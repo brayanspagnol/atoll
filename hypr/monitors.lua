@@ -45,12 +45,13 @@ for workspace, monitor in pairs(layout.workspaces or {}) do
     hl.workspace_rule({ workspace = workspace, monitor = monitor })
 end
 
+-- hl.get_monitors only lists screens that are on.
 local function screens()
     local laptop, external
     for _, mon in ipairs(hl.get_monitors()) do
         if is_laptop(mon.name) then
             laptop = mon
-        elseif not mon.disabled then
+        else
             external = external or mon
         end
     end
@@ -59,27 +60,38 @@ end
 
 local function sync()
     local laptop, external = screens()
+    local closed = lid_closed()
+    -- The external screen is asleep or not detected yet. Moving the panel now would put it in the way when that returns.
+    if closed and not external then
+        return
+    end
+    local settings = saved()
+    -- Never leave the machine without a lit screen.
+    if not laptop and not external then
+        for _, rule in ipairs(settings.monitors or {}) do
+            if is_laptop(rule.output) then
+                hl.monitor({ output = rule.output, disabled = false, mode = "preferred", position = "auto", scale = 1 })
+            end
+        end
+        return
+    end
     if not laptop then
         return
     end
-    local wants_parked = external and lid_closed() and (saved().lid or "off") == "off"
-    if wants_parked and not laptop.disabled and laptop.y ~= parked_at then
+    local wants_parked = external and closed and (settings.lid or "off") == "off"
+    if wants_parked and laptop.y ~= parked_at then
         hl.monitor({ output = laptop.name, position = "0x" .. parked_at })
         pcall(function()
             hl.dispatch(hl.dsp.focus({ monitor = external.name }))
         end)
     elseif not wants_parked and laptop.y == parked_at then
-        for _, rule in ipairs(saved().monitors or {}) do
+        for _, rule in ipairs(settings.monitors or {}) do
             if rule.output == laptop.name then
                 hl.monitor(rule)
                 return
             end
         end
         hl.monitor({ output = laptop.name, mode = "preferred", position = "auto", scale = 1 })
-    end
-    -- Never leave the machine without a lit screen.
-    if not external and laptop.disabled then
-        hl.monitor({ output = laptop.name, disabled = false, mode = "preferred", position = "auto", scale = 1 })
     end
 end
 atoll_sync_monitors = sync

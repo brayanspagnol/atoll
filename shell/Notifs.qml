@@ -21,17 +21,24 @@ Singleton {
     function clear() { all.slice().forEach(n => n.dismiss()) }
     function clearApp(name) { all.filter(n => n.appName === name).forEach(n => n.dismiss()) }
     function restore(saved) {
-        return {
+        const t = {
             id: saved.id, time: saved.time, appName: saved.appName, summary: saved.summary, body: saved.body, appIcon: saved.appIcon, urgency: saved.urgency, expireTimeout: -1,
             // Generated images only exist in this run; icon names and files last.
             image: /^(image:\/\/icon\/|file:|\/)/.test(saved.image || "") ? saved.image : "",
-            actions: [], dismiss() { root.remove(this) }
+            actions: [], dismiss: null
         }
+        // By closure: a Repeater hands out copies, so "this" would not be the item in the list.
+        t.dismiss = () => root.remove(t)
+        return t
     }
     function attach(t, n) {
         t.actions = n.actions.map(a => ({ text: a.text, invoke: () => a.invoke() }))
         t.dismiss = () => n.dismiss()
         n.closed.connect(() => { root.drop(t); root.remove(t) })
+        // An app replacing its notification updates this same object.
+        const refresh = () => { t.summary = n.summary; t.body = n.body; root.all = root.all.slice(); saver.restart() }
+        n.summaryChanged.connect(refresh)
+        n.bodyChanged.connect(refresh)
     }
     FileView {
         id: file
@@ -69,10 +76,6 @@ Singleton {
             // A copy, because the sheet keeps drawing the card during its closing animation, after n is gone.
             const t = { id: n.id, time: Date.now(), appName: n.appName, summary: n.summary, body: n.body, image: n.image, appIcon: n.appIcon, urgency: n.urgency, expireTimeout: n.expireTimeout }
             root.attach(t, n)
-            // An app replacing its notification updates this same object.
-            const refresh = () => { t.summary = n.summary; t.body = n.body; root.all = root.all.slice(); saver.restart() }
-            n.summaryChanged.connect(refresh)
-            n.bodyChanged.connect(refresh)
             if (!n.transient) { root.all = root.all.concat([t]).slice(-root.limit); saver.restart() }
             if (Cfg.v.dnd && n.urgency !== NotificationUrgency.Critical) return
             if (root.toasts.length === 0 && !Ui.mediaOpen) Ui.sheetScreen = Ui.screen

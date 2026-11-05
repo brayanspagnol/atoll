@@ -107,11 +107,11 @@ Singleton {
             const [w, h] = (mode ? mode.res : "0x0").split("x").map(Number)
             const mirrored = m.mirrorOf !== "none" ? live.find(o => String(o.id) === String(m.mirrorOf))?.name ?? "" : ""
             // A closed laptop is parked far away by hypr/monitors.lua; its real place is the saved one.
-            const parked = m.y <= -1000
+            const away = isLaptop(m.name) && m.y <= -1000
             return { name: m.name, make: m.make, model: m.model, laptop: isLaptop(m.name), modes, w, h,
                 rate: lit ? rate : mode?.rates[0] ?? rate,
-                x: parked ? old?.x ?? 1000000 : m.x, y: parked ? old?.y ?? 0 : m.y, scale: m.scale, rot: m.transform % 4,
-                on: !m.disabled, mirror: mirrored, vrr: !!m.vrr, bit: (m.currentFormat ?? "").includes("2101010"), parked }
+                x: away ? old?.x ?? 1000000 : m.x, y: away ? old?.y ?? 0 : m.y, scale: m.scale, rot: m.transform % 4,
+                on: !m.disabled, mirror: mirrored, vrr: !!m.vrr, bit: (m.currentFormat ?? "").includes("2101010"), parked: away && !m.disabled }
         }).filter(m => m.modes.length || !m.disabled).sort((a, b) => a.laptop - b.laptop || a.name.localeCompare(b.name))
         // A parked panel with no saved place goes next to the others.
         const unplaced = list.find(m => m.x === 1000000)
@@ -132,6 +132,7 @@ Singleton {
     FileView { id: luaFile; path: root.dir + "monitors.lua"; atomicWrites: true; printErrors: false }
     FileView { id: jsonFile; path: root.dir + "monitors.json"; atomicWrites: true; blockLoading: true; printErrors: false }
     Timer { id: delayed; interval: 1200; onTriggered: root.refresh() }
+    Component.onCompleted: refresh()
     Timer { id: identifyEnd; interval: 1800; onTriggered: root.identifying = false }
     Timer {
         interval: 1000; repeat: true; running: root.confirming

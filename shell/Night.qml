@@ -18,5 +18,6 @@ Singleton {
         if (Cfg.v.nightOn !== want) { Cfg.v.nightOn = want; apply() }
     }
     Timer { interval: 30000; running: true; repeat: true; triggeredOnStart: true; onTriggered: root.tick() }
-    Connections { target: Cfg.v; function onNightAutoChanged() { root.tick() } function onNightFromChanged() { root.wanted = null; root.tick() } function onNightToChanged() { root.wanted = null; root.tick() } }
+    // Also covers startup, when the profile finishes loading after the first apply().
+    Connections { target: Cfg.v; function onNightOnChanged() { root.apply() } function onNightKChanged() { root.apply() } function onNightAutoChanged() { root.tick() } function onNightFromChanged() { root.wanted = null; root.tick() } function onNightToChanged() { root.wanted = null; root.tick() } }
 }

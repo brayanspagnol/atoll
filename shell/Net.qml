@@ -35,11 +35,20 @@ Singleton {
             run(["connect-new", uuid], "", () => { addState = ""; refreshVpns() }, () => { addErr = Tr.t("Couldn't connect. Check the name and the password."); addState = "" })
         }, reason => { addErr = reason; addState = "" })
     }
+    // One at a time: a VPN can take 30 seconds, and a second request must not take over the first one's callbacks.
+    property var queue: []
     function run(args, secret, done, failed) {
-        task.secret = secret
-        task.done = done
-        task.failed = failed
-        task.command = [script].concat(args)
+        queue = queue.concat([{ args, secret, done, failed }])
+        if (!task.running) next()
+    }
+    function next() {
+        if (!queue.length) return
+        const job = queue[0]
+        queue = queue.slice(1)
+        task.secret = job.secret
+        task.done = job.done
+        task.failed = job.failed
+        task.command = [script].concat(job.args)
         task.running = true
     }
     Process {
@@ -53,7 +62,10 @@ Singleton {
         stderr: StdioCollector { id: taskErr }
         onExited: code => {
             const then = code === 0 ? done : failed
-            if (then) then(code === 0 ? taskOut.text.trim() : taskErr.text.trim().split("\n").pop() || Tr.t("Something went wrong."))
+            const result = code === 0 ? taskOut.text.trim() : taskErr.text.trim().split("\n").pop() || Tr.t("Something went wrong.")
+            // A callback may queue more work, so the next job starts after it.
+            if (then) then(result)
+            root.next()
         }
     }
     Process {

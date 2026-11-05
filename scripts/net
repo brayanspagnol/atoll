@@ -14,7 +14,7 @@ one_line() { [[ "$1" != *$'\n'* ]] || { echo "line breaks are not allowed" >&2; 
 
 new_profile() {
     local out
-    out="$(LC_ALL=C nmcli connection add type wifi con-name "$1" ssid "$1" wifi.hidden "$2")"
+    out="$(LC_ALL=C nmcli connection add type wifi con-name "$1" ssid "$1" wifi.hidden "$2")" || return 1
     uuid_of "$out"
 }
 
@@ -37,7 +37,7 @@ vpn_only() {
 case "${1:-}" in
     wifi)
         valid_hidden "$3"
-        uuid="$(new_profile "$2" "$3")"
+        uuid="$(new_profile "$2" "$3")" || exit 1
         if [[ "$4" == psk ]]; then
             IFS= read -r password
             edit_profile "$uuid" "set wifi-sec.key-mgmt wpa-psk"$'\n'"set wifi-sec.psk $password"
@@ -50,7 +50,7 @@ case "${1:-}" in
         one_line "$5"
         one_line "${6:-}"
         IFS= read -r password
-        uuid="$(new_profile "$2" "$3")"
+        uuid="$(new_profile "$2" "$3")" || exit 1
         commands="set wifi-sec.key-mgmt wpa-eap"$'\n'"set 802-1x.eap $4"$'\n'"set 802-1x.phase2-auth mschapv2"$'\n'"set 802-1x.identity $5"$'\n'"set 802-1x.password $password"
         # With a domain the server must prove who it is, using the system's certificates.
         [[ -z "${6:-}" ]] || commands+=$'\n'"set 802-1x.system-ca-certs yes"$'\n'"set 802-1x.domain-suffix-match $6"

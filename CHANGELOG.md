@@ -6,6 +6,24 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.10.1] - 2026-11-05
+
+### Changed
+
+- The workspace overview animates: windows travel between their real place and the spread, also when closing.
+- Overlapping windows, such as maximized ones, spread out in a grid in the overview.
+
+### Fixed
+
+- A laptop screen left off is turned back on when the external monitor goes away with the lid open.
+- A closed lid with the external monitor asleep no longer moves the laptop panel back into the layout.
+- Turning on a laptop screen that was off from the Monitor screen now works.
+- Restored notifications can be dismissed, and replaced ones keep updating after a shell reload.
+- The night light is applied at login when the schedule or switch has it on.
+- Network requests wait their turn instead of taking over each other's results, and nmcli's own error is shown when saving a network fails.
+- The Monitor tile shows the screen count right after the shell starts.
+- Translation fixes across all languages.
+
 ## [1.10.0] - 2026-11-05
 
 ### Added
@@ -157,7 +175,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.10.1...HEAD
+[1.10.1]: https://github.com/brayanspagnol/atoll/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/brayanspagnol/atoll/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/brayanspagnol/atoll/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/brayanspagnol/atoll/compare/v1.7.1...v1.8.0
