@@ -34,5 +34,11 @@ Singleton {
         Quickshell.execDetached(["hyprctl", "eval", `hl.config({ general = { col = { active_border = "rgb(${accent.toString().slice(1)})", inactive_border = "rgba(ffffff24)" } } })`])
     }
     onAccentChanged: pushBorder()
-    Component.onCompleted: pushBorder()
+    // The lock screen reads the wallpaper through this link, because it runs outside the shell.
+    readonly property string wallpaper: Cfg.v.wallpaper
+    function linkWallpaper() {
+        Quickshell.execDetached(["sh", "-c", 'if [ -n "$1" ]; then ln -sfn "$1" "$2"; else rm -f "$2"; fi', "sh", wallpaper, Quickshell.env("HOME") + "/.local/share/atoll/current-wallpaper"])
+    }
+    onWallpaperChanged: linkWallpaper()
+    Component.onCompleted: { pushBorder(); linkWallpaper() }
 }

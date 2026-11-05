@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Current song for the lock screen, or nothing. The output is Pango markup, so it must be escaped.
+command -v playerctl >/dev/null || exit 0
+[[ "$(playerctl status 2>/dev/null)" == Playing ]] || exit 0
+playerctl metadata --format '{{title}} — {{artist}}' 2>/dev/null |
+    sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'

@@ -31,7 +31,7 @@ bin="$HOME/.local/bin"
 
 packages=(hyprland quickshell hyprlock hypridle hyprsunset xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
     polkit-gnome networkmanager bluez bluez-utils pipewire wireplumber libnotify cliphist wl-clipboard wofi
-    grim slurp jq brightnessctl ttf-jetbrains-mono-nerd papirus-icon-theme qt6-svg noto-fonts noto-fonts-cjk)
+    grim slurp jq brightnessctl ttf-jetbrains-mono-nerd papirus-icon-theme qt6-svg noto-fonts noto-fonts-cjk playerctl)
 commands=(Hyprland start-hyprland qs hyprlock hypridle hyprsunset nmcli bluetoothctl wpctl notify-send cliphist
     wl-paste wofi grim slurp jq brightnessctl)
 
@@ -60,8 +60,14 @@ cp "$repo"/hypr/*.lua "$config/hypr/"
 cp "$repo"/scripts/* "$data/scripts/"
 cp "$repo"/wallpapers/* "$data/wallpapers/"
 cp "$repo/VERSION" "$data/VERSION"
-# Settings rewrites the idle file, and people personalize the lock screen, so keep existing copies.
-[[ -f "$config/hyprlock.conf" ]] || cp "$repo/config/hyprlock.conf" "$config/hyprlock.conf"
+# A modified lock screen is kept aside, not lost.
+if [[ -f "$config/hyprlock.conf" ]] && ! cmp -s "$repo/config/hyprlock.conf" "$config/hyprlock.conf"; then
+    cp "$config/hyprlock.conf" "$config/hyprlock.conf.bak"
+    echo "Your previous lock screen was saved as $config/hyprlock.conf.bak"
+fi
+cp "$repo/config/hyprlock.conf" "$config/hyprlock.conf"
+[[ -e "$data/current-wallpaper" ]] || ln -sfn "$data/wallpapers/atoll-dusk.jpg" "$data/current-wallpaper"
+# The idle page in Settings rewrites this file, so keep the existing one.
 [[ -f "$config/hypridle.conf" ]] || cp "$repo/config/hypridle.conf" "$config/hypridle.conf"
 ln -sf "$data/scripts/atoll-session" "$bin/atoll-session"
 

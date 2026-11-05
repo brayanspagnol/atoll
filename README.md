@@ -24,16 +24,17 @@ wallpaper, and windows keep the rest of the screen.
 - **Notifications and volume:** glass cards that drop from under the island.
 - **Search:** apps and system screens in one box. Type "wifi" or "volume".
 - **Languages:** English, Português (Brasil), Español, Français, Deutsch, Русский and 简体中文. It follows your system language, or pick one in Settings.
-- **Lock and idle:** lock screen, per-power-source idle timers, night light and monitor brightness.
+- **Lock screen:** large clock, the current song, battery and your picture, over your wallpaper. It also greets you when waking from suspend, with no flash of the desktop.
+- **Idle and display:** idle timers per power source, night light and monitor brightness.
 - **Resilient by design:** if the shell crashes, it restarts by itself. Your windows stay open.
 
 ## Screenshots
 
 Personal data such as network and device names is covered with solid blocks.
 
-| Desktop | Lock screen |
-|---|---|
-| ![Desktop with the dock visible](docs/screenshots/desktop.webp) | ![Lock screen](docs/screenshots/lock.webp) |
+![Lock screen](docs/screenshots/lock.webp)
+
+![Desktop with the dock visible](docs/screenshots/desktop.webp)
 
 | Music | Sound and output | Likes |
 |---|---|---|
@@ -115,7 +116,9 @@ The full list is in [`hypr/binds.lua`](hypr/binds.lua).
 ## Configure
 
 **Most things** are in the Settings screen: language, accent color, wallpaper, brightness, night light and idle timers.
-Your wallpapers go in `~/Pictures/Wallpapers`.
+Your wallpapers go in `~/Pictures/Wallpapers`, and the lock screen follows the one you pick. Your lock screen picture is `~/.face`.
+
+**The lock screen** is `~/.config/atoll/hyprlock.conf`. Updates replace it and save your version as `hyprlock.conf.bak`.
 
 **Hyprland** overrides go in `~/.config/atoll/user.lua`, which updates never touch. For example, a keyboard
 layout, a monitor and another terminal:

@@ -21,7 +21,7 @@ luac -p hypr/*.lua                                    # Lua syntax
 shellcheck -s bash scripts/* install.sh uninstall.sh  # shell scripts
 ```
 
-CI runs these on every pull request. New logic in `cal.js` or `parse.js` should come with a test.
+The project has no hosted CI, so please run them before opening a pull request. New logic in `cal.js` or `parse.js` should come with a test.
 
 ### Try the interface without leaving your session
 
@@ -61,5 +61,5 @@ not reviewed by native speakers, so corrections are very welcome.
 
 ## Releases
 
-Maintainers release by moving `[Unreleased]` to a new version in `CHANGELOG.md`, updating `VERSION`, and pushing a
-`vX.Y.Z` tag. The release workflow checks that the tag matches `VERSION` and publishes the changelog section.
+Maintainers release by moving `[Unreleased]` to a new version in `CHANGELOG.md`, updating `VERSION`, tagging `vX.Y.Z` and
+publishing a GitHub release with that changelog section as its notes.

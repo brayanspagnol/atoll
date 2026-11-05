@@ -6,6 +6,23 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-05
+
+### Added
+
+- New lock screen with a large clock, the current song, battery, keyboard layout and your `~/.face` picture. It renders on the first frame after waking from suspend.
+- The lock screen follows the wallpaper chosen in Settings.
+
+### Changed
+
+- Password prompt and error messages on the lock screen come from the system, in its language.
+- `install.sh` updates the lock screen and saves a modified one as `hyprlock.conf.bak`.
+- `install.sh --deps` also installs `playerctl`, used to show the current song.
+
+### Removed
+
+- GitHub Actions workflows and Dependabot. Checks run locally, as described in `CONTRIBUTING.md`.
+
 ## [1.1.0] - 2026-11-05
 
 ### Added
@@ -34,6 +51,7 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/brayanspagnol/atoll/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/brayanspagnol/atoll/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/brayanspagnol/atoll/releases/tag/v1.0.0

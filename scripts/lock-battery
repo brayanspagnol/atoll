@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Battery for the lock screen: icon and percentage, or nothing on machines without a battery.
+# The icons are raw UTF-8 bytes because printf \U depends on the locale.
+shopt -s nullglob
+for battery in /sys/class/power_supply/BAT*; do
+    level="$(cat "$battery/capacity")"
+    if [[ "$(cat "$battery/status")" == Discharging ]]; then
+        printf '\xf3\xb0\x81\xb9 %s%%\n' "$level"
+    else
+        printf '\xf3\xb0\x82\x84 %s%%\n' "$level"
+    fi
+    exit 0
+done

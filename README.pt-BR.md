@@ -22,7 +22,8 @@ Os prints estão no [README em inglês](README.md#screenshots).
 - **Avisos e volume:** cartões de vidro que descem de baixo da ilha.
 - **Busca:** aplicativos e telas do sistema no mesmo lugar. Digite "wifi" ou "volume".
 - **Idiomas:** English, Português (Brasil), Español, Français, Deutsch, Русский e 简体中文. Segue o idioma do sistema, ou escolha em Ajustes.
-- **Bloqueio e ociosidade:** tela de bloqueio, tempos separados para tomada e bateria, luz noturna e brilho do monitor.
+- **Tela de bloqueio:** relógio grande, música atual, bateria e sua foto, sobre o seu papel de parede. Ela também recebe você ao voltar da suspensão, sem o desktop piscar antes.
+- **Ociosidade e tela:** tempos separados para tomada e bateria, luz noturna e brilho do monitor.
 - **Resistente:** se o shell cair, ele volta sozinho. Suas janelas continuam abertas.
 
 ## Requisitos
@@ -85,7 +86,9 @@ A lista completa está em [`hypr/binds.lua`](hypr/binds.lua).
 ## Configurar
 
 **Quase tudo** está na tela Ajustes: idioma, cor de destaque, papel de parede, brilho, luz noturna e tempos de ociosidade.
-Seus papéis de parede vão em `~/Pictures/Wallpapers`.
+Seus papéis de parede vão em `~/Pictures/Wallpapers`, e a tela de bloqueio segue o que você escolher. Sua foto nela é o arquivo `~/.face`.
+
+**Tela de bloqueio:** é o arquivo `~/.config/atoll/hyprlock.conf`. Atualizações o substituem e guardam sua versão como `hyprlock.conf.bak`.
 
 **Hyprland:** personalizações vão em `~/.config/atoll/user.lua`, que as atualizações nunca alteram. Por exemplo,
 teclado ABNT2, um monitor e outro terminal:

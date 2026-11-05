@@ -10,7 +10,7 @@ case "${1:-}" in
 esac
 
 rm -rf "$HOME/.config/quickshell/atoll" "$HOME/.config/atoll/hypr" "$HOME/.config/atoll/hyprlock.conf"
-rm -rf "$HOME/.local/share/atoll/scripts" "$HOME/.local/share/atoll/wallpapers" "$HOME/.local/share/atoll/VERSION"
+rm -rf "$HOME/.local/share/atoll/scripts" "$HOME/.local/share/atoll/wallpapers" "$HOME/.local/share/atoll/VERSION" "$HOME/.local/share/atoll/current-wallpaper"
 rm -f "$HOME/.local/bin/atoll-session"
 
 if ((purge)); then
