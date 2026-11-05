@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Name of the active profile for the lock screen. The output is Pango markup, so it must be escaped.
+config="$HOME/.config/atoll"
+profile="$(cat "$config/active-profile" 2>/dev/null)"
+name="$(jq -r '.name // empty' "$config/profiles/${profile:-default}.json" 2>/dev/null)"
+sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' <<<"${name:-$USER}"

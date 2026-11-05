@@ -18,7 +18,7 @@ PanelWindow {
     mask: Region { item: win.open ? pillArea : edge }
 
     readonly property bool peek: Ui.dockPeek && Ui.screen === modelData
-    readonly property bool wanted: hover.hovered || peek || Ui.dockEditor
+    readonly property bool wanted: (hover.hovered || peek) && !Ui.dockEditor
     property bool open: false
     onWantedChanged: {
         if (wanted) { hideTimer.stop(); open = true }

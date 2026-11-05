@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Long date for the lock screen, in the system language.
+case "${LC_ALL:-${LC_TIME:-$LANG}}" in
+    pt* | es*) date +"%A, %-d de %B" ;;
+    en*) date +"%A, %B %-d" ;;
+    *) date +"%A, %-d %B" ;;
+esac

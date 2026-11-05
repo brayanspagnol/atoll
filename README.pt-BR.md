@@ -16,13 +16,13 @@ Os prints estão no [README em inglês](README.md#screenshots).
 ## O que tem
 
 - **Ilha:** áreas de trabalho, relógio, música e status em uma pílula flutuante no topo.
-- **Dock:** se esconde na borda inferior, então as janelas ganham a altura toda. Encoste o mouse na borda ou aperte `Super+Z`. A engrenagem escolhe quais apps aparecem: da lista de instalados, ou qualquer programa achado nos seus arquivos.
+- **Dock:** se esconde na borda inferior, então as janelas ganham a altura toda. Encoste o mouse na borda ou aperte `Super+Z`. A engrenagem abre um launchpad em tela cheia para escolher os apps, da lista de instalados ou qualquer programa nos seus arquivos, e reordenar.
 - **Central:** som, internet, Bluetooth, desempenho, calendário, avisos, ajustes e energia.
 - **Cartão de música:** capa, cores tiradas do álbum, barra de tempo, repetir, aleatório, curtidas, volume e troca de saída.
 - **Avisos e volume:** cartões de vidro que descem de baixo da ilha.
 - **Busca:** aplicativos e telas do sistema no mesmo lugar. Digite "wifi" ou "volume".
 - **Idiomas:** English, Português (Brasil), Español, Français, Deutsch, Русский e 简体中文. Segue o idioma do sistema, ou escolha em Ajustes.
-- **Tela de bloqueio:** relógio grande, música atual, bateria e sua foto, sobre o seu papel de parede. Ela também recebe você ao voltar da suspensão, sem o desktop piscar antes.
+- **Tela de bloqueio:** relógio grande, música atual, nome e foto do perfil, sobre o seu papel de parede nítido. Ela também recebe você ao voltar da suspensão, sem o desktop piscar antes.
 - **Perfis:** cada um guarda nome, foto, idioma, cor, papel de parede, dock e tempos de ociosidade. Crie e troque em Ajustes.
 - **Feriados:** de mais de 200 países no calendário, ou nenhum. Escolha em Ajustes.
 - **Ociosidade e tela:** tempos separados para tomada e bateria, luz noturna e brilho do monitor.

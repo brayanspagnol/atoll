@@ -2,5 +2,8 @@
 # Current song for the lock screen, or nothing. The output is Pango markup, so it must be escaped.
 command -v playerctl >/dev/null || exit 0
 [[ "$(playerctl status 2>/dev/null)" == Playing ]] || exit 0
-playerctl metadata --format '{{title}} — {{artist}}' 2>/dev/null |
-    sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+# A UTF-8 locale, because playerctl fails on the separator in the plain C locale.
+song="$(LC_ALL=C.UTF-8 playerctl metadata --format '{{title}} · {{artist}}' 2>/dev/null)"
+[[ -n "$song" ]] || exit 0
+# The note is a raw UTF-8 icon, because printf \U depends on the locale.
+printf '\xf3\xb0\x9d\x9a  %s\n' "$song" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'

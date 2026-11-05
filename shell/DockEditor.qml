@@ -1,11 +1,12 @@
 import QtQuick
+import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
-import Quickshell.Widgets
 
-// Chooses what the dock shows. Apps come from the system list; anything else is searched for in files.
+// Launchpad for choosing the dock's apps, with the dock itself in edit mode at the bottom.
+// Apps come from the system list; anything else is searched for in files.
 Scope {
     id: editor
     // Outlives Ui.dockEditor by the closing animation.
@@ -13,7 +14,7 @@ Scope {
     readonly property bool isOpen: Ui.dockEditor
     onIsOpenChanged: {
         if (isOpen) { closing.stop(); alive = true }
-        else closing.restart()
+        else { closing.restart(); Ui.dockPeek = true } // show the result on the real dock
     }
     Timer { id: closing; interval: 200; onTriggered: editor.alive = false }
 
@@ -30,6 +31,7 @@ Scope {
             color: "transparent"
 
             readonly property string query: search.text.trim()
+            property int selected: -1
             property var files: []
             property bool searching: false
             readonly property var apps: {
@@ -37,6 +39,10 @@ Scope {
                 return [...DesktopEntries.applications.values].filter(a => !a.noDisplay
                     && (!q || (a.name + " " + a.genericName + " " + a.keywords.join(" ")).toLowerCase().includes(q)))
                     .sort((a, b) => a.name.localeCompare(b.name))
+            }
+            function tapOutside() {
+                if (selected >= 0) selected = -1
+                else Ui.dockEditor = false
             }
             onQueryChanged: {
                 finder.running = false
@@ -60,116 +66,233 @@ Scope {
                     }
                 }
             }
-
-            // A window shortcut, because clicking a row takes the focus away from the search field.
+            // A window shortcut, because clicking an app takes the focus away from the search field.
             Shortcut { sequence: "Escape"; onActivated: Ui.dockEditor = false }
             Connections {
                 target: Pins
                 function onListChanged() { search.forceActiveFocus() }
             }
-            MouseArea { anchors.fill: parent; enabled: Ui.dockEditor; onClicked: Ui.dockEditor = false }
-            Frost {
-                id: panel
-                anchors.horizontalCenter: parent.horizontalCenter
-                y: Math.max(82, (win.height - height) / 2 - 40)
-                width: Math.min(1000, win.width - 48)
-                height: Math.min(780, win.height - 200)
+
+            Item {
+                id: stage
+                anchors.fill: parent
+                Accessible.name: Tr.t("Customize dock")
                 property bool shown: false
                 Component.onCompleted: shown = Qt.binding(() => Ui.dockEditor)
                 opacity: shown ? 1 : 0
-                scale: shown ? 1 : 0.96
                 Behavior on opacity { NumberAnimation { duration: 170 } }
-                Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-                MouseArea { anchors.fill: parent }
+
+                // The blur itself comes from the layer rule in hypr/look.lua.
+                Rectangle { anchors.fill: parent; color: Qt.rgba(8 / 255, 13 / 255, 20 / 255, 0.58) }
+                MouseArea { anchors.fill: parent; enabled: Ui.dockEditor; onClicked: win.tapOutside() }
 
                 ColumnLayout {
-                    anchors.fill: parent; anchors.margins: 24; spacing: 14
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Tx { text: Tr.t("Customize dock"); size: 24; strong: true; Layout.fillWidth: true; Accessible.role: Accessible.Heading; Accessible.name: text }
-                        Btn { variant: "quiet"; icon: "x"; implicitHeight: 44; a11y: Tr.t("Close panel"); onClicked: Ui.dockEditor = false }
-                    }
-                    RowLayout {
-                        Layout.fillWidth: true; Layout.fillHeight: true; spacing: 24
+                    id: content
+                    anchors { fill: parent; topMargin: 90; bottomMargin: 130 }
+                    spacing: 40
+                    scale: stage.shown ? 1 : 1.05
+                    Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
 
-                        // Pinned, in order
-                        ColumnLayout {
-                            Layout.preferredWidth: 1; Layout.fillWidth: true; Layout.fillHeight: true; spacing: 8
-                            Sec { title: Tr.t("On the dock"); Layout.topMargin: 0 }
-                            Tx { visible: Pins.list.length === 0; text: Tr.t("The dock is empty. Add apps from the list."); dim: true; wrapMode: Text.Wrap; Layout.fillWidth: true }
-                            ListView {
-                                Layout.fillWidth: true; Layout.fillHeight: true
-                                clip: true; spacing: 2
-                                model: Pins.list
-                                delegate: Rowi {
-                                    id: pinned
-                                    required property var modelData
-                                    required property int index
-                                    width: ListView.view.width
-                                    clickable: false
-                                    a11y: Tr.t(modelData.label)
-                                    PinIcon { pin: pinned.modelData; size: 24 }
-                                    Tx { text: Tr.t(pinned.modelData.label); Layout.fillWidth: true }
-                                    Btn { variant: "quiet"; icon: "up"; iconSize: 18; implicitWidth: 36; a11y: Tr.t("Move up"); enabledB: pinned.index > 0; onClicked: Pins.move(pinned.index, -1) }
-                                    Btn { variant: "quiet"; icon: "down"; iconSize: 18; implicitWidth: 36; a11y: Tr.t("Move down"); enabledB: pinned.index < Pins.list.length - 1; onClicked: Pins.move(pinned.index, 1) }
-                                    Btn { variant: "quiet"; icon: "x"; iconSize: 18; implicitWidth: 36; a11y: Tr.t("Remove %1").arg(Tr.t(pinned.modelData.label)); onClicked: Pins.remove(pinned.index) }
+                    Rectangle {
+                        Layout.alignment: Qt.AlignHCenter
+                        implicitWidth: Math.min(760, win.width - 96); implicitHeight: 72; radius: 36
+                        color: Qt.rgba(1, 1, 1, 0.1)
+                        border.width: search.activeFocus ? 2 : 1
+                        border.color: search.activeFocus ? Theme.accent : Theme.lineStrong
+                        RowLayout {
+                            anchors.fill: parent; anchors.leftMargin: 26; anchors.rightMargin: 26; spacing: 14
+                            Ic { name: "search"; size: 28; color: Theme.muted }
+                            TextInput {
+                                id: search
+                                Layout.fillWidth: true
+                                color: Theme.ink; selectionColor: Theme.accent; selectedTextColor: Theme.accentInk
+                                font.family: Theme.sans; font.pixelSize: 24
+                                clip: true
+                                Accessible.name: Tr.t("Search apps and files…")
+                                Component.onCompleted: forceActiveFocus()
+                                Keys.onReturnPressed: if (win.apps.length) Pins.toggle(win.apps[0])
+                                Keys.onEnterPressed: if (win.apps.length) Pins.toggle(win.apps[0])
+                                Tx { visible: !search.text; text: Tr.t("Search apps and files…"); size: 24; dim: true; anchors.verticalCenter: parent.verticalCenter }
+                            }
+                        }
+                    }
+
+                    GridView {
+                        id: grid
+                        Layout.fillWidth: true; Layout.fillHeight: true
+                        Layout.leftMargin: side; Layout.rightMargin: side
+                        readonly property int side: Math.max(48, win.width * 0.1)
+                        readonly property int columns: Math.max(3, Math.min(8, Math.floor(width / 200)))
+                        readonly property int iconSize: Math.min(128, cellWidth * 0.6)
+                        clip: true
+                        cellWidth: width / columns
+                        cellHeight: iconSize + 92
+                        boundsBehavior: Flickable.StopAtBounds
+                        model: win.apps
+                        ScrollBar.vertical: ScrollBar { policy: grid.contentHeight > grid.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff; width: 6 }
+                        // The grid takes the clicks between and below its cells, so they must close the panel here too.
+                        MouseArea {
+                            parent: grid.contentItem
+                            z: -1
+                            width: grid.width
+                            height: Math.max(grid.contentHeight, grid.height)
+                            onClicked: win.tapOutside()
+                        }
+
+                        delegate: Item {
+                            id: cell
+                            required property var modelData
+                            readonly property bool on: Pins.has(modelData)
+                            width: GridView.view.cellWidth; height: GridView.view.cellHeight
+                            activeFocusOnTab: true
+                            Accessible.role: Accessible.CheckBox
+                            Accessible.name: modelData.name
+                            Accessible.checked: on
+                            Keys.onSpacePressed: Pins.toggle(modelData)
+                            Keys.onReturnPressed: Pins.toggle(modelData)
+                            MouseArea {
+                                id: hit
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: Pins.toggle(cell.modelData)
+                            }
+                            Rectangle {
+                                visible: cell.activeFocus
+                                anchors.fill: parent; anchors.margins: 4; radius: 20
+                                color: "transparent"; border.width: 2; border.color: Theme.ink
+                            }
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 12
+                                width: parent.width - 16
+                                PinIcon {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    pin: ({ appIcon: cell.modelData.icon, label: cell.modelData.name })
+                                    size: grid.iconSize
+                                    opacity: cell.on || hit.containsMouse ? 1 : 0.86
+                                    scale: hit.containsMouse ? 1.08 : 1
+                                    transform: Translate { y: hit.containsMouse ? -6 : 0; Behavior on y { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } } }
+                                    Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 2 } }
+                                    Rectangle {
+                                        visible: cell.on
+                                        anchors { right: parent.right; top: parent.top; margins: -4 }
+                                        width: 34; height: 34; radius: 17
+                                        color: Theme.accent
+                                        border.width: 2; border.color: Theme.ground
+                                        Ic { anchors.centerIn: parent; name: "check"; size: 20; color: Theme.accentInk }
+                                    }
                                 }
+                                Tx { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: cell.modelData.name; size: 20 }
                             }
                         }
 
-                        Rectangle { Layout.fillHeight: true; implicitWidth: 1; color: Theme.line }
-
-                        // Available
-                        ColumnLayout {
-                            Layout.preferredWidth: 1; Layout.fillWidth: true; Layout.fillHeight: true; spacing: 8
-                            Fld {
-                                id: search
-                                Layout.fillWidth: true
-                                placeholderText: Tr.t("Search apps and files…")
-                                Accessible.name: Tr.t("Search apps and files…")
-                                Component.onCompleted: forceActiveFocus()
-                            }
-                            ListView {
-                                id: available
-                                Layout.fillWidth: true; Layout.fillHeight: true
-                                clip: true; spacing: 2
-                                model: win.apps
-                                delegate: Rowi {
-                                    id: app
-                                    required property var modelData
-                                    width: ListView.view.width
-                                    readonly property bool on: Pins.has(modelData)
-                                    a11y: modelData.name
-                                    onClicked: Pins.toggle(modelData)
-                                    IconImage { implicitSize: 24; source: Quickshell.iconPath(app.modelData.icon, true) }
-                                    Tx { text: app.modelData.name; Layout.fillWidth: true }
-                                    Ic { visible: app.on; name: "check"; color: Theme.accent }
+                        footer: ColumnLayout {
+                            width: GridView.view.width
+                            spacing: 6
+                            ColumnLayout {
+                                Layout.alignment: Qt.AlignHCenter
+                                Layout.preferredWidth: Math.min(760, grid.width)
+                                Layout.maximumWidth: Math.min(760, grid.width)
+                                Layout.topMargin: 16
+                                spacing: 6
+                                visible: win.query.length >= 2
+                                Sec { title: Tr.t("Found in files"); Layout.topMargin: 0 }
+                                Tx { visible: win.searching; text: Tr.t("Searching files…"); dim: true }
+                                Tx { visible: !win.searching && win.files.length === 0; text: Tr.t("Nothing found."); dim: true }
+                                Repeater {
+                                    model: win.files
+                                    Rowi {
+                                        id: file
+                                        required property string modelData
+                                        readonly property bool on: Pins.hasFile(modelData)
+                                        a11y: modelData
+                                        clickable: !on
+                                        onClicked: Pins.addFile(modelData)
+                                        ColumnLayout {
+                                            Layout.fillWidth: true; spacing: 0
+                                            Tx { text: file.modelData.split("/").pop(); Layout.fillWidth: true }
+                                            Tx { text: file.modelData; dim: true; size: 12; mono: true; Layout.fillWidth: true; elide: Text.ElideMiddle }
+                                        }
+                                        Ic { visible: file.on; name: "check"; color: Theme.accent }
+                                        Ic { visible: !file.on; name: "plus"; color: Theme.muted }
+                                    }
                                 }
-                                footer: ColumnLayout {
-                                    width: ListView.view.width; spacing: 2
-                                    Sec { visible: win.query.length >= 2; title: Tr.t("Found in files") }
-                                    Tx { visible: win.searching; text: Tr.t("Searching files…"); dim: true }
-                                    Tx { visible: win.query.length >= 2 && !win.searching && win.files.length === 0; text: Tr.t("Nothing found."); dim: true }
-                                    Tx { visible: win.query.length < 2 && win.apps.length > 0; text: Tr.t("Not on the list? Type its name to search your files too."); dim: true; wrapMode: Text.Wrap; Layout.fillWidth: true; Layout.topMargin: 8 }
-                                    Repeater {
-                                        model: win.files
-                                        Rowi {
-                                            id: file
-                                            required property string modelData
-                                            readonly property bool on: Pins.hasFile(modelData)
-                                            a11y: modelData
-                                            clickable: !on
-                                            onClicked: Pins.addFile(modelData)
-                                            ColumnLayout {
-                                                Layout.fillWidth: true; spacing: 0
-                                                Tx { text: file.modelData.split("/").pop(); Layout.fillWidth: true }
-                                                Tx { text: file.modelData; dim: true; size: 12; mono: true; Layout.fillWidth: true; elide: Text.ElideMiddle }
-                                            }
-                                            Ic { visible: file.on; name: "check"; color: Theme.accent }
-                                            Ic { visible: !file.on; name: "plus"; color: Theme.muted }
+                            }
+                        }
+                    }
+                }
+
+                // The dock in edit mode: same place as the real one, which hides while this is open.
+                Frost {
+                    anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 16 }
+                    implicitWidth: pinRow.implicitWidth + 20
+                    implicitHeight: 80
+                    radius: 26
+                    MouseArea { anchors.fill: parent; onClicked: win.selected = -1 }
+                    RowLayout {
+                        id: pinRow
+                        anchors.centerIn: parent
+                        spacing: 8
+                        Rectangle {
+                            implicitWidth: 60; implicitHeight: 60; radius: 16
+                            color: Theme.accent
+                            activeFocusOnTab: true
+                            border.width: activeFocus ? 2 : 0; border.color: Theme.ink
+                            Accessible.role: Accessible.Button
+                            Accessible.name: Tr.t("Close panel")
+                            Keys.onSpacePressed: Ui.dockEditor = false
+                            Keys.onReturnPressed: Ui.dockEditor = false
+                            Ic { anchors.centerIn: parent; name: "gear"; size: 26; color: Theme.accentInk }
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Ui.dockEditor = false }
+                        }
+                        Rectangle { implicitWidth: 1; implicitHeight: 36; color: Theme.line; Layout.leftMargin: 4; Layout.rightMargin: 4 }
+                        Tx { visible: Pins.list.length === 0; text: Tr.t("The dock is empty. Add apps from the list."); dim: true; Layout.rightMargin: 12 }
+                        Repeater {
+                            model: Pins.list
+                            Rectangle {
+                                id: pinned
+                                required property var modelData
+                                required property int index
+                                readonly property bool sel: win.selected === index
+                                implicitWidth: 60; implicitHeight: 60; radius: 16
+                                color: sel ? Qt.rgba(140 / 255, 200 / 255, 245 / 255, 0.25) : pm.containsMouse ? Qt.rgba(1, 1, 1, 0.2) : Theme.raised
+                                border.width: sel || activeFocus ? 2 : 0
+                                border.color: activeFocus ? Theme.ink : Theme.accent
+                                activeFocusOnTab: true
+                                Accessible.role: Accessible.Button
+                                Accessible.name: Tr.t(modelData.label)
+                                Keys.onSpacePressed: win.selected = sel ? -1 : index
+                                Keys.onReturnPressed: win.selected = sel ? -1 : index
+                                PinIcon { anchors.centerIn: parent; pin: pinned.modelData }
+                                MouseArea { id: pm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: win.selected = pinned.sel ? -1 : pinned.index }
+                                Rectangle {
+                                    visible: pinned.sel
+                                    anchors { bottom: parent.top; bottomMargin: 14; horizontalCenter: parent.horizontalCenter }
+                                    implicitWidth: actions.implicitWidth + 12; implicitHeight: actions.implicitHeight + 12
+                                    radius: 16
+                                    color: Qt.rgba(10 / 255, 16 / 255, 24 / 255, 0.92)
+                                    border.width: 1; border.color: Theme.lineStrong
+                                    RowLayout {
+                                        id: actions
+                                        anchors.centerIn: parent
+                                        spacing: 4
+                                        Btn {
+                                            variant: "quiet"; icon: "left"; implicitHeight: 44
+                                            a11y: Tr.t("Move left"); enabledB: pinned.index > 0
+                                            onClicked: { win.selected = pinned.index - 1; Pins.move(pinned.index, -1) }
+                                        }
+                                        Btn {
+                                            variant: "quiet"; icon: "x"; iconColor: Theme.danger; implicitHeight: 44
+                                            a11y: Tr.t("Remove %1").arg(Tr.t(pinned.modelData.label))
+                                            onClicked: { const i = pinned.index; win.selected = -1; Pins.remove(i) }
+                                        }
+                                        Btn {
+                                            variant: "quiet"; icon: "right"; implicitHeight: 44
+                                            a11y: Tr.t("Move right"); enabledB: pinned.index < Pins.list.length - 1
+                                            onClicked: { win.selected = pinned.index + 1; Pins.move(pinned.index, 1) }
                                         }
                                     }
-                                    Item { implicitHeight: 8 }
                                 }
                             }
                         }

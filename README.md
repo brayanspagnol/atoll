@@ -18,13 +18,13 @@ wallpaper, and windows keep the rest of the screen.
 ## Features
 
 - **Island:** workspaces, clock, media and status in a floating pill at the top.
-- **Dock:** hides at the bottom edge, so windows get the full height. Hover the edge or press `Super+Z`. The gear chooses which apps it shows: from the installed list, or any program found in your files.
+- **Dock:** hides at the bottom edge, so windows get the full height. Hover the edge or press `Super+Z`. The gear opens a full-screen launchpad to choose its apps, from the installed list or any program in your files, and to reorder them.
 - **Control center:** sound, internet, Bluetooth, performance, calendar, notifications, settings and power.
 - **Music card:** cover art, colors taken from the album, seek bar, repeat, shuffle, likes, volume and output switching.
 - **Notifications and volume:** glass cards that drop from under the island.
 - **Search:** apps and system screens in one box. Type "wifi" or "volume".
 - **Languages:** English, Português (Brasil), Español, Français, Deutsch, Русский and 简体中文. It follows your system language, or pick one in Settings.
-- **Lock screen:** large clock, the current song, battery and your picture, over your wallpaper. It also greets you when waking from suspend, with no flash of the desktop.
+- **Lock screen:** a large clock, the current song and your profile's name and picture over your sharp wallpaper. It also greets you when waking from suspend, with no flash of the desktop.
 - **Profiles:** each one keeps its own name, picture, language, accent, wallpaper, dock and idle times. Create and switch them in Settings.
 - **Public holidays:** for over 200 countries in the calendar, or none. Choose in Settings.
 - **Idle and display:** idle timers per power source, night light and monitor brightness.
@@ -50,9 +50,9 @@ Personal data such as network and device names is covered with solid blocks.
 |---|---|
 | ![Internet](docs/screenshots/rede.webp) | ![Bluetooth](docs/screenshots/bt.webp) |
 
-| Customize the dock | Search |
-|---|---|
-| ![Choosing the apps on the dock](docs/screenshots/dock-editor.webp) | ![Search](docs/screenshots/launcher.webp) |
+![Choosing the apps on the dock](docs/screenshots/dock-editor.webp)
+
+![Search](docs/screenshots/launcher.webp)
 
 | Settings | Power |
 |---|---|

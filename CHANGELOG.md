@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-11-05
+
+### Changed
+
+- New lock screen: a large clock at the bottom left over a sharp wallpaper, with the profile's name and picture beside the password field.
+- Customizing the dock now happens in a full-screen launchpad with large icons, with the dock in edit mode at the bottom.
+
 ## [1.4.0] - 2026-11-05
 
 ### Added
@@ -76,7 +83,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/brayanspagnol/atoll/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/brayanspagnol/atoll/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/brayanspagnol/atoll/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/brayanspagnol/atoll/compare/v1.1.0...v1.2.0
