@@ -30,6 +30,7 @@ Os prints estão no [README em inglês](README.md#screenshots).
 - **Hyprland com configuração em Lua.** Desenvolvido na 0.56.2. Versões antigas, sem `hl.*`, não funcionam.
 - **Quickshell** 0.3 ou mais novo.
 - NetworkManager, BlueZ e PipeWire com WirePlumber para as telas correspondentes.
+- Fontes Noto (`noto-fonts`, `noto-fonts-cjk`) para exibir russo e chinês.
 
 O Atoll é desenvolvido e testado em uma máquina: Arch Linux com GPU Intel. Outras distribuições e GPUs podem
 funcionar, e relatos são bem-vindos.

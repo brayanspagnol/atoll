@@ -60,6 +60,7 @@ Personal data such as network and device names is covered with solid blocks.
 - **Hyprland with Lua configuration.** Developed on 0.56.2. Older versions without `hl.*` will not work.
 - **Quickshell** 0.3 or newer.
 - NetworkManager, BlueZ and PipeWire with WirePlumber for the matching screens.
+- Noto fonts (`noto-fonts`, `noto-fonts-cjk`) to display Russian and Chinese.
 
 Atoll is developed and tested on one machine: Arch Linux with an Intel GPU. Other distributions and
 GPUs may work, and reports are welcome.
