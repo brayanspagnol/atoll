@@ -21,15 +21,15 @@ Os prints estão no [README em inglês](README.md#screenshots).
 - **Cartão de música:** capa, cores tiradas do álbum, barra de tempo, repetir, aleatório, curtidas, volume e troca de saída.
 - **Avisos e volume:** cartões de vidro que descem de baixo da ilha.
 - **Visão geral:** faixa com as áreas de trabalho acima das janelas da área atual, com prévia ao vivo. Arraste uma janela para outra área. `Super+O`.
-- **Busca:** aplicativos, telas do sistema, histórico da área de transferência, emoji e prints no mesmo lugar. Digite "wifi" ou "volume".
+- **Busca:** aplicativos, telas do sistema, histórico da área de transferência, emoji (buscado no seu idioma) e prints no mesmo lugar. Digite "wifi" ou "volume".
 - **Idiomas:** English, Português (Brasil), Español, Français, Deutsch, Русский e 简体中文. Segue o idioma do sistema, ou escolha em Ajustes.
 - **Tela de bloqueio:** relógio grande, música atual, nome e foto do perfil, sobre o seu papel de parede nítido. Ela também recebe você ao voltar da suspensão, sem o desktop piscar antes.
-- **Perfis:** cada um guarda nome, foto e papel de parede (de galerias em que você adiciona e remove, com um papel de parede por tela se quiser), idioma, cor, dock e tempos de ociosidade. Crie e troque em Ajustes.
+- **Perfis:** cada um guarda nome, foto e papel de parede (de galerias em que você adiciona e remove, com um papel de parede por tela se quiser, que a tela de bloqueio também segue), idioma, cor, dock e tempos de ociosidade. Crie e troque em Ajustes.
 - **Feriados:** de mais de 200 países no calendário, ou nenhum. Escolha em Ajustes.
 - **Monitores:** arraste as telas para posicionar e ajuste resolução, taxa, escala, rotação, espelhamento, VRR, brilho, áreas de trabalho e o que fechar a tampa faz. Uma disposição nova volta sozinha em 15 segundos se você não mantiver.
 - **Ociosidade e energia:** tempos de bloqueio, desligar a tela e suspender para tomada e bateria, cada um com a opção Nunca, modos de energia e luz noturna com horário próprio.
 - **Teclado e mouse:** layouts, velocidade do ponteiro, rolagem natural e opções do touchpad em Ajustes.
-- **Internet:** Wi-Fi com redes ocultas e corporativas (802.1X), mais arquivos WireGuard e OpenVPN que você importa.
+- **Internet:** Wi-Fi com redes ocultas e corporativas (802.1X: PEAP, TTLS e TLS com certificado), mais arquivos WireGuard e OpenVPN que você importa.
 - **Sobre:** versão, atualização com um clique, links do projeto e dados do sistema para relatar bugs.
 - **Resistente:** se o shell cair, ele volta sozinho. Suas janelas continuam abertas.
 
@@ -142,6 +142,7 @@ git pull && ./install.sh   # atualiza; ajustes, eventos e curtidas ficam. Sobre 
 - **Eventos do calendário são locais.** Não há sincronização com Google Agenda ou CalDAV.
 - **Feriados são só nacionais,** com nome em inglês ou no idioma do país, e precisam de conexão na primeira vez.
 - **Eventos e curtidas são compartilhados** entre os perfis.
+- **Botões dos avisos** só funcionam enquanto o aviso está ativo. Depois de reiniciar o shell, um aviso do histórico oferece abrir o app.
 - **Parear Bluetooth** funciona com aparelhos que não pedem código. Para teclados que mostram um, use `bluetoothctl`.
 - **Blur** usa a GPU. Se ficar lento, desligue em `user.lua`:
   `hl.config({ decoration = { blur = { enabled = false } } })`.

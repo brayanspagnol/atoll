@@ -6,6 +6,26 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-11-05
+
+### Added
+
+- A clipboard icon on the island opens the clipboard history.
+- Certificate-based enterprise Wi-Fi (EAP-TLS), with client certificate, private key and an optional CA.
+- Emoji search in the interface language, from Unicode CLDR annotations, ignoring accents.
+- The lock screen follows the wallpaper chosen for each screen.
+- Restored notifications offer to open their app.
+
+### Changed
+
+- The workspace overview lays out overlapping windows in rows of the same height.
+- Shuffle shows as unavailable when the player does not support it.
+
+### Fixed
+
+- A profile missing a newer setting gets its default instead of the previous profile's value.
+- Saving a network fails cleanly when NetworkManager rejects a value, such as an invalid CA certificate.
+
 ## [1.10.1] - 2026-11-05
 
 ### Changed
@@ -175,7 +195,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.10.1...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.11.0...HEAD
+[1.11.0]: https://github.com/brayanspagnol/atoll/compare/v1.10.1...v1.11.0
 [1.10.1]: https://github.com/brayanspagnol/atoll/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/brayanspagnol/atoll/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/brayanspagnol/atoll/compare/v1.8.0...v1.9.0

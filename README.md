@@ -23,15 +23,15 @@ wallpaper, and windows keep the rest of the screen.
 - **Music card:** cover art, colors taken from the album, seek bar, repeat, shuffle, likes, volume and output switching.
 - **Notifications and volume:** glass cards that drop from under the island.
 - **Overview:** a strip of workspaces above the current one's windows, with live previews. Drag a window to another workspace. `Super+O`.
-- **Search:** apps, system screens, clipboard history, emoji and screenshots in one place. Type "wifi" or "volume".
+- **Search:** apps, system screens, clipboard history, emoji (searched in your language) and screenshots in one place. Type "wifi" or "volume".
 - **Languages:** English, Português (Brasil), Español, Français, Deutsch, Русский and 简体中文. It follows your system language, or pick one in Settings.
 - **Lock screen:** a large clock, the current song and your profile's name and picture over your sharp wallpaper. It also greets you when waking from suspend, with no flash of the desktop.
-- **Profiles:** each one keeps its own name, picture and wallpaper (from galleries you add to and remove from, with a wallpaper per screen if you like), language, accent, dock and idle times. Create and switch them in Settings.
+- **Profiles:** each one keeps its own name, picture and wallpaper (from galleries you add to and remove from, with a wallpaper per screen if you like, which the lock screen follows too), language, accent, dock and idle times. Create and switch them in Settings.
 - **Public holidays:** for over 200 countries in the calendar, or none. Choose in Settings.
 - **Monitors:** drag your screens into place, and set resolution, refresh rate, scale, rotation, mirroring, VRR, brightness, workspaces and what closing the lid does. A new layout goes back by itself in 15 seconds unless you keep it.
 - **Idle and power:** lock, screen off and suspend times per power source, each with a Never option, power modes, and a night light with its own schedule.
 - **Keyboard and mouse:** layouts, pointer speed, natural scrolling and touchpad options in Settings.
-- **Internet:** Wi-Fi with hidden and enterprise (802.1X) networks, plus WireGuard and OpenVPN files you import.
+- **Internet:** Wi-Fi with hidden and enterprise (802.1X: PEAP, TTLS and certificate-based TLS) networks, plus WireGuard and OpenVPN files you import.
 - **About:** version, one-click update, project links and system details to paste in a bug report.
 - **Resilient by design:** if the shell crashes, it restarts by itself. Your windows stay open.
 
@@ -181,6 +181,7 @@ git pull && ./install.sh   # update; settings, events and likes stay. About can 
 - **Calendar events are local.** There is no Google Calendar or CalDAV sync.
 - **Holidays are nationwide only,** with names in English or in the country's language, and they need a connection the first time.
 - **Events and likes are shared** by all profiles.
+- **Notification buttons** only work while the notification is live. After a shell restart, a card from history offers to open its app instead.
 - **Bluetooth pairing** works for devices that need no code. For keyboards that show one, use `bluetoothctl`.
 - **Blur** uses the GPU. If it feels slow, disable it in `user.lua`:
   `hl.config({ decoration = { blur = { enabled = false } } })`.
