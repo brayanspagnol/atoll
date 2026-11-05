@@ -114,7 +114,7 @@ PanelWindow {
                 }
                 Stat {
                     icon: "clipboard"; a11y: Tr.t("Clipboard history")
-                    onActivated: Ui.openLauncher("clip")
+                    onActivated: Ui.clipboard ? Ui.clipboard = false : Ui.openClipboard()
                 }
                 Stat {
                     icon: Cfg.v.dnd ? "bellOff" : "avisos"
