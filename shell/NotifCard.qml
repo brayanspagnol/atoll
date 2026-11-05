@@ -9,6 +9,7 @@ Rectangle {
     id: c
     required property var modelData
     readonly property bool critical: modelData.urgency === NotificationUrgency.Critical
+    readonly property var app: modelData.restored ? Notifs.appOf(modelData) : null
     implicitHeight: lay.implicitHeight + 24
     radius: 18
     color: Theme.raised
@@ -36,11 +37,13 @@ Rectangle {
             Tx { text: c.modelData.summary; strong: true; Layout.fillWidth: true }
             Tx { text: c.modelData.body; visible: !!text; dim: true; wrapMode: Text.Wrap; maximumLineCount: 4; Layout.fillWidth: true }
             RowLayout {
-                visible: c.modelData.actions.length > 0; Layout.topMargin: 6; spacing: 6
+                visible: c.modelData.actions.length > 0 || !!c.app; Layout.topMargin: 6; spacing: 6
                 Repeater {
                     model: c.modelData.actions
                     Btn { required property var modelData; text: modelData.text; onClicked: modelData.invoke() }
                 }
+                // The panel would cover the app, so it closes; the notification stays.
+                Btn { visible: !!c.app; text: Tr.t("Open app"); onClicked: { c.app.execute(); Ui.open = false } }
             }
         }
         Btn { Layout.alignment: Qt.AlignTop; text: Tr.t("Dismiss"); onClicked: c.modelData.dismiss() }

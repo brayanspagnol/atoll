@@ -16,6 +16,11 @@ Singleton {
         if (img.startsWith("image://icon/")) return Quickshell.iconPath(img.slice(13), true)
         return img || (n.appIcon ? Quickshell.iconPath(n.appIcon, true) : "")
     }
+    // The app behind a restored notification, for its "Open app" button. NoDisplay entries are skipped, as in the launcher.
+    // Called from the card, not from restore: desktop entries are still loading when the history is.
+    function appOf(n) {
+        return [n.desktopEntry, n.appName].map(id => id ? DesktopEntries.heuristicLookup(id) : null).find(e => e && !e.noDisplay) ?? null
+    }
     function drop(n) { toasts = toasts.filter(t => t !== n) }
     function remove(n) { all = all.filter(t => t !== n); saver.restart() }
     function clear() { all.slice().forEach(n => n.dismiss()) }
@@ -23,6 +28,7 @@ Singleton {
     function restore(saved) {
         const t = {
             id: saved.id, time: saved.time, appName: saved.appName, summary: saved.summary, body: saved.body, appIcon: saved.appIcon, urgency: saved.urgency, expireTimeout: -1,
+            desktopEntry: saved.desktopEntry ?? "", restored: true, // older history files have no desktopEntry
             // Generated images only exist in this run; icon names and files last.
             image: /^(image:\/\/icon\/|file:|\/)/.test(saved.image || "") ? saved.image : "",
             actions: [], dismiss: null
@@ -32,6 +38,8 @@ Singleton {
         return t
     }
     function attach(t, n) {
+        t.desktopEntry = n.desktopEntry
+        t.restored = false
         t.actions = n.actions.map(a => ({ text: a.text, invoke: () => a.invoke() }))
         t.dismiss = () => n.dismiss()
         n.closed.connect(() => { root.drop(t); root.remove(t) })
@@ -51,7 +59,7 @@ Singleton {
         id: saver
         interval: 500
         // Messages are private, so their folder is for this user only: see Component.onCompleted.
-        onTriggered: file.setText(JSON.stringify(root.all.map(t => ({ id: t.id, time: t.time, appName: t.appName, summary: t.summary, body: t.body, image: t.image, appIcon: t.appIcon, urgency: t.urgency }))))
+        onTriggered: file.setText(JSON.stringify(root.all.map(t => ({ id: t.id, time: t.time, appName: t.appName, summary: t.summary, body: t.body, image: t.image, appIcon: t.appIcon, urgency: t.urgency, desktopEntry: t.desktopEntry }))))
     }
     Component.onCompleted: {
         Quickshell.execDetached(["sh", "-c", 'mkdir -p "$1" && chmod 700 "$1"', "sh", Quickshell.env("HOME") + "/.local/state/atoll"])
@@ -70,7 +78,7 @@ Singleton {
             n.tracked = true
             if (n.lastGeneration) { // carried over a shell reload: already shown once
                 const same = root.all.find(t => t.id === n.id && t.summary === n.summary)
-                if (same) root.attach(same, n)
+                if (same) { root.attach(same, n); root.all = root.all.slice() } // cards hold copies, so they must be rebuilt
                 return
             }
             // A copy, because the sheet keeps drawing the card during its closing animation, after n is gone.

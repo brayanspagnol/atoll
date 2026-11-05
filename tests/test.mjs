@@ -127,6 +127,68 @@ assert.equal(profiles("forget", "wallpaper", wall2).status, 0)
 assert.deepEqual(JSON.parse(fs.readFileSync(home + "/.config/atoll/profiles/a.json")).wallpapers, { "DP-2": "/keep" })
 fs.rmSync(home, { recursive: true })
 
+// Settings and restored notifications, on the real QML in a throwaway offscreen instance with its own HOME and D-Bus session.
+const haveQs = ["qs", "dbus-run-session", "notify-send"].every(tool => spawnSync("sh", ["-c", `command -v ${tool}`]).status === 0)
+const runQml = (dir, shellQml, files = {}) => {
+    fs.writeFileSync(dir + "/shell.qml", shellQml)
+    for (const [name, text] of Object.entries(files)) fs.writeFileSync(dir + "/" + name, text)
+    const { WAYLAND_DISPLAY, DISPLAY, HYPRLAND_INSTANCE_SIGNATURE, ...env } = process.env
+    const run = spawnSync("dbus-run-session", ["--", "qs", "-p", dir + "/shell.qml"], { encoding: "utf8", timeout: 30000, env: { ...env, QT_QPA_PLATFORM: "offscreen", HOME: dir + "/home", XDG_DATA_HOME: dir + "/home/share", XDG_CONFIG_HOME: dir + "/home/config", XDG_STATE_HOME: dir + "/home/state", XDG_DATA_DIRS: dir + "/data" } })
+    return Object.fromEntries([...(run.stdout + run.stderr).matchAll(/RESULT (\w+) (.*)/g)].map(m => [m[1], JSON.parse(m[2])]))
+}
+if (haveQs) {
+    // "Open app" appears only on restored cards with an app to open, and old history files still load.
+    const root = fs.mkdtempSync("/tmp/atoll-test-")
+    fs.cpSync(new URL("../shell/", import.meta.url), root, { recursive: true })
+    const state = root + "/home/.local/state/atoll"
+    fs.mkdirSync(state, { recursive: true }); fs.mkdirSync(root + "/data/applications", { recursive: true })
+    const entry = (id, hidden) => fs.writeFileSync(`${root}/data/applications/${id}.desktop`, `[Desktop Entry]\nType=Application\nName=${id}\nExec=touch ${root}/launched-${id}\nNoDisplay=${hidden}\n`)
+    entry("fake-app", false); entry("hidden-app", true)
+    const saved = (summary, appName, desktopEntry) => ({ id: 1, time: 1, appName, summary, body: "", image: "", appIcon: "", urgency: 1, ...(desktopEntry ? { desktopEntry } : {}) })
+    fs.writeFileSync(state + "/notifications.json", JSON.stringify([saved("old", "fake-app"), saved("new", "other", "fake-app"), saved("none", "nothing-like-this"), saved("hidden", "nothing-like-this", "hidden-app")]))
+    const cards = runQml(root, `import QtQuick
+import Quickshell
+import Quickshell.Io
+ShellRoot {
+    property int step: 0
+    Item { Repeater { id: rep; model: step > 0 ? Notifs.all : []; NotifCard { } } }
+    function button(item) {
+        for (const c of item.children) {
+            if (c.text === "Open app") return c
+            const inner = button(c)
+            if (inner) return inner
+        }
+        return null
+    }
+    Process { id: send; command: ["notify-send", "-a", "fake-app", "-h", "string:desktop-entry:fake-app", "-A", "go=Go", "-t", "0", "live"] }
+    Timer {
+        running: true; repeat: true; interval: 500
+        onTriggered: {
+            step++
+            if (step === 1) send.running = true
+            if (step === 4) {
+                const shown = {}
+                for (let i = 0; i < rep.count; i++) shown[rep.itemAt(i).modelData.summary] = { button: button(rep.itemAt(i)).visible, actions: rep.itemAt(i).modelData.actions.length }
+                console.log("RESULT cards " + JSON.stringify(shown))
+                button(rep.itemAt(0)).clicked()
+                console.log("RESULT kept " + Notifs.all.length)
+            }
+            if (step === 7) Qt.quit()
+        }
+    }
+}
+`, { "Ui.qml": `pragma Singleton\nimport Quickshell\nSingleton { property bool open: true; property bool mediaOpen: false; property var sheetScreen; property var screen }\n` })
+    assert.deepEqual(cards.cards, {
+        old: { button: true, actions: 0 }, new: { button: true, actions: 0 }, none: { button: false, actions: 0 }, hidden: { button: false, actions: 0 },
+        live: { button: false, actions: 1 }
+    })
+    assert.equal(cards.kept, 5)
+    assert(fs.existsSync(root + "/launched-fake-app"))
+    const history = JSON.parse(fs.readFileSync(state + "/notifications.json"))
+    assert.equal(history.find(n => n.summary === "live").desktopEntry, "fake-app")
+    fs.rmSync(root, { recursive: true })
+} else console.log("skipped the QML checks: they need qs, dbus-run-session and notify-send")
+
 // Every string the interface asks for must exist in every language, with the same placeholders.
 const shell = new URL("../shell/", import.meta.url)
 const used = new Set()
