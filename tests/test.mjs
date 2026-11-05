@@ -6,7 +6,7 @@ const load = (file, names) => {
     return ctx.x
 }
 const C = load("cal.js", "key,addDays,easter,holidays,monthGrid,weekOf,isoWeek,occurs,on,upcoming,validTime")
-const P = load("parse.js", "cpu,mem,net,top,bytes")
+const P = load("parse.js", "cpu,mem,net,top,bytes,shQuote")
 assert.equal(C.easter(2026), "2026-04-05"); assert.equal(C.easter(2027), "2027-03-28")
 const h = C.holidays(2026)
 assert.equal(h["2026-02-17"], "Carnival"); assert.equal(h["2026-04-03"], "Good Friday"); assert.equal(h["2026-06-04"], "Corpus Christi"); assert.equal(h["2026-11-20"], "Black Awareness Day")
@@ -29,6 +29,8 @@ const mm = P.mem("MemTotal: 1000 kB\nMemAvailable: 400 kB\nSwapTotal: 100 kB\nSw
 const nn = P.net("h\nh\n lo: 9 0 0 0 0 0 0 0 9 0\n wlp0: 100 1 0 0 0 0 0 0 200 1 0 0 0 0 0 0\ndocker0: 7 0 0 0 0 0 0 0 7\n"); assert.equal(nn.rx, 100); assert.equal(nn.tx, 200)
 const t = P.top("    PID USER PR NI VIRT RES SHR S %CPU %MEM TIME+ COMMAND\n 1 a 20 0 1 1 1 S 99.0 1.0 0:00.01 old\n\ntop\n    PID USER PR NI VIRT RES SHR S %CPU %MEM TIME+ COMMAND\n 22 bob 20 0 1 1 1 R 12.5 3.2 0:01.00 Web Content\n", 5)
 assert.equal(t.length, 1); assert.equal(t[0].name, "Web Content"); assert.equal(t[0].cpu, 12.5); assert.equal(P.top("nada", 5).length, 0)
+assert.equal(P.shQuote("/opt/my app"), "'/opt/my app'")
+assert.equal(P.shQuote("it's"), "'it'\\''s'")
 assert.equal(P.bytes(1536), "1.5 KB"); assert.equal(P.bytes(500), "500 B")
 // Every string the interface asks for must exist in every language, with the same placeholders.
 const shell = new URL("../shell/", import.meta.url)

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Prints the name, icon and command of a .desktop file, one per line.
+field() { grep -m1 "^$1=" "$file" | cut -d= -f2-; }
+file="$1"
+field Name
+field Icon
+# Field codes such as %U are arguments the dock does not pass.
+field Exec | sed -E 's/ *%[a-zA-Z]//g'

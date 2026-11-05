@@ -18,7 +18,7 @@ wallpaper, and windows keep the rest of the screen.
 ## Features
 
 - **Island:** workspaces, clock, media and status in a floating pill at the top.
-- **Dock:** hides at the bottom edge, so windows get the full height. Hover the edge or press `Super+Z`.
+- **Dock:** hides at the bottom edge, so windows get the full height. Hover the edge or press `Super+Z`. The gear chooses which apps it shows: from the installed list, or any program found in your files.
 - **Control center:** sound, internet, Bluetooth, performance, calendar, notifications, settings and power.
 - **Music card:** cover art, colors taken from the album, seek bar, repeat, shuffle, likes, volume and output switching.
 - **Notifications and volume:** glass cards that drop from under the island.
@@ -48,13 +48,15 @@ Personal data such as network and device names is covered with solid blocks.
 |---|---|
 | ![Internet](docs/screenshots/rede.webp) | ![Bluetooth](docs/screenshots/bt.webp) |
 
+| Customize the dock | Search |
+|---|---|
+| ![Choosing the apps on the dock](docs/screenshots/dock-editor.webp) | ![Search](docs/screenshots/launcher.webp) |
+
 | Settings | Power |
 |---|---|
 | ![Settings](docs/screenshots/ajustes.webp) | ![Power](docs/screenshots/energia.webp) |
 
-| Notifications and volume | Search |
-|---|---|
-| ![Notifications and volume](docs/screenshots/notify.webp) | ![Search](docs/screenshots/launcher.webp) |
+![Notifications and volume](docs/screenshots/notify.webp)
 
 ## Requirements
 
@@ -134,7 +136,7 @@ hl.bind("SUPER + Return", hl.dsp.exec_cmd("foot"))
 
 | Key | Meaning |
 |---|---|
-| `dock` | Pinned apps: `label`, `icon` (a key from [`Icons.qml`](shell/Icons.qml)), `ids` (lowercase Wayland app ids) and `cmd` |
+| `dock` | Pinned apps, normally edited with the gear on the dock. Each has a `label`, `ids` (lowercase Wayland app ids), an icon (`icon`, a key from [`Icons.qml`](shell/Icons.qml), or `appIcon`, an icon theme name) and what to start (`desktopId` or `cmd`) |
 | `language` | `auto`, or a language code such as `en`, `pt-BR`, `es`, `fr`, `de`, `ru` or `zh-CN` |
 | `holidays` | Brazilian national holidays in the calendar: `on`, `off`, or `auto` for Brazilian locales |
 | `accent` | `gelo`, `areia`, `hortela` or `coral` |

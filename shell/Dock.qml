@@ -18,7 +18,7 @@ PanelWindow {
     mask: Region { item: win.open ? pillArea : edge }
 
     readonly property bool peek: Ui.dockPeek && Ui.screen === modelData
-    readonly property bool wanted: hover.hovered || peek
+    readonly property bool wanted: hover.hovered || peek || Ui.dockEditor
     property bool open: false
     onWantedChanged: {
         if (wanted) { hideTimer.stop(); open = true }
@@ -30,7 +30,7 @@ PanelWindow {
     readonly property var pinned: Cfg.v.dock
     readonly property var windows: ToplevelManager.toplevels.values
     readonly property var extras: {
-        const known = [].concat(...pinned.map(p => p.ids)), seen = new Set(), out = []
+        const known = [].concat(...pinned.map(p => p.ids ?? [])), seen = new Set(), out = []
         for (const t of windows) {
             const id = t.appId.toLowerCase()
             if (!known.includes(id) && !seen.has(id)) { seen.add(id); out.push(t) }
@@ -39,8 +39,8 @@ PanelWindow {
     }
     function windowsOf(ids) { return windows.filter(t => ids.includes(t.appId.toLowerCase())) }
     // Repeated clicks walk through an app's windows.
-    function focusOrLaunch(ws, cmd) {
-        if (!ws.length) return Ui.sh(cmd)
+    function focusOrLaunch(ws, pin) {
+        if (!ws.length) return Pins.launch(pin)
         const i = ws.findIndex(t => t.activated)
         ws[(i + 1) % ws.length].activate()
     }
@@ -96,6 +96,11 @@ PanelWindow {
                 anchors.centerIn: parent
                 spacing: 8
                 Tile {
+                    label: Tr.t("Customize dock")
+                    onClicked: Ui.editDock()
+                    Ic { anchors.centerIn: parent; anchors.verticalCenterOffset: 3; name: "gear"; size: 26 }
+                }
+                Tile {
                     label: Tr.t("Apps and commands"); color: Theme.accent
                     onClicked: { Ui.open = false; Ui.launcher = !Ui.launcher }
                     Ic { anchors.centerIn: parent; anchors.verticalCenterOffset: 3; name: "search"; size: 26; color: Theme.accentInk }
@@ -105,12 +110,12 @@ PanelWindow {
                     Tile {
                         id: pt
                         required property var modelData
-                        readonly property var ws: win.windowsOf(modelData.ids)
+                        readonly property var ws: win.windowsOf(modelData.ids ?? [])
                         label: Tr.t(modelData.label)
                         running: ws.length > 0
                         active: ws.some(t => t.activated)
-                        onClicked: win.focusOrLaunch(ws, modelData.cmd)
-                        Ic { anchors.centerIn: parent; name: pt.modelData.icon; size: 26 }
+                        onClicked: win.focusOrLaunch(ws, modelData)
+                        PinIcon { anchors.centerIn: parent; pin: pt.modelData }
                     }
                 }
                 Rectangle { visible: win.extras.length > 0; implicitWidth: 1; implicitHeight: 36; color: Theme.line }
@@ -125,7 +130,7 @@ PanelWindow {
                         label: entry?.name ?? modelData.title
                         running: true
                         active: ws.some(t => t.activated)
-                        onClicked: win.focusOrLaunch(ws, "")
+                        onClicked: win.focusOrLaunch(ws, {})
                         IconImage { visible: !!et.entry?.icon; anchors.centerIn: parent; implicitSize: 26; source: et.entry?.icon ? Quickshell.iconPath(et.entry.icon, true) : "" }
                         Tx { visible: !et.entry?.icon; anchors.centerIn: parent; text: et.appId.charAt(0).toUpperCase(); size: 20; strong: true }
                     }

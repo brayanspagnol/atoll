@@ -10,6 +10,7 @@ Singleton {
     property string page: "som"
     property bool launcher: false
     property bool dockPeek: false
+    property bool dockEditor: false
     property bool mediaOpen: false
     property var sheetScreen: null
     property var sheetIsland: null
@@ -32,7 +33,8 @@ Singleton {
     ]
     readonly property var screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0] ?? null
 
-    function show(p) { page = p; launcher = false; mediaOpen = false; open = true }
+    function show(p) { page = p; launcher = false; mediaOpen = false; dockEditor = false; open = true }
+    function editDock() { open = false; launcher = false; mediaOpen = false; dockEditor = true }
     function toggle(p) { if (open && (!p || page === p)) open = false; else show(p || page) }
     function sh(cmd) { Quickshell.execDetached(["sh", "-c", cmd]) }
 
@@ -41,6 +43,7 @@ Singleton {
         function toggle(page: string): void { ui.toggle(page) }
         function launcher(): void { ui.open = false; ui.launcher = !ui.launcher }
         function dock(): void { ui.toggleDock() }
+        function editDock(): void { ui.editDock() }
         function close(): void { ui.open = false; ui.launcher = false }
     }
 }

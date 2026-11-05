@@ -16,7 +16,7 @@ Os prints estão no [README em inglês](README.md#screenshots).
 ## O que tem
 
 - **Ilha:** áreas de trabalho, relógio, música e status em uma pílula flutuante no topo.
-- **Dock:** se esconde na borda inferior, então as janelas ganham a altura toda. Encoste o mouse na borda ou aperte `Super+Z`.
+- **Dock:** se esconde na borda inferior, então as janelas ganham a altura toda. Encoste o mouse na borda ou aperte `Super+Z`. A engrenagem escolhe quais apps aparecem: da lista de instalados, ou qualquer programa achado nos seus arquivos.
 - **Central:** som, internet, Bluetooth, desempenho, calendário, avisos, ajustes e energia.
 - **Cartão de música:** capa, cores tiradas do álbum, barra de tempo, repetir, aleatório, curtidas, volume e troca de saída.
 - **Avisos e volume:** cartões de vidro que descem de baixo da ilha.
@@ -104,7 +104,7 @@ hl.bind("SUPER + Return", hl.dsp.exec_cmd("foot"))
 
 | Chave | Significado |
 |---|---|
-| `dock` | Apps fixados: `label`, `icon` (uma chave de [`Icons.qml`](shell/Icons.qml)), `ids` (app ids do Wayland em minúsculas) e `cmd` |
+| `dock` | Apps fixados, normalmente editados pela engrenagem do dock. Cada um tem `label`, `ids` (app ids do Wayland em minúsculas), um ícone (`icon`, chave de [`Icons.qml`](shell/Icons.qml), ou `appIcon`, nome no tema de ícones) e o que iniciar (`desktopId` ou `cmd`) |
 | `language` | `auto`, ou um código de idioma como `en`, `pt-BR`, `es`, `fr`, `de`, `ru` ou `zh-CN` |
 | `holidays` | Feriados do Brasil no calendário: `on`, `off`, ou `auto` para idioma do sistema brasileiro |
 | `accent` | `gelo`, `areia`, `hortela` ou `coral` |

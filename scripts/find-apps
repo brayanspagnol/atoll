@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Searches for programs by name: executables, AppImages and .desktop files. Prints up to 30 paths, shortest first.
+query="${1//[\*\?\[\]\\]/}"
+((${#query} >= 2)) || exit 0
+
+match() {
+    "$@" -type f -iname "*$query*" \( -perm /111 -o -iname '*.appimage' -o -iname '*.desktop' \) -print 2>/dev/null
+}
+
+{
+    # Fast, likely places first, so a slow home folder cannot hide them.
+    match find /usr/bin /usr/local/bin /opt "$HOME/.local/bin" "$HOME/.local/share/applications"
+    # The home folder can be huge: limit depth and time, and skip hidden and build folders.
+    match timeout 4 find "$HOME" -maxdepth 6 \
+        \( -name '.*' -o -name node_modules -o -name target -o -name __pycache__ -o -name venv \) -prune -o
+} | awk '!seen[$0]++ { print length($0) "\t" $0 }' | sort -n | cut -f2- | head -30

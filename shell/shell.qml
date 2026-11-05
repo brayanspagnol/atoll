@@ -9,6 +9,7 @@ ShellRoot {
     Variants { model: Quickshell.screens; Dock {} }
     Central {}
     Launcher {}
+    DockEditor {}
     Variants { model: Quickshell.screens; Sheet {} }
     Component.onCompleted: { Theme.accent; Notifs.all; Events.list; Sys.cpu; Osd.shown; Night.apply() }
 }

@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-05
+
+### Added
+
+- A gear on the dock opens a panel to choose, order and remove the apps it shows.
+- The panel lists installed apps and also searches your files for executables, AppImages and `.desktop` files.
+- Pinned apps show their own icon, or their first letter when they have none.
+
 ## [1.2.0] - 2026-11-05
 
 ### Added
@@ -51,7 +59,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/brayanspagnol/atoll/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/brayanspagnol/atoll/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/brayanspagnol/atoll/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/brayanspagnol/atoll/releases/tag/v1.0.0

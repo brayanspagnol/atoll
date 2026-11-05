@@ -32,6 +32,9 @@ function top(text, limit) { // last batch of `top -b -n2`, default field order
     }
     return out.slice(0, limit)
 }
+function shQuote(text) { // one safe shell word
+    return "'" + text.replace(/'/g, "'\\''") + "'"
+}
 function bytes(n) {
     const u = ["B", "KB", "MB", "GB", "TB"]; let i = 0
     while (n >= 1024 && i < 4) { n /= 1024; i++ }
