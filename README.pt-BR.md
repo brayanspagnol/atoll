@@ -20,14 +20,16 @@ Os prints estão no [README em inglês](README.md#screenshots).
 - **Central:** som, internet, Bluetooth, desempenho, calendário, avisos, monitor, ajustes, sobre e energia.
 - **Cartão de música:** capa, cores tiradas do álbum, barra de tempo, repetir, aleatório, curtidas, volume e troca de saída.
 - **Avisos e volume:** cartões de vidro que descem de baixo da ilha.
-- **Busca:** aplicativos e telas do sistema no mesmo lugar. Digite "wifi" ou "volume".
+- **Busca:** aplicativos, telas do sistema, histórico da área de transferência, emoji e prints no mesmo lugar. Digite "wifi" ou "volume".
 - **Idiomas:** English, Português (Brasil), Español, Français, Deutsch, Русский e 简体中文. Segue o idioma do sistema, ou escolha em Ajustes.
 - **Tela de bloqueio:** relógio grande, música atual, nome e foto do perfil, sobre o seu papel de parede nítido. Ela também recebe você ao voltar da suspensão, sem o desktop piscar antes.
-- **Perfis:** cada um guarda nome, foto e papel de parede (de galerias que você vai adicionando), idioma, cor, dock e tempos de ociosidade. Crie e troque em Ajustes.
+- **Perfis:** cada um guarda nome, foto e papel de parede (de galerias em que você adiciona e remove, com um papel de parede por tela se quiser), idioma, cor, dock e tempos de ociosidade. Crie e troque em Ajustes.
 - **Feriados:** de mais de 200 países no calendário, ou nenhum. Escolha em Ajustes.
 - **Monitores:** arraste as telas para posicionar e ajuste resolução, taxa, escala, rotação, espelhamento, VRR, brilho, áreas de trabalho e o que fechar a tampa faz. Uma disposição nova volta sozinha em 15 segundos se você não mantiver.
-- **Ociosidade:** tempos de bloqueio, desligar a tela e suspender para tomada e bateria, cada um com a opção Nunca, e luz noturna.
-- **Sobre:** versão, busca por atualização, links do projeto e dados do sistema para relatar bugs.
+- **Ociosidade e energia:** tempos de bloqueio, desligar a tela e suspender para tomada e bateria, cada um com a opção Nunca, modos de energia e luz noturna com horário próprio.
+- **Teclado e mouse:** layouts, velocidade do ponteiro, rolagem natural e opções do touchpad em Ajustes.
+- **Internet:** Wi-Fi com redes ocultas e corporativas (802.1X), mais arquivos WireGuard e OpenVPN que você importa.
+- **Sobre:** versão, atualização com um clique, links do projeto e dados do sistema para relatar bugs.
 - **Resistente:** se o shell cair, ele volta sozinho. Suas janelas continuam abertas.
 
 ## Requisitos
@@ -48,6 +50,13 @@ No Arch Linux:
 git clone https://github.com/brayanspagnol/atoll.git
 cd atoll
 ./install.sh --deps
+```
+
+Ou pelo AUR, e rode a configuração com seu próprio usuário:
+
+```sh
+yay -S atoll
+atoll-setup
 ```
 
 Em outras distribuições, instale os pacotes listados em `install.sh` e rode `./install.sh`.
@@ -75,6 +84,7 @@ Para escolher o Atoll no gerenciador de login, rode também `./install.sh --sess
 | `Super+Alt+A` / `I` / `B` / `D` | Som / Internet / Bluetooth / Desempenho |
 | `Super+Alt+C` / `V` / `J` / `E` | Calendário / Avisos / Ajustes / Energia |
 | `Super+Alt+M` / `O` | Monitor / Sobre |
+| `Super+Shift+V` / `Super+.` | Área de transferência / Emoji |
 | `Super+Enter` | Terminal |
 | `Super+B` / `E` | Navegador / Arquivos |
 | `Super+C` | Fechar janela |
@@ -118,7 +128,7 @@ hl.bind("SUPER + Return", hl.dsp.exec_cmd("foot"))
 ## Atualizar e remover
 
 ```sh
-git pull && ./install.sh   # atualiza; ajustes, eventos e curtidas ficam
+git pull && ./install.sh   # atualiza; ajustes, eventos e curtidas ficam. Sobre também faz isso com um clique
 ./uninstall.sh             # remove; com --purge apaga seus dados também
 ```
 
@@ -136,7 +146,7 @@ git pull && ./install.sh   # atualiza; ajustes, eventos e curtidas ficam
 
 ## Privacidade
 
-O Atoll não pede conta nem envia telemetria. Dois recursos usam a rede. A busca por atualização em Sobre consulta o GitHub, só quando você clica. E ao abrir o calendário ou os Ajustes, ele baixa feriados de
+O Atoll não pede conta nem envia telemetria. O histórico de avisos, que pode ter texto de mensagens, fica no seu computador em `~/.local/state/atoll`, legível só por você; Limpar tudo apaga. Dois recursos usam a rede. A busca por atualização em Sobre consulta o GitHub, só quando você clica. E ao abrir o calendário ou os Ajustes, ele baixa feriados de
 [date.nager.at](https://date.nager.at), que vê seu IP, o país e os anos pedidos. O resultado fica em `~/.cache/atoll/holidays`.
 Para desligar, deixe `holidays` em `off`.
 

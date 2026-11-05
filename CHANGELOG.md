@@ -6,6 +6,27 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-11-05
+
+### Added
+
+- Keyboard and mouse in Settings: layouts, pointer speed, natural scrolling and touchpad options.
+- Clipboard history, emoji and screenshots in Search. `Super+Shift+V` and `Super+.` open them directly.
+- Power modes in the Power screen, with `power-profiles-daemon`.
+- A schedule for the night light.
+- A wallpaper per screen.
+- Remove images from the photo and wallpaper galleries.
+- Drag icons to reorder the dock in its editor.
+- Notifications are grouped by app, and their history survives a shell restart.
+- Hidden and enterprise (802.1X) Wi-Fi networks.
+- VPN section: import WireGuard and OpenVPN files, connect, disconnect and forget.
+- One-click update in About.
+- An AUR package definition in `packaging/aur`.
+
+### Removed
+
+- The wofi clipboard picker, replaced by Search.
+
 ## [1.8.0] - 2026-11-05
 
 ### Added
@@ -130,7 +151,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/brayanspagnol/atoll/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/brayanspagnol/atoll/compare/v1.7.1...v1.8.0
 [1.7.1]: https://github.com/brayanspagnol/atoll/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/brayanspagnol/atoll/compare/v1.6.1...v1.7.0

@@ -22,14 +22,16 @@ wallpaper, and windows keep the rest of the screen.
 - **Control center:** sound, internet, Bluetooth, performance, calendar, notifications, monitor, settings, about and power.
 - **Music card:** cover art, colors taken from the album, seek bar, repeat, shuffle, likes, volume and output switching.
 - **Notifications and volume:** glass cards that drop from under the island.
-- **Search:** apps and system screens in one box. Type "wifi" or "volume".
+- **Search:** apps, system screens, clipboard history, emoji and screenshots in one place. Type "wifi" or "volume".
 - **Languages:** English, Português (Brasil), Español, Français, Deutsch, Русский and 简体中文. It follows your system language, or pick one in Settings.
 - **Lock screen:** a large clock, the current song and your profile's name and picture over your sharp wallpaper. It also greets you when waking from suspend, with no flash of the desktop.
-- **Profiles:** each one keeps its own name, picture and wallpaper (from galleries you add to), language, accent, dock and idle times. Create and switch them in Settings.
+- **Profiles:** each one keeps its own name, picture and wallpaper (from galleries you add to and remove from, with a wallpaper per screen if you like), language, accent, dock and idle times. Create and switch them in Settings.
 - **Public holidays:** for over 200 countries in the calendar, or none. Choose in Settings.
 - **Monitors:** drag your screens into place, and set resolution, refresh rate, scale, rotation, mirroring, VRR, brightness, workspaces and what closing the lid does. A new layout goes back by itself in 15 seconds unless you keep it.
-- **Idle:** lock, screen off and suspend times per power source, each with a Never option, and night light.
-- **About:** version, update check, project links and system details to paste in a bug report.
+- **Idle and power:** lock, screen off and suspend times per power source, each with a Never option, power modes, and a night light with its own schedule.
+- **Keyboard and mouse:** layouts, pointer speed, natural scrolling and touchpad options in Settings.
+- **Internet:** Wi-Fi with hidden and enterprise (802.1X) networks, plus WireGuard and OpenVPN files you import.
+- **About:** version, one-click update, project links and system details to paste in a bug report.
 - **Resilient by design:** if the shell crashes, it restarts by itself. Your windows stay open.
 
 ## Screenshots
@@ -71,7 +73,8 @@ Screenshots use demo data.
 - **Hyprland with Lua configuration.** Developed on 0.56.2. Older versions without `hl.*` will not work.
 - **Quickshell** 0.3 or newer.
 - NetworkManager, BlueZ and PipeWire with WirePlumber for the matching screens.
-- Noto fonts (`noto-fonts`, `noto-fonts-cjk`) to display Russian and Chinese.
+- Noto fonts (`noto-fonts`, `noto-fonts-cjk`, `noto-fonts-emoji`) to display Russian, Chinese and emoji.
+- Optional: `power-profiles-daemon` for power modes, `networkmanager-openvpn` for OpenVPN files.
 
 Atoll is developed and tested on one machine: Arch Linux with an Intel GPU. Other distributions and
 GPUs may work, and reports are welcome.
@@ -84,6 +87,13 @@ On Arch Linux:
 git clone https://github.com/brayanspagnol/atoll.git
 cd atoll
 ./install.sh --deps
+```
+
+Or from the AUR, then run the setup as your own user:
+
+```sh
+yay -S atoll
+atoll-setup
 ```
 
 On other distributions, install the packages listed in `install.sh` and run `./install.sh`.
@@ -111,6 +121,7 @@ for `sudo`; everything else stays in your home directory. See `./install.sh --he
 | `Super+Alt+A` / `I` / `B` / `D` | Sound / Internet / Bluetooth / Performance |
 | `Super+Alt+C` / `V` / `J` / `E` | Calendar / Notifications / Settings / Power |
 | `Super+Alt+M` / `O` | Monitor / About |
+| `Super+Shift+V` / `Super+.` | Clipboard history / Emoji |
 | `Super+Enter` | Terminal |
 | `Super+B` / `E` | Browser / Files |
 | `Super+C` | Close window |
@@ -154,7 +165,7 @@ hl.bind("SUPER + Return", hl.dsp.exec_cmd("foot"))
 ## Update and remove
 
 ```sh
-git pull && ./install.sh   # update; settings, events and likes stay
+git pull && ./install.sh   # update; settings, events and likes stay. About can also do this in one click
 ./uninstall.sh             # remove; add --purge to delete your data too
 ```
 
@@ -172,7 +183,7 @@ git pull && ./install.sh   # update; settings, events and likes stay
 
 ## Privacy
 
-Atoll needs no account and sends no telemetry. Two features use the network. The update check in About asks GitHub for the latest release, only when you click it. And when you open the calendar or Settings, it
+Atoll needs no account and sends no telemetry. Notification history, which can include message text, stays on your computer in `~/.local/state/atoll`, readable only by you; Clear all erases it. Two features use the network. The update check in About asks GitHub for the latest release, only when you click it. And when you open the calendar or Settings, it
 downloads public holidays from [date.nager.at](https://date.nager.at), which sees your IP address and the country and years
 requested. Results stay cached in `~/.cache/atoll/holidays`. Set `holidays` to `off` to turn this off.
 

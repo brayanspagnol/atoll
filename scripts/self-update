@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Installs a release from GitHub over this installation, then restarts the shell: self-update vX.Y.Z
+# Everything runs inside main, because the installer replaces this very file while it runs.
+set -euo pipefail
+
+main() {
+    local tag="${1:-}"
+    [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "invalid version: $tag" >&2; return 2; }
+    dir="$(mktemp -d)"
+    trap 'rm -rf "$dir"' EXIT
+    curl -fsSL -m 120 -o "$dir/release.tar.gz" "https://github.com/brayanspagnol/atoll/archive/refs/tags/$tag.tar.gz" 2>/dev/null \
+        || { echo "could not download $tag" >&2; return 1; }
+    tar -xzf "$dir/release.tar.gz" --strip-components=1 -C "$dir"
+    [[ "$(cat "$dir/VERSION")" == "${tag#v}" ]] || { echo "the download is not version $tag" >&2; return 1; }
+    "$dir/install.sh" >/dev/null
+    # atoll-start brings the shell back. Only its own parent: a test copy must not hit another shell.
+    [[ "$(ps -o comm= -p "$PPID")" == qs ]] && kill -TERM "$PPID"
+    return 0
+}
+main "$@"; exit $?

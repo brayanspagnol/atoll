@@ -1,0 +1,32 @@
+# Maintainer: Brayan Spagnol <121728908+brayanspagnol@users.noreply.github.com>
+pkgname=atoll
+pkgver=1.9.0
+pkgrel=1
+pkgdesc="A complete glass desktop shell for Hyprland, built with Quickshell"
+arch=(any)
+url="https://github.com/brayanspagnol/atoll"
+license=(MIT)
+depends=(hyprland quickshell hyprlock hypridle hyprsunset xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
+    polkit-gnome networkmanager bluez bluez-utils pipewire wireplumber libnotify cliphist wl-clipboard
+    grim slurp jq brightnessctl ttf-jetbrains-mono-nerd papirus-icon-theme qt6-svg curl noto-fonts noto-fonts-cjk
+    noto-fonts-emoji playerctl zenity)
+optdepends=('power-profiles-daemon: choose a power mode'
+    'networkmanager-openvpn: import OpenVPN files'
+    'ddcutil: brightness of external monitors')
+install=atoll.install
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+package() {
+    cd "$pkgname-$pkgver"
+    install -d "$pkgdir/usr/share/atoll"
+    cp -r hypr shell scripts config install.sh uninstall.sh VERSION "$pkgdir/usr/share/atoll/"
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    install -d "$pkgdir/usr/bin"
+    printf '#!/bin/sh\n# Copies Atoll into your home directory. Run it after every package update.\nexec /usr/share/atoll/install.sh "$@"\n' >"$pkgdir/usr/bin/atoll-setup"
+    printf '#!/bin/sh\nexec "$HOME/.local/share/atoll/scripts/atoll-session" "$@"\n' >"$pkgdir/usr/bin/atoll-session"
+    chmod 755 "$pkgdir/usr/bin/atoll-setup" "$pkgdir/usr/bin/atoll-session"
+    install -d "$pkgdir/usr/share/wayland-sessions"
+    printf '[Desktop Entry]\nName=Atoll\nComment=Hyprland with the Atoll shell\nExec=atoll-session\nType=Application\nDesktopNames=Hyprland\n' \
+        >"$pkgdir/usr/share/wayland-sessions/atoll.desktop"
+}

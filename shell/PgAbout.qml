@@ -14,7 +14,9 @@ Page {
         return out
     }
     property string latest: ""
-    property string updateState: "idle" // idle, checking, failed, done
+    property string updateState: "idle" // idle, checking, failed, done, updating
+    property string updateError: ""
+    property bool packaged: false // installed by a package manager, which then owns updates
     readonly property bool hasUpdate: !!latest && P.newerVersion(latest, Ui.version)
     readonly property string report: "Atoll " + Ui.version + "\n" + facts.trim() + "\nMemory=" + P.bytes(Sys.memInfo.total)
 
@@ -41,6 +43,22 @@ Page {
             echo "GPU=$(command -v lspci >/dev/null && lspci | grep -Ei 'vga|3d' | head -1 | cut -d: -f3- | sed 's/^ *//; s/ Corporation//; s/ (rev.*//')"
         `]
         stdout: StdioCollector { onStreamFinished: pg.facts = text }
+    }
+    Process {
+        running: true
+        command: ["test", "-e", "/usr/share/atoll/VERSION"]
+        onExited: code => pg.packaged = code === 0
+    }
+    Process {
+        id: updater
+        command: [Quickshell.env("HOME") + "/.local/share/atoll/scripts/self-update", pg.latest]
+        stderr: StdioCollector {}
+        // On success the script restarts the shell, so this page only ever sees failures.
+        onExited: code => {
+            if (code === 0) return
+            pg.updateError = Tr.t("Couldn't update. Check your connection.")
+            pg.updateState = "done"
+        }
     }
     Process {
         id: checker
@@ -71,13 +89,23 @@ Page {
             anchors.fill: parent; anchors.leftMargin: 16; anchors.rightMargin: 12; spacing: 12
             Tx {
                 Layout.fillWidth: true; strong: true
-                color: pg.updateState === "failed" ? Theme.danger : pg.updateState === "done" ? Theme.good : Theme.muted
+                color: pg.updateState === "failed" || pg.updateError ? Theme.danger : pg.updateState === "done" ? Theme.good : Theme.muted
                 text: pg.updateState === "checking" ? Tr.t("Checking…")
+                    : pg.updateState === "updating" ? Tr.t("Updating…")
+                    : pg.updateError ? pg.updateError
+                    : pg.hasUpdate && pg.packaged ? Tr.t("Version %1 is available. Update the package, then run atoll-setup.").arg(pg.latest)
                     : pg.updateState === "failed" ? Tr.t("Couldn't check. Check your connection.")
                     : pg.updateState !== "done" ? Tr.t("Not checked yet")
                     : pg.hasUpdate ? Tr.t("Version %1 is available").arg(pg.latest) : Tr.t("You have the latest version")
             }
             Link { visible: pg.hasUpdate; text: Tr.t("See what's new"); url: pg.repo + "/releases/latest" }
+            Btn {
+                visible: pg.hasUpdate && !pg.packaged
+                variant: "solid"
+                text: Tr.t("Update now")
+                enabledB: pg.updateState === "done"
+                onClicked: { pg.updateError = ""; pg.updateState = "updating"; updater.running = true }
+            }
             Btn {
                 text: Tr.t("Check for updates")
                 enabledB: pg.updateState !== "checking"

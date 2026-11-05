@@ -1,0 +1,6 @@
+post_install() {
+    echo "Atoll installs per user. As your own user, run: atoll-setup"
+}
+post_upgrade() {
+    echo "To apply this update, as your own user, run: atoll-setup"
+}
