@@ -25,7 +25,8 @@ end
 hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("pkill -x qs"))
 hl.bind(mainMod .. " + L",      hl.dsp.exec_cmd(lock))
 hl.bind(mainMod .. " + SPACE",  hl.dsp.exec_cmd(scripts .. "kb-layout"))
-hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd(scripts .. "clipboard"))
+hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd(qs .. "ui clipboard"))
+hl.bind(mainMod .. " + period", hl.dsp.exec_cmd(qs .. "ui emoji"))
 
 hl.bind(mainMod .. " + M",         hl.dsp.window.move({ workspace = "special:minimized" }))
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.workspace.toggle_special("minimized"))

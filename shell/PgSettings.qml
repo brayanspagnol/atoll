@@ -304,7 +304,7 @@ Page {
         Layout.fillWidth: true
         placeholderText: Tr.t("Search layouts")
         Accessible.name: Tr.t("Search layouts")
-        onVisibleChanged: if (visible) forceActiveFocus()
+        onVisibleChanged: if (visible) { forceActiveFocus(); layoutScroll.restart() }
     }
     Repeater {
         model: pg.addingLayout ? Input.catalog.filter(c => c.name.toLowerCase().includes(layoutSearch.text.trim().toLowerCase())).slice(0, 6) : []
@@ -316,6 +316,12 @@ Page {
             onClicked: { Input.addLayout(modelData); pg.addingLayout = false }
             Tx { text: layoutRow.modelData.name; Layout.fillWidth: true }
         }
+    }
+    // The results open below the field, which can be near the bottom of the page.
+    Timer {
+        id: layoutScroll
+        interval: 60
+        onTriggered: pg.contentY = Math.max(pg.contentY, Math.min(layoutSearch.mapToItem(pg.contentItem, 0, 0).y - 140, pg.contentHeight - pg.height))
     }
     Line {
         label: Tr.t("Pointer speed")
@@ -404,7 +410,7 @@ Page {
                     ["Super + Alt + A", Tr.t("Sound")], ["Super + Alt + I", "Internet"], ["Super + Alt + B", "Bluetooth"], ["Super + Alt + D", Tr.t("Performance")],
                     ["Super + Alt + C", Tr.t("Calendar")], ["Super + Alt + V", Tr.t("Notifications")], ["Super + Alt + J", Tr.t("Settings")], ["Super + Alt + M", Tr.t("Monitor")], ["Super + Alt + O", Tr.t("About")], ["Super + Alt + E", Tr.t("Power")],
                     ["Super + L", Tr.t("Lock")], ["Super + Enter", Tr.t("Terminal")], ["Super + B", Tr.t("Browser")], ["Super + E", Tr.t("Files")],
-                    ["Super + C", Tr.t("Close window")], ["Super + Shift + V", Tr.t("Clipboard history")], ["Print", Tr.t("Area screenshot")], [Tr.t("Super + Space"), Tr.t("Switch keyboard layout")]]
+                    ["Super + C", Tr.t("Close window")], ["Super + Shift + V", Tr.t("Clipboard history")], ["Super + .", Tr.t("Emoji")], ["Print", Tr.t("Area screenshot")], [Tr.t("Super + Space"), Tr.t("Switch keyboard layout")]]
             RowLayout {
                 required property var modelData
                 Layout.fillWidth: true; Layout.preferredWidth: 1; spacing: 8

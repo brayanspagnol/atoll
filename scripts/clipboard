@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-# Clipboard history picker.
-set -euo pipefail
-selection="$(cliphist list | wofi --dmenu --insensitive --sort-order default --prompt "Clipboard" --width 560 --height 420 || true)"
-[[ -n "$selection" ]] && cliphist decode <<<"$selection" | wl-copy

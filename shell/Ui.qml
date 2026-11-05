@@ -9,6 +9,9 @@ Singleton {
     property bool open: false
     property string page: "som"
     property bool launcher: false
+    property string launcherMode: "" // "", "clip" or "emoji": what the search lists
+    onLauncherChanged: if (!launcher) launcherMode = ""
+    function openLauncher(mode) { open = false; launcher = true; launcherMode = mode }
     property bool dockPeek: false
     property bool dockEditor: false
     property bool mediaOpen: false
@@ -47,6 +50,8 @@ Singleton {
         target: "ui"
         function toggle(page: string): void { ui.toggle(page) }
         function launcher(): void { ui.open = false; ui.launcher = !ui.launcher }
+        function clipboard(): void { ui.openLauncher("clip") }
+        function emoji(): void { ui.openLauncher("emoji") }
         function dock(): void { ui.toggleDock() }
         function editDock(): void { ui.editDock() }
         function close(): void { ui.open = false; ui.launcher = false }

@@ -37,6 +37,8 @@ Singleton {
             music: "M9 18V5l12-2v13" + c(6, 18, 3) + c(18, 16, 3),
             search: c(11, 11, 8) + "M21 21l-4.3-4.3",
             bat: batt + "M6 11v2M10 11v2M14 11v2", batLow: batt + "M6 11v2", charge: batt + "M11 9l-3 3h5l-3 3",
+            camera: "M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3zM12 10a3 3 0 1 0 0 6 3 3 0 0 0 0-6z",
+            smile: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01",
             x: "M18 6 6 18M6 6l12 12", left: "M15 18l-6-6 6-6", right: "M9 18l6-6-6-6",
             play: "M6 3l14 9-14 9Z", pause: "M8 4v16M16 4v16", next: "M5 4l10 8-10 8ZM19 5v14", prev: "M19 20L9 12l10-8ZM5 19V5",
             menu: "M3 6h18M3 12h18M3 18h18",
