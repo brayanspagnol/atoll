@@ -228,6 +228,77 @@ ShellRoot {
     const history = JSON.parse(fs.readFileSync(state + "/notifications.json"))
     assert.equal(history.find(n => n.summary === "live").desktopEntry, "fake-app")
     fs.rmSync(root, { recursive: true })
+
+    // Clipboard panel, against a throwaway cliphist database: the default one is the user's real history.
+    const realCliphist = spawnSync("sh", ["-c", "command -v cliphist"], { encoding: "utf8" }).stdout.trim()
+    if (realCliphist) {
+        const cb = fs.mkdtempSync("/tmp/atoll-test-"), bin = cb + "/bin", db = cb + "/db"
+        fs.cpSync(new URL("../shell/", import.meta.url), cb, { recursive: true })
+        fs.mkdirSync(bin); fs.mkdirSync(cb + "/run", { mode: 0o700 })
+        const store = input => assert.equal(spawnSync(realCliphist, ["-db-path", db, "-config-path", cb + "/none", "store"], { input }).status, 0)
+        const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64")
+        store("hello world"); store("https://example.com/a"); store("#8CC8F5"); store(png); store("it's $(touch " + cb + "/pwned) `x`")
+        fs.writeFileSync(bin + "/cliphist", `#!/bin/sh\nexec '${realCliphist}' -db-path '${db}' -config-path '${cb}/none' "$@"\n`, { mode: 0o755 })
+        fs.writeFileSync(bin + "/wl-copy", `#!/bin/sh\nprintf '%s\\n' "$*" > '${cb}/copied-args'\ncat > '${cb}/copied'\n`, { mode: 0o755 })
+        // No layer shell offscreen: a plain window stands in, and the loaded window is exposed to the test.
+        const qml = fs.readFileSync(cb + "/Clipboard.qml", "utf8")
+            .replace("PanelWindow {", "FloatingWindow { implicitWidth: 1600; implicitHeight: 1000")
+            .replace("    LazyLoader {", "    readonly property var win: loader.item\n    LazyLoader {\n    id: loader")
+            .split("\n").filter(l => !/^\s*(anchors \{ top|exclusionMode|WlrLayershell)/.test(l)).join("\n")
+        fs.writeFileSync(cb + "/Clipboard.qml", qml)
+        const env = { PATH: process.env.PATH, XDG_RUNTIME_DIR: process.env.XDG_RUNTIME_DIR }
+        Object.assign(process.env, { PATH: bin + ":" + process.env.PATH, XDG_RUNTIME_DIR: cb + "/run" })
+        const clip = runQml(cb, `import QtQuick
+import Quickshell
+ShellRoot {
+    Clipboard { id: clip }
+    property int step: 0
+    readonly property var win: clip.win
+    function rows() { return win.rows.map(r => r.kind + (r.pinned ? "*" : "") + " " + r.preview) }
+    function say(tag, v) { console.log("RESULT " + tag + " " + JSON.stringify(v)) }
+    Timer {
+        running: true; repeat: true; interval: 500
+        onTriggered: {
+            step++
+            if (step === 2) { say("open", { rows: rows(), meta: win.meta(win.rows[1]), tmp: win.tmp }); win.sel = 1 }
+            if (step === 3) { say("image", win.shownImage); win.sel = 0 }
+            if (step === 4) { say("full", win.full); win.pin(win.rows[0]) }
+            if (step === 5) win.pin(win.rows.find(r => r.kind === "image"))
+            if (step === 6) {
+                say("pinned", rows())
+                win.chip = "image"; say("images", rows()); win.chip = "all"
+                win.remove(win.rows.find(r => r.kind === "link"))
+            }
+            if (step === 7) { say("removed", rows()); win.wipe(); win.wipe() }
+            if (step === 8) { say("wiped", rows()); win.copy(win.rows.find(r => r.kind === "image")) }
+            if (step === 10) Ui.clipboard = true
+            if (step === 11) { say("reopened", rows()); win.unpin(win.rows[0]); win.remove(win.rows[0]); say("unpinned", rows()); Ui.clipboard = false }
+            if (step === 13) Qt.quit()
+        }
+    }
+}
+`, { "Ui.qml": `pragma Singleton\nimport Quickshell\nSingleton { property bool clipboard: true; readonly property var screen: Quickshell.screens[0] ?? null }\n` })
+        Object.assign(process.env, env)
+        const evil = "it's $(touch " + cb + "/pwned) `x`"
+        assert.deepEqual(clip.open.rows, ["text " + evil, "image [[ binary data 70 B png 1x1 ]]", "color #8CC8F5", "link https://example.com/a", "text hello world"])
+        assert.equal(clip.open.meta, "Image · PNG · 70 B · 1×1")
+        assert.equal(clip.image, "file://" + clip.open.tmp + "/0-4.png")
+        assert.equal(clip.full, evil)
+        assert.deepEqual(clip.pinned.slice(0, 2), ["image* [[ binary data 70 B png 1x1 ]]", "text* " + evil])
+        assert.deepEqual(clip.images, ["image* [[ binary data 70 B png 1x1 ]]"])
+        assert(!clip.removed.some(r => r.startsWith("link")))
+        assert.deepEqual(clip.wiped, clip.pinned.slice(0, 2)) // pins outlive the history
+        assert.deepEqual(clip.reopened, clip.wiped) // and a new window
+        assert.deepEqual(clip.unpinned, [])
+        assert.equal(fs.readFileSync(cb + "/copied-args", "utf8"), "--type image/png\n")
+        assert(fs.readFileSync(cb + "/copied").equals(png))
+        const pins = cb + "/home/.local/state/atoll"
+        assert.equal(fs.statSync(pins).mode & 0o777, 0o700); assert.equal(fs.statSync(pins + "/pins").mode & 0o777, 0o700)
+        assert.deepEqual(fs.readdirSync(pins + "/pins"), []); assert.equal(fs.readFileSync(pins + "/clipboard-pins.json", "utf8"), "[]")
+        assert(!fs.existsSync(clip.open.tmp)) // decoded images go with the window
+        assert(!fs.existsSync(cb + "/pwned"))
+        fs.rmSync(cb, { recursive: true })
+    } else console.log("skipped the clipboard check: it needs cliphist")
 } else console.log("skipped the QML checks: they need qs, dbus-run-session and notify-send")
 // Certificate Wi-Fi, against a stand-in nmcli: the real one is the machine's live network.
 const nm = fs.mkdtempSync("/tmp/atoll-test-")
@@ -288,6 +359,18 @@ for (const file of fs.readdirSync(new URL("i18n/", shell))) {
         assert(value.trim(), `${file}: empty translation: ${key}`)
     }
 }
+
+// Clipboard: what a cliphist line is, and the filters.
+const K = load("clip.js", "classify,parseList,filter")
+const kinds = K.parseList("9\t[[ binary data 1.2 MiB png 3440x1440 ]]\n8\t #8CC8F5 \n7\thttps://a.example/x?y=1\n6\tmailto:a@b.c\n5\tsee https://a.example\n4\t#12345\n3\t#abc\n2\t[[ binary data 3 KiB ]]\n\nnot a line\n")
+assert.deepEqual(kinds.map(k => k.id + k.kind), ["9image", "8color", "7link", "6link", "5text", "4text", "3color", "2text"])
+assert.deepEqual(plain(kinds[0]), { id: "9", preview: "[[ binary data 1.2 MiB png 3440x1440 ]]", kind: "image", size: "1.2 MiB", fmt: "png", w: 3440, h: 1440 })
+assert.equal(kinds[1].color, "#8CC8F5")
+assert.deepEqual(K.parseList("1\ta\tb").map(k => k.preview), ["a\tb"])
+const pool = kinds.concat([{ id: "1", preview: "Pinned NOTE", kind: "text", pinned: true }])
+const ids = (q, chip) => K.filter(pool, q, chip).map(k => k.id).join()
+assert.equal(ids("", "all"), "9,8,7,6,5,4,3,2,1"); assert.equal(ids("", "text"), "8,5,4,3,2,1"); assert.equal(ids("", "link"), "7,6")
+assert.equal(ids("", "image"), "9"); assert.equal(ids("", "pinned"), "1"); assert.equal(ids("  note ", "all"), "1"); assert.equal(ids("example", "text"), "5")
 
 // Emoji search: localized names and keywords, accents ignored, ranked, English as the fallback.
 const E = load("parse.js", "fold,emojiEntries,emojiSearch")
