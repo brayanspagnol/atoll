@@ -21,7 +21,8 @@ Os prints estão no [README em inglês](README.md#screenshots).
 - **Cartão de música:** capa, cores tiradas do álbum, barra de tempo, repetir, aleatório, curtidas, volume e troca de saída.
 - **Avisos e volume:** cartões de vidro que descem de baixo da ilha.
 - **Visão geral:** faixa com as áreas de trabalho acima das janelas da área atual, com prévia ao vivo. Arraste uma janela para outra área. `Super+O`.
-- **Busca:** aplicativos, telas do sistema, histórico da área de transferência, emoji (buscado no seu idioma) e prints no mesmo lugar. Digite "wifi" ou "volume".
+- **Busca:** aplicativos, telas do sistema, comandos, emoji (buscado no seu idioma) e prints, com abas e seus apps recentes no topo. Digite "wifi" ou "volume".
+- **Área de transferência:** busque, filtre por texto, links ou imagens, veja a prévia de imagens, fixe o que você reutiliza e apague o resto. Pelo ícone na ilha ou `Super+Shift+V`.
 - **Idiomas:** English, Português (Brasil), Español, Français, Deutsch, Русский e 简体中文. Segue o idioma do sistema, ou escolha em Ajustes.
 - **Tela de bloqueio:** relógio grande, música atual, nome e foto do perfil, sobre o seu papel de parede nítido. Ela também recebe você ao voltar da suspensão, sem o desktop piscar antes.
 - **Perfis:** cada um guarda nome, foto e papel de parede (de galerias em que você adiciona e remove, com um papel de parede por tela se quiser, que a tela de bloqueio também segue), idioma, cor, dock e tempos de ociosidade. Crie e troque em Ajustes.

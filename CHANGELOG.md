@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-11-05
+
+### Added
+
+- Clipboard history panel: search, filters for text, links, images and pinned items, image and color previews, pin, delete and clear. Pinned items are kept by Atoll and survive clearing the history.
+
+### Changed
+
+- Redesigned search: tabs for apps, screens, clipboard, emoji and screenshots, results grouped by kind with larger icons, recent apps on top, and an opening and closing animation.
+
 ## [1.11.0] - 2026-11-05
 
 ### Added
@@ -195,7 +205,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.11.0...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.12.0...HEAD
+[1.12.0]: https://github.com/brayanspagnol/atoll/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/brayanspagnol/atoll/compare/v1.10.1...v1.11.0
 [1.10.1]: https://github.com/brayanspagnol/atoll/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/brayanspagnol/atoll/compare/v1.9.0...v1.10.0

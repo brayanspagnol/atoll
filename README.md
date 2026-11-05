@@ -23,7 +23,8 @@ wallpaper, and windows keep the rest of the screen.
 - **Music card:** cover art, colors taken from the album, seek bar, repeat, shuffle, likes, volume and output switching.
 - **Notifications and volume:** glass cards that drop from under the island.
 - **Overview:** a strip of workspaces above the current one's windows, with live previews. Drag a window to another workspace. `Super+O`.
-- **Search:** apps, system screens, clipboard history, emoji (searched in your language) and screenshots in one place. Type "wifi" or "volume".
+- **Search:** apps, system screens, commands, emoji (searched in your language) and screenshots, with tabs and your recent apps on top. Type "wifi" or "volume".
+- **Clipboard history:** search, filter by text, links or images, preview images, pin what you reuse and delete the rest. From the island icon or `Super+Shift+V`.
 - **Languages:** English, Português (Brasil), Español, Français, Deutsch, Русский and 简体中文. It follows your system language, or pick one in Settings.
 - **Lock screen:** a large clock, the current song and your profile's name and picture over your sharp wallpaper. It also greets you when waking from suspend, with no flash of the desktop.
 - **Profiles:** each one keeps its own name, picture and wallpaper (from galleries you add to and remove from, with a wallpaper per screen if you like, which the lock screen follows too), language, accent, dock and idle times. Create and switch them in Settings.
@@ -59,7 +60,9 @@ Screenshots use demo data.
 
 ![Workspace overview](docs/screenshots/overview.webp)
 
-![Search](docs/screenshots/launcher.webp)
+| Search | Clipboard history |
+|---|---|
+| ![Search](docs/screenshots/launcher.webp) | ![Clipboard history](docs/screenshots/clipboard.webp) |
 
 | Monitor | About |
 |---|---|
@@ -188,7 +191,7 @@ git pull && ./install.sh   # update; settings, events and likes stay. About can 
 
 ## Privacy
 
-Atoll needs no account and sends no telemetry. Notification history, which can include message text, stays on your computer in `~/.local/state/atoll`, readable only by you; Clear all erases it. Two features use the network. The update check in About asks GitHub for the latest release, only when you click it. And when you open the calendar or Settings, it
+Atoll needs no account and sends no telemetry. Notification history, which can include message text, stays on your computer in `~/.local/state/atoll`, readable only by you; Clear all erases it. Pinned clipboard items are kept there too. Two features use the network. The update check in About asks GitHub for the latest release, only when you click it. And when you open the calendar or Settings, it
 downloads public holidays from [date.nager.at](https://date.nager.at), which sees your IP address and the country and years
 requested. Results stay cached in `~/.cache/atoll/holidays`. Set `holidays` to `off` to turn this off.
 
