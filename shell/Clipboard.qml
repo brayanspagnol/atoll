@@ -158,7 +158,14 @@ Scope {
                     Layout.fillWidth: true; spacing: 10
                     Fld {
                         id: field
-                        Layout.fillWidth: true; implicitHeight: 40
+                        Layout.fillWidth: true; implicitHeight: 56
+                        font.pixelSize: 19
+                        leftPadding: 52
+                        background: Rectangle {
+                            radius: 16; color: Qt.rgba(1, 1, 1, 0.06)
+                            border.width: 1.5; border.color: Theme.accent
+                            Ic { anchors { left: parent.left; leftMargin: 18; verticalCenter: parent.verticalCenter } name: "search"; size: 22; color: Theme.muted }
+                        }
                         placeholderText: Tr.t("Search the clipboard…")
                         Accessible.name: Tr.t("Search the clipboard…")
                         focus: true
@@ -175,7 +182,7 @@ Scope {
                         }
                     }
                     Btn {
-                        implicitHeight: 40
+                        implicitHeight: 44
                         icon: "trash"; variant: "danger"
                         text: win.wipeArmed ? Tr.t("Click again to clear") : Tr.t("Clear history")
                         a11y: win.wipeArmed ? Tr.t("Click again within 5 s to confirm") : Tr.t("Clear history")
@@ -185,12 +192,30 @@ Scope {
                 }
                 RowLayout {
                     Layout.fillWidth: true
-                    Seg {
-                        id: chips
-                        readonly property var values: ["all", "text", "link", "image", "pinned"]
-                        options: [Tr.t("All"), Tr.t("Text"), Tr.t("Links"), Tr.t("Images"), Tr.t("Pinned")]
-                        current: values.indexOf(win.chip)
-                        onPicked: i => { win.chip = values[i]; win.sel = 0 }
+                    Row {
+                        spacing: 6
+                        Repeater {
+                            model: [{ id: "all", label: Tr.t("All"), icon: "grid" }, { id: "text", label: Tr.t("Text"), icon: "note" }, { id: "link", label: Tr.t("Links"), icon: "link" },
+                                { id: "image", label: Tr.t("Images"), icon: "image" }, { id: "pinned", label: Tr.t("Pinned"), icon: "pin" }]
+                            Rectangle {
+                                id: chip
+                                required property var modelData
+                                readonly property bool on: win.chip === modelData.id
+                                width: chipRow.implicitWidth + 24; height: 34; radius: 17
+                                color: on ? Theme.accent : chipArea.containsMouse ? Theme.hover : Theme.raised
+                                border.width: 1; border.color: on ? Theme.accent : Theme.line
+                                Accessible.role: Accessible.RadioButton
+                                Accessible.name: modelData.label
+                                Accessible.checked: on
+                                RowLayout {
+                                    id: chipRow
+                                    anchors.centerIn: parent; spacing: 7
+                                    Ic { name: chip.modelData.icon; size: 16; color: chip.on ? Theme.accentInk : Theme.ink }
+                                    Tx { text: chip.modelData.label; size: 14; strong: true; color: chip.on ? Theme.accentInk : Theme.ink }
+                                }
+                                MouseArea { id: chipArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { win.chip = chip.modelData.id; win.sel = 0 } }
+                            }
+                        }
                     }
                     Item { Layout.fillWidth: true }
                     Tx { text: Tr.t("Items: %1").arg(win.rows.length); dim: true; size: 13 }
