@@ -14,14 +14,6 @@ local function saved()
     return ok and type(data) == "table" and data or {}
 end
 
-local layout = saved()
-for _, rule in ipairs(layout.monitors or {}) do
-    hl.monitor(rule)
-end
-for workspace, monitor in pairs(layout.workspaces or {}) do
-    hl.workspace_rule({ workspace = workspace, monitor = monitor })
-end
-
 local function is_laptop(name)
     return name:find("^eDP") or name:find("^LVDS") or name:find("^DSI")
 end
@@ -36,6 +28,23 @@ local function lid_closed()
     return state:find("closed", 1, true) ~= nil
 end
 
+-- A far away position, with no shared edge: the pointer cannot walk onto a closed lid, and disabling
+-- the panel would modeset and blank the external monitor on some hardware.
+local parked_at = -2000
+
+local layout = saved()
+local keep_parked = lid_closed() and (layout.lid or "off") == "off"
+for _, rule in ipairs(layout.monitors or {}) do
+    -- Going to the saved place first would move a closed panel out and back on every reload.
+    if keep_parked and rule.position and is_laptop(rule.output) then
+        rule.position = "0x" .. parked_at
+    end
+    hl.monitor(rule)
+end
+for workspace, monitor in pairs(layout.workspaces or {}) do
+    hl.workspace_rule({ workspace = workspace, monitor = monitor })
+end
+
 local function screens()
     local laptop, external
     for _, mon in ipairs(hl.get_monitors()) do
@@ -47,10 +56,6 @@ local function screens()
     end
     return laptop, external
 end
-
--- A far away position, with no shared edge: the pointer cannot walk onto a closed lid, and disabling
--- the panel would modeset and blank the external monitor on some hardware.
-local parked_at = -2000
 
 local function sync()
     local laptop, external = screens()

@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-11-05
+
+### Fixed
+
+- A closed laptop panel no longer moves out of its parked position and back when the configuration reloads.
+
 ## [1.7.0] - 2026-11-05
 
 ### Added
@@ -109,7 +115,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.7.1...HEAD
+[1.7.1]: https://github.com/brayanspagnol/atoll/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/brayanspagnol/atoll/compare/v1.6.1...v1.7.0
 [1.6.1]: https://github.com/brayanspagnol/atoll/compare/v1.6.0...v1.6.1
 [1.6.0]: https://github.com/brayanspagnol/atoll/compare/v1.5.0...v1.6.0
