@@ -9,6 +9,7 @@ ShellRoot {
     Variants { model: Quickshell.screens; Dock {} }
     Central {}
     Launcher {}
+    Overview {}
     DockEditor {}
     Variants { model: Quickshell.screens; DisplayOverlay {} }
     Variants { model: Quickshell.screens; Sheet {} }

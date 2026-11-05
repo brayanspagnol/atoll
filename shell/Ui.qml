@@ -9,6 +9,7 @@ Singleton {
     property bool open: false
     property string page: "som"
     property bool launcher: false
+    property bool overview: false
     property string launcherMode: "" // "", "clip" or "emoji": what the search lists
     onLauncherChanged: if (!launcher) launcherMode = ""
     function openLauncher(mode) { open = false; launcher = true; launcherMode = mode }
@@ -38,8 +39,8 @@ Singleton {
     ]
     readonly property var screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0] ?? null
 
-    function show(p) { page = p; launcher = false; mediaOpen = false; dockEditor = false; open = true }
-    function editDock() { open = false; launcher = false; mediaOpen = false; dockEditor = true }
+    function show(p) { page = p; launcher = false; overview = false; mediaOpen = false; dockEditor = false; open = true }
+    function editDock() { open = false; launcher = false; overview = false; mediaOpen = false; dockEditor = true }
     function toggle(p) { if (open && (!p || page === p)) open = false; else show(p || page) }
     function sh(cmd) { Quickshell.execDetached(["sh", "-c", cmd]) }
 
@@ -50,10 +51,11 @@ Singleton {
         target: "ui"
         function toggle(page: string): void { ui.toggle(page) }
         function launcher(): void { ui.open = false; ui.launcher = !ui.launcher }
+        function overview(): void { ui.open = false; ui.launcher = false; ui.overview = !ui.overview }
         function clipboard(): void { ui.openLauncher("clip") }
         function emoji(): void { ui.openLauncher("emoji") }
         function dock(): void { ui.toggleDock() }
         function editDock(): void { ui.editDock() }
-        function close(): void { ui.open = false; ui.launcher = false }
+        function close(): void { ui.open = false; ui.launcher = false; ui.overview = false }
     }
 }

@@ -1,6 +1,6 @@
 # Maintainer: Brayan Spagnol <121728908+brayanspagnol@users.noreply.github.com>
 pkgname=atoll
-pkgver=1.9.0
+pkgver=1.10.0
 pkgrel=1
 pkgdesc="A complete glass desktop shell for Hyprland, built with Quickshell"
 arch=(any)

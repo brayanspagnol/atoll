@@ -76,6 +76,7 @@ LazyLoader {
             const apps = [...DesktopEntries.applications.values].filter(a => !a.noDisplay).sort((a, b) => a.name.localeCompare(b.name))
                 .map(a => ({ name: a.name, kind: Tr.t("app"), app: a, hay: (a.name + " " + a.genericName + " " + a.keywords.join(" ")).toLowerCase(), run: () => { a.execute(); Ui.launcher = false } }))
             const commands = [
+                { name: Tr.t("Workspace overview"), icon: "monitor", words: "overview workspaces windows expose", run: () => { Ui.launcher = false; Ui.overview = true } },
                 { name: Tr.t("Clipboard history"), icon: "copy", words: "clipboard paste copy history", run: () => Ui.launcherMode = "clip" },
                 { name: Tr.t("Emoji"), icon: "smile", words: "emoji smiley", run: () => Ui.launcherMode = "emoji" },
                 { name: Tr.t("Area screenshot"), icon: "camera", words: "screenshot print capture area", run: () => win.shoot("region-file") },

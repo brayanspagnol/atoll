@@ -20,6 +20,7 @@ Os prints estão no [README em inglês](README.md#screenshots).
 - **Central:** som, internet, Bluetooth, desempenho, calendário, avisos, monitor, ajustes, sobre e energia.
 - **Cartão de música:** capa, cores tiradas do álbum, barra de tempo, repetir, aleatório, curtidas, volume e troca de saída.
 - **Avisos e volume:** cartões de vidro que descem de baixo da ilha.
+- **Visão geral:** faixa com as áreas de trabalho acima das janelas da área atual, com prévia ao vivo. Arraste uma janela para outra área. `Super+O`.
 - **Busca:** aplicativos, telas do sistema, histórico da área de transferência, emoji e prints no mesmo lugar. Digite "wifi" ou "volume".
 - **Idiomas:** English, Português (Brasil), Español, Français, Deutsch, Русский e 简体中文. Segue o idioma do sistema, ou escolha em Ajustes.
 - **Tela de bloqueio:** relógio grande, música atual, nome e foto do perfil, sobre o seu papel de parede nítido. Ela também recebe você ao voltar da suspensão, sem o desktop piscar antes.
@@ -85,6 +86,7 @@ Para escolher o Atoll no gerenciador de login, rode também `./install.sh --sess
 | `Super+Alt+C` / `V` / `J` / `E` | Calendário / Avisos / Ajustes / Energia |
 | `Super+Alt+M` / `O` | Monitor / Sobre |
 | `Super+Shift+V` / `Super+.` | Área de transferência / Emoji |
+| `Super+O` | Visão geral das áreas |
 | `Super+Enter` | Terminal |
 | `Super+B` / `E` | Navegador / Arquivos |
 | `Super+C` | Fechar janela |

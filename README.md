@@ -22,6 +22,7 @@ wallpaper, and windows keep the rest of the screen.
 - **Control center:** sound, internet, Bluetooth, performance, calendar, notifications, monitor, settings, about and power.
 - **Music card:** cover art, colors taken from the album, seek bar, repeat, shuffle, likes, volume and output switching.
 - **Notifications and volume:** glass cards that drop from under the island.
+- **Overview:** a strip of workspaces above the current one's windows, with live previews. Drag a window to another workspace. `Super+O`.
 - **Search:** apps, system screens, clipboard history, emoji and screenshots in one place. Type "wifi" or "volume".
 - **Languages:** English, Português (Brasil), Español, Français, Deutsch, Русский and 简体中文. It follows your system language, or pick one in Settings.
 - **Lock screen:** a large clock, the current song and your profile's name and picture over your sharp wallpaper. It also greets you when waking from suspend, with no flash of the desktop.
@@ -55,6 +56,8 @@ Screenshots use demo data.
 | ![Internet](docs/screenshots/rede.webp) | ![Bluetooth](docs/screenshots/bt.webp) |
 
 ![Choosing the apps on the dock](docs/screenshots/dock-editor.webp)
+
+![Workspace overview](docs/screenshots/overview.webp)
 
 ![Search](docs/screenshots/launcher.webp)
 
@@ -122,6 +125,7 @@ for `sudo`; everything else stays in your home directory. See `./install.sh --he
 | `Super+Alt+C` / `V` / `J` / `E` | Calendar / Notifications / Settings / Power |
 | `Super+Alt+M` / `O` | Monitor / About |
 | `Super+Shift+V` / `Super+.` | Clipboard history / Emoji |
+| `Super+O` | Workspace overview |
 | `Super+Enter` | Terminal |
 | `Super+B` / `E` | Browser / Files |
 | `Super+C` | Close window |
