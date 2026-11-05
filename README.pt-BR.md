@@ -52,10 +52,10 @@ cd atoll
 ./install.sh --deps
 ```
 
-Ou pelo AUR, e rode a configuração com seu próprio usuário:
+Ou como pacote, gerado a partir de `packaging/aur`, e rode a configuração com seu próprio usuário:
 
 ```sh
-yay -S atoll
+cd packaging/aur && makepkg -si
 atoll-setup
 ```
 

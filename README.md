@@ -89,10 +89,10 @@ cd atoll
 ./install.sh --deps
 ```
 
-Or from the AUR, then run the setup as your own user:
+Or as a package, built from `packaging/aur`, then run the setup as your own user:
 
 ```sh
-yay -S atoll
+cd packaging/aur && makepkg -si
 atoll-setup
 ```
 
