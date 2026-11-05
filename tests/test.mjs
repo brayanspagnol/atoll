@@ -229,6 +229,46 @@ ShellRoot {
     assert.equal(history.find(n => n.summary === "live").desktopEntry, "fake-app")
     fs.rmSync(root, { recursive: true })
 } else console.log("skipped the QML checks: they need qs, dbus-run-session and notify-send")
+// Certificate Wi-Fi, against a stand-in nmcli: the real one is the machine's live network.
+const nm = fs.mkdtempSync("/tmp/atoll-test-")
+fs.writeFileSync(nm + "/nmcli", `#!/usr/bin/env bash
+echo "ARGV $*" >>"$NM_LOG"
+case "$*" in
+    *"connection add"*) echo "Connection (00000000-0000-0000-0000-000000000001) successfully added." ;;
+    *"connection edit"*) cat >>"$NM_LOG"; echo "\${NM_SAY:-}" ;;
+esac
+`, { mode: 0o755 })
+fs.mkdirSync(nm + "/my dir")
+for (const f of ["c.pem", "k.pem", "my dir/k.pem", "ca.pem"]) fs.writeFileSync(nm + "/" + f, "x")
+const log = nm + "/log"
+const tls = (args, input, say = "") => {
+    fs.writeFileSync(log, "")
+    const r = spawnSync(new URL("../scripts/net", import.meta.url).pathname, ["wifi-eap", "Net", "no", "tls", ...args], { input, cwd: nm, encoding: "utf8", env: { ...process.env, PATH: nm + ":" + process.env.PATH, NM_LOG: log, NM_SAY: say } })
+    return { status: r.status, out: r.stdout.trim(), log: fs.readFileSync(log, "utf8") }
+}
+const [cc, kk, ca] = [nm + "/c.pem", nm + "/k.pem", nm + "/ca.pem"]
+// Bad input never reaches nmcli, so no profile is left behind.
+for (const args of [["me", nm + "/none.pem", kk], ["me", cc, nm], ["me", cc, kk, nm + "/none.pem"], ["", cc, kk], ["a\nsave", cc, kk], ["me", cc, kk, "", "a\nsave"]]) {
+    const r = tls(args, "pw\n")
+    assert.equal(r.status, 2, args.join()); assert.equal(r.log, "")
+}
+for (const input of ["   \n", " pw\n", "pw \n"]) { const r = tls(["me", cc, kk], input); assert.equal(r.status, 2); assert.equal(r.log, "") }
+const saved = tls(["me", "c.pem", "my dir/k.pem", "", "corp.example"], "s3 cr#t\n")
+assert.equal(saved.status, 0); assert.equal(saved.out, "00000000-0000-0000-0000-000000000001")
+assert(!saved.log.split("\n").some(l => l.startsWith("ARGV") && l.includes("s3 cr#t"))) // never on the command line
+const lines = saved.log.split("\n")
+for (const l of ["set 802-1x.eap tls", "set 802-1x.identity me", `set 802-1x.client-cert ${cc}`, "set 802-1x.private-key-password s3 cr#t", "set 802-1x.system-ca-certs yes", "set 802-1x.domain-suffix-match corp.example"]) assert(lines.includes(l), l)
+assert(lines.includes(`set 802-1x.private-key ${nm}/my\\ dir/k.pem`))
+assert(lines.indexOf("set 802-1x.private-key-password s3 cr#t") > lines.findIndex(l => l.startsWith("set 802-1x.private-key "))) // setting the key clears its password
+const own = tls(["me", cc, kk, ca], "\n").log
+assert(own.includes(`set 802-1x.ca-cert ${ca}\n`)); assert(!own.includes("system-ca-certs"))
+assert(!own.includes("private-key-password")) // empty, the editor would ask and take the next command as the answer
+assert(!own.includes("domain-suffix-match"))
+assert(!tls(["me", cc, kk], "").log.includes("ca-cert")) // no stdin at all still works, and nothing is checked
+// nmcli's editor exits 0 after rejecting a value, so the half-made profile goes because of what it said.
+const bad = tls(["me", cc, kk, ca], "\n", "Error: failed to set 'ca-cert' property")
+assert.equal(bad.status, 1); assert.equal(bad.out, ""); assert(bad.log.includes("ARGV connection delete uuid 00000000-0000-0000-0000-000000000001"))
+fs.rmSync(nm, { recursive: true })
 
 // Every string the interface asks for must exist in every language, with the same placeholders.
 const shell = new URL("../shell/", import.meta.url)

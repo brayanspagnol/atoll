@@ -13,6 +13,17 @@ Singleton {
     property string vpnErr: ""
     property string addState: "" // "", "saving" or "connecting"
     property string addErr: ""
+    // The "Other network" form lives here because picking a file closes the page. The password stays in the page.
+    property bool formOpen: false
+    property bool formHidden: true
+    property int formKind: 1 // 0 no password, 1 password, 2 enterprise
+    property int formEap: 0 // 0 PEAP, 1 TTLS, 2 TLS
+    property string formSsid: ""
+    property string formUser: ""
+    property string formDomain: ""
+    property string formCert: ""
+    property string formKey: ""
+    property string formCa: ""
 
     function refreshVpns() { vpnList.running = true }
     function vpn(action, uuid) {
@@ -26,14 +37,23 @@ Singleton {
         Ui.open = false
         vpnPicker.running = true
     }
+    // Fills a form property with the chosen file. Closes the control center, like importVpn.
+    function pickFile(field, title) {
+        if (filePicker.running) return
+        filePicker.field = field
+        filePicker.command = ["zenity", "--file-selection", "--title=" + title, "--filename=" + Quickshell.env("HOME") + "/"]
+        Ui.open = false
+        filePicker.running = true
+    }
     // args come from the form; the secret goes to the script on stdin.
     function addWifi(args, secret) {
         addErr = ""
         addState = "saving"
         run(args, secret, uuid => {
             addState = "connecting"
-            run(["connect-new", uuid], "", () => { addState = ""; refreshVpns() }, () => { addErr = Tr.t("Couldn't connect. Check the name and the password."); addState = "" })
+            run(["connect-new", uuid], "", () => { addState = ""; formOpen = false; refreshVpns() }, () => { addErr = args[3] === "tls" ? Tr.t("Couldn't connect. Check the name, the files and the key password.") : Tr.t("Couldn't connect. Check the name and the password."); addState = "" })
         }, reason => { addErr = reason; addState = "" })
+        secret = "" // the callbacks above share this scope and live on after the request
     }
     // One at a time: a VPN can take 30 seconds, and a second request must not take over the first one's callbacks.
     property var queue: []
@@ -57,7 +77,8 @@ Singleton {
         property var done: null
         property var failed: null
         stdinEnabled: true
-        onStarted: { if (secret) write(secret + "\n"); secret = "" }
+        // Always a line: a key without a password sends an empty one, and the script waits for it.
+        onStarted: { write(secret + "\n"); secret = "" }
         stdout: StdioCollector { id: taskOut }
         stderr: StdioCollector { id: taskErr }
         onExited: code => {
@@ -84,6 +105,15 @@ Singleton {
             Ui.show("rede")
             const file = picked.text.trim()
             if (file) root.run(["vpn-import", file], "", () => root.refreshVpns(), reason => { root.vpnErr = reason })
+        }
+    }
+    Process {
+        id: filePicker
+        property string field: ""
+        stdout: StdioCollector { id: pickedFile }
+        onExited: code => {
+            Ui.show("rede")
+            if (code === 0) root[field] = pickedFile.text.trim()
         }
     }
     readonly property var wifi: Networking.devices.values.find(d => d.type === DeviceType.Wifi) ?? null

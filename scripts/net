@@ -2,6 +2,7 @@
 # Atoll networks, on top of nmcli. Passwords arrive on stdin: command line arguments are visible to every process.
 #   net wifi SSID HIDDEN(yes|no) open|psk                     -> prints the new profile's uuid
 #   net wifi-eap SSID HIDDEN(yes|no) peap|ttls IDENTITY [DOMAIN] -> prints the new profile's uuid
+#   net wifi-eap SSID HIDDEN(yes|no) tls IDENTITY CERT KEY [CA] [DOMAIN] -> stdin is the key's password, empty if it has none
 #   net connect-new UUID                                      -> connects; a profile that fails is removed
 #   net vpn-import FILE                                       -> WireGuard .conf or OpenVPN .ovpn; prints the uuid
 #   net vpn-up|vpn-down|vpn-forget UUID
@@ -19,13 +20,21 @@ new_profile() {
 }
 
 # nmcli's editor reads commands from stdin, which keeps the secret off the command line.
+# It carries on past a value it rejects, then saves without it and exits 0, so its errors count as failure too.
 edit_profile() {
-    local uuid="$1" script="$2"
-    if ! nmcli connection edit uuid "$uuid" <<<"$script"$'\nsave\nquit' >/dev/null; then
+    local uuid="$1" script="$2" out
+    if ! out="$(LC_ALL=C nmcli connection edit uuid "$uuid" <<<"$script"$'\nsave\nquit' 2>&1)" || grep -q '^Error:' <<<"$out"; then
         nmcli connection delete uuid "$uuid" >/dev/null 2>&1 || true
         echo "could not save the network" >&2
         exit 1
     fi
+}
+
+# A regular file's absolute path: NetworkManager reads it later, from somewhere else.
+cert_file() {
+    one_line "$1"
+    [[ -f "$1" ]] || { echo "not a file: $1" >&2; exit 2; }
+    realpath -s -- "$1"
 }
 
 vpn_only() {
@@ -46,8 +55,32 @@ case "${1:-}" in
         ;;
     wifi-eap)
         valid_hidden "$3"
-        [[ "$4" == peap || "$4" == ttls ]] || { echo "unsupported method: $4" >&2; exit 2; }
+        [[ "$4" == peap || "$4" == ttls || "$4" == tls ]] || { echo "unsupported method: $4" >&2; exit 2; }
         one_line "$5"
+        if [[ "$4" == tls ]]; then
+            # An empty value would make the editor ask for it, and take the next command as the answer.
+            [[ -n "$5" ]] || { echo "identity is required" >&2; exit 2; }
+            cert="$(cert_file "${6:-}")"
+            key="$(cert_file "${7:-}")"
+            ca=""
+            [[ -z "${8:-}" ]] || ca="$(cert_file "$8")"
+            one_line "${9:-}"
+            IFS= read -r password || true
+            # The editor trims values, which would change this one, or empty it and make it ask (see above).
+            [[ "$password" != [[:space:]]* && "$password" != *[[:space:]] ]] || { echo "the key password can't start or end with a space" >&2; exit 2; }
+            uuid="$(new_profile "$2" "$3")" || exit 1
+            # The private key alone splits on spaces, taking a second word as its password, unless they are escaped.
+            key="${key//\\/\\\\}"
+            commands="set wifi-sec.key-mgmt wpa-eap"$'\n'"set 802-1x.eap tls"$'\n'"set 802-1x.identity $5"$'\n'"set 802-1x.client-cert $cert"$'\n'"set 802-1x.private-key ${key// /\\ }"
+            # After the key, because setting the key clears its password.
+            [[ -z "$password" ]] || commands+=$'\n'"set 802-1x.private-key-password $password"
+            if [[ -n "$ca" ]]; then commands+=$'\n'"set 802-1x.ca-cert $ca"
+            elif [[ -n "${9:-}" ]]; then commands+=$'\n'"set 802-1x.system-ca-certs yes"; fi
+            [[ -z "${9:-}" ]] || commands+=$'\n'"set 802-1x.domain-suffix-match $9"
+            edit_profile "$uuid" "$commands"
+            echo "$uuid"
+            exit 0
+        fi
         one_line "${6:-}"
         IFS= read -r password
         uuid="$(new_profile "$2" "$3")" || exit 1

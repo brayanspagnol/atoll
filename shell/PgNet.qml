@@ -17,26 +17,22 @@ Page {
     property string askFor: ""
     property string err: ""
     property var details: ({})
-    property bool formOpen: false
-    property bool formHidden: true
-    property int formKind: 1 // 0 no password, 1 password, 2 enterprise
-    property int formEap: 0
+    readonly property bool tls: Net.formKind === 2 && Net.formEap === 2
     property string armedVpn: ""
     Timer { running: pg.armedVpn !== ""; interval: 5000; onTriggered: pg.armedVpn = "" }
     Timer { interval: 5000; running: true; repeat: true; triggeredOnStart: true; onTriggered: Net.refreshVpns() }
     function openForm(name, hidden, kind) {
         Net.addErr = ""
-        formOpen = true; formHidden = hidden; formKind = kind
-        formSsid.text = name; formPass.text = ""; formUser.text = ""; formDomain.text = ""
-        // The form sits below the list of networks.
-        Qt.callLater(() => pg.contentY = Math.max(0, pg.contentHeight - pg.height))
+        Net.formOpen = true; Net.formHidden = hidden; Net.formKind = kind
+        Net.formSsid = name; formPass.text = ""; Net.formUser = ""; Net.formDomain = ""
+        Net.formCert = ""; Net.formKey = ""; Net.formCa = ""
+        toForm.restart()
         if (hidden) formSsid.forceActiveFocus(); else formUser.forceActiveFocus()
     }
 
-    Connections {
-        target: Net
-        function onAddStateChanged() { if (!Net.addState && !Net.addErr) pg.formOpen = false }
-    }
+    // The form sits below the list of networks, and the layout needs a moment to place it.
+    Timer { id: toForm; interval: 100; onTriggered: pg.contentY = Math.max(0, pg.contentHeight - pg.height) }
+    Component.onCompleted: if (Net.formOpen) toForm.start()
     Binding { target: pg.wifi; property: "scannerEnabled"; value: Networking.wifiEnabled; when: !!pg.wifi }
 
     Process {
@@ -53,6 +49,24 @@ Page {
     }
     Timer { interval: 5000; running: true; repeat: true; onTriggered: info.running = true }
 
+
+    component FileField: RowLayout {
+        id: ff
+        property string label: ""
+        property string field: "" // the Net property holding the path
+        visible: pg.tls
+        Layout.fillWidth: true; spacing: 8
+        Fld {
+            Layout.fillWidth: true; placeholderText: ff.label; Accessible.name: ff.label
+            text: Net[ff.field]
+            onTextEdited: Net[ff.field] = text
+        }
+        Btn {
+            text: Tr.t("Choose…"); a11y: ff.label + ": " + text
+            // Cleared even if the page survives the picker, so what the user sees is always the same.
+            onClicked: { formPass.text = ""; Net.pickFile(ff.field, ff.label) }
+        }
+    }
 
     component Fact: ColumnLayout {
         Layout.fillWidth: true
@@ -141,34 +155,45 @@ Page {
             }
         }
     }
-    Btn { visible: Networking.wifiEnabled && !pg.formOpen; text: Tr.t("Other network…"); onClicked: pg.openForm("", true, 1) }
+    Btn { visible: Networking.wifiEnabled && !Net.formOpen; text: Tr.t("Other network…"); onClicked: pg.openForm("", true, 1) }
     ColumnLayout {
-        visible: pg.formOpen
+        visible: Net.formOpen
         Layout.fillWidth: true; spacing: 8
-        Sec { title: pg.formHidden ? Tr.t("Other network") : Tr.t("Enterprise network") }
+        Sec { title: Net.formHidden ? Tr.t("Other network") : Tr.t("Enterprise network") }
         Fld {
             id: formSsid
-            visible: pg.formHidden
+            visible: Net.formHidden
             Layout.fillWidth: true; placeholderText: Tr.t("Network name"); Accessible.name: Tr.t("Network name")
+            text: Net.formSsid
+            onTextEdited: Net.formSsid = text
         }
-        Tx { visible: !pg.formHidden; text: formSsid.text; strong: true }
+        Tx { visible: !Net.formHidden; text: Net.formSsid; strong: true }
         Seg {
-            visible: pg.formHidden
+            visible: Net.formHidden
             options: [Tr.t("No password"), Tr.t("Password"), Tr.t("Enterprise (802.1X)")]
-            current: pg.formKind
-            onPicked: i => pg.formKind = i
+            current: Net.formKind
+            onPicked: i => Net.formKind = i
         }
-        Seg { id: formEap; visible: pg.formKind === 2; options: ["PEAP", "TTLS"]; current: pg.formEap; onPicked: i => pg.formEap = i }
-        Fld { id: formUser; visible: pg.formKind === 2; Layout.fillWidth: true; placeholderText: Tr.t("User"); Accessible.name: Tr.t("User") }
+        Seg { visible: Net.formKind === 2; options: ["PEAP", "TTLS", "TLS"]; current: Net.formEap; onPicked: i => Net.formEap = i }
+        Fld { id: formUser; visible: Net.formKind === 2; Layout.fillWidth: true; placeholderText: Tr.t("User"); Accessible.name: Tr.t("User"); text: Net.formUser; onTextEdited: Net.formUser = text }
+        FileField { label: Tr.t("Client certificate"); field: "formCert" }
+        FileField { label: Tr.t("Private key"); field: "formKey" }
         Fld {
             id: formPass
-            visible: pg.formKind !== 0
-            Layout.fillWidth: true; placeholderText: Tr.t("Password"); Accessible.name: Tr.t("Password")
+            visible: Net.formKind !== 0
+            Layout.fillWidth: true
+            placeholderText: pg.tls ? Tr.t("Key password (if it has one)") : Tr.t("Password")
+            Accessible.name: placeholderText
             echoMode: TextInput.Password
             onAccepted: if (formGo.enabledB) formGo.clicked()
         }
-        Fld { id: formDomain; visible: pg.formKind === 2; Layout.fillWidth: true; placeholderText: Tr.t("Server domain (optional)"); Accessible.name: Tr.t("Server domain (optional)") }
-        Tx { visible: pg.formKind === 2; text: Tr.t("Without a domain, the server's identity isn't checked, and a fake network could capture your password."); color: Theme.warn; size: 13; wrapMode: Text.Wrap; Layout.fillWidth: true }
+        FileField { label: Tr.t("CA certificate (optional)"); field: "formCa" }
+        Fld { visible: Net.formKind === 2; Layout.fillWidth: true; placeholderText: Tr.t("Server domain (optional)"); Accessible.name: Tr.t("Server domain (optional)"); text: Net.formDomain; onTextEdited: Net.formDomain = text }
+        Tx {
+            visible: Net.formKind === 2 && (!pg.tls || (!Net.formCa.trim() && !Net.formDomain.trim()))
+            text: pg.tls ? Tr.t("Without a CA certificate or a domain, the server's identity isn't checked, and a fake network could pretend to be this one.") : Tr.t("Without a domain, the server's identity isn't checked, and a fake network could capture your password.")
+            color: Theme.warn; size: 13; wrapMode: Text.Wrap; Layout.fillWidth: true
+        }
         Tx { visible: !!Net.addState; text: Net.addState === "saving" ? Tr.t("Saving…") : Tr.t("Connecting…"); dim: true }
         Tx { visible: !!Net.addErr; text: Net.addErr; color: Theme.danger; wrapMode: Text.Wrap; Layout.fillWidth: true }
         RowLayout {
@@ -176,16 +201,19 @@ Page {
             Btn {
                 id: formGo
                 text: Tr.t("Connect"); variant: "solid"
-                enabledB: !Net.addState && formSsid.text.trim().length > 0
-                    && (pg.formKind === 0 || (pg.formKind === 1 && formPass.text.length >= 8) || (pg.formKind === 2 && formPass.text.length > 0 && formUser.text.trim().length > 0))
+                enabledB: !Net.addState && Net.formSsid.trim().length > 0
+                    && (Net.formKind === 0 || (Net.formKind === 1 && formPass.text.length >= 8)
+                        || (Net.formKind === 2 && Net.formUser.trim().length > 0
+                            && (pg.tls ? Net.formCert.trim().length > 0 && Net.formKey.trim().length > 0 : formPass.text.length > 0)))
                 onClicked: {
-                    const hidden = pg.formHidden ? "yes" : "no", ssid = formSsid.text.trim()
-                    if (pg.formKind === 2) Net.addWifi(["wifi-eap", ssid, hidden, pg.formEap === 0 ? "peap" : "ttls", formUser.text.trim()].concat(formDomain.text.trim() ? [formDomain.text.trim()] : []), formPass.text)
-                    else Net.addWifi(["wifi", ssid, hidden, pg.formKind === 1 ? "psk" : "open"], pg.formKind === 1 ? formPass.text : "")
+                    const hidden = Net.formHidden ? "yes" : "no", ssid = Net.formSsid.trim(), user = Net.formUser.trim(), domain = Net.formDomain.trim()
+                    if (pg.tls) Net.addWifi(["wifi-eap", ssid, hidden, "tls", user, Net.formCert.trim(), Net.formKey.trim(), Net.formCa.trim(), domain], formPass.text)
+                    else if (Net.formKind === 2) Net.addWifi(["wifi-eap", ssid, hidden, Net.formEap === 0 ? "peap" : "ttls", user].concat(domain ? [domain] : []), formPass.text)
+                    else Net.addWifi(["wifi", ssid, hidden, Net.formKind === 1 ? "psk" : "open"], Net.formKind === 1 ? formPass.text : "")
                     formPass.text = ""
                 }
             }
-            Btn { text: Tr.t("Cancel"); onClicked: pg.formOpen = false }
+            Btn { text: Tr.t("Cancel"); onClicked: Net.formOpen = false }
         }
     }
 
