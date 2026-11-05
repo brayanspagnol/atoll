@@ -6,6 +6,21 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-11-05
+
+### Added
+
+- Idle times are now picked from a list with a Never option.
+- Wallpaper gallery: add images with the + button in Settings and they stay there. An image you already use joins it by itself.
+
+### Changed
+
+- Settings no longer lists every image in `~/Pictures/Wallpapers`.
+
+### Removed
+
+- The bundled default wallpaper and its generator. New installs start on a solid color.
+
 ## [1.7.1] - 2026-11-05
 
 ### Fixed
@@ -115,7 +130,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.7.1...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/brayanspagnol/atoll/compare/v1.7.1...v1.8.0
 [1.7.1]: https://github.com/brayanspagnol/atoll/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/brayanspagnol/atoll/compare/v1.6.1...v1.7.0
 [1.6.1]: https://github.com/brayanspagnol/atoll/compare/v1.6.0...v1.6.1

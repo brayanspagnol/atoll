@@ -17,16 +17,16 @@ Os prints estão no [README em inglês](README.md#screenshots).
 
 - **Ilha:** áreas de trabalho, relógio, música e status em uma pílula flutuante no topo.
 - **Dock:** se esconde na borda inferior, então as janelas ganham a altura toda. Encoste o mouse na borda ou aperte `Super+Z`. A engrenagem abre um launchpad em tela cheia para escolher os apps, da lista de instalados ou qualquer programa nos seus arquivos, e reordenar.
-- **Central:** som, internet, Bluetooth, desempenho, calendário, avisos, ajustes e energia.
+- **Central:** som, internet, Bluetooth, desempenho, calendário, avisos, monitor, ajustes, sobre e energia.
 - **Cartão de música:** capa, cores tiradas do álbum, barra de tempo, repetir, aleatório, curtidas, volume e troca de saída.
 - **Avisos e volume:** cartões de vidro que descem de baixo da ilha.
 - **Busca:** aplicativos e telas do sistema no mesmo lugar. Digite "wifi" ou "volume".
 - **Idiomas:** English, Português (Brasil), Español, Français, Deutsch, Русский e 简体中文. Segue o idioma do sistema, ou escolha em Ajustes.
 - **Tela de bloqueio:** relógio grande, música atual, nome e foto do perfil, sobre o seu papel de parede nítido. Ela também recebe você ao voltar da suspensão, sem o desktop piscar antes.
-- **Perfis:** cada um guarda nome, foto (de uma galeria que você vai adicionando), idioma, cor, papel de parede, dock e tempos de ociosidade. Crie e troque em Ajustes.
+- **Perfis:** cada um guarda nome, foto e papel de parede (de galerias que você vai adicionando), idioma, cor, dock e tempos de ociosidade. Crie e troque em Ajustes.
 - **Feriados:** de mais de 200 países no calendário, ou nenhum. Escolha em Ajustes.
 - **Monitores:** arraste as telas para posicionar e ajuste resolução, taxa, escala, rotação, espelhamento, VRR, brilho, áreas de trabalho e o que fechar a tampa faz. Uma disposição nova volta sozinha em 15 segundos se você não mantiver.
-- **Ociosidade:** tempos para tomada e bateria, e luz noturna.
+- **Ociosidade:** tempos de bloqueio, desligar a tela e suspender para tomada e bateria, cada um com a opção Nunca, e luz noturna.
 - **Sobre:** versão, busca por atualização, links do projeto e dados do sistema para relatar bugs.
 - **Resistente:** se o shell cair, ele volta sozinho. Suas janelas continuam abertas.
 
@@ -91,7 +91,7 @@ A lista completa está em [`hypr/binds.lua`](hypr/binds.lua).
 ## Configurar
 
 **Quase tudo** está na tela Ajustes: perfil, idioma, cor de destaque, papel de parede, luz noturna e tempos de ociosidade. As telas ficam em Monitor, salvas em `~/.config/atoll/monitors.lua`.
-Seus papéis de parede vão em `~/Pictures/Wallpapers`, e a tela de bloqueio segue o que você escolher. A foto é definida por perfil e, sem uma, usa `~/.face`.
+O Atoll não traz papéis de parede e começa com uma cor sólida. Adicione os seus com o **+** em Ajustes: eles ficam na galeria, e a tela de bloqueio segue o que você escolher. A foto é definida por perfil e, sem uma, usa `~/.face`.
 
 **Tela de bloqueio:** é o arquivo `~/.config/atoll/hyprlock.conf`. Atualizações o substituem e guardam sua versão como `hyprlock.conf.bak`.
 

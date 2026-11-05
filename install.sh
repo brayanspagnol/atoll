@@ -51,7 +51,7 @@ if ((${#missing[@]})); then
 fi
 
 echo "Installing to $config, $shell_dir and $data"
-mkdir -p "$config/hypr" "$shell_dir" "$data/scripts" "$data/wallpapers" "$bin"
+mkdir -p "$config/hypr" "$shell_dir" "$data/scripts" "$bin"
 
 # Settings moved into profiles in 1.4.0.
 mkdir -p "$config/profiles"
@@ -66,7 +66,6 @@ rm -rf "$shell_dir"/*.qml "$shell_dir"/*.js "$shell_dir/i18n"
 cp -r "$repo"/shell/* "$shell_dir/"
 cp "$repo"/hypr/*.lua "$config/hypr/"
 cp "$repo"/scripts/* "$data/scripts/"
-cp "$repo"/wallpapers/* "$data/wallpapers/"
 cp "$repo/VERSION" "$data/VERSION"
 # A modified lock screen is kept aside, not lost.
 if [[ -f "$config/hyprlock.conf" ]] && ! cmp -s "$repo/config/hyprlock.conf" "$config/hyprlock.conf"; then
@@ -74,7 +73,6 @@ if [[ -f "$config/hyprlock.conf" ]] && ! cmp -s "$repo/config/hyprlock.conf" "$c
     echo "Your previous lock screen was saved as $config/hyprlock.conf.bak"
 fi
 cp "$repo/config/hyprlock.conf" "$config/hyprlock.conf"
-[[ -e "$data/current-wallpaper" ]] || ln -sfn "$data/wallpapers/atoll-dusk.jpg" "$data/current-wallpaper"
 # The idle page in Settings rewrites this file, so keep the existing one.
 [[ -f "$config/hypridle.conf" ]] || cp "$repo/config/hypridle.conf" "$config/hypridle.conf"
 ln -sf "$data/scripts/atoll-session" "$bin/atoll-session"

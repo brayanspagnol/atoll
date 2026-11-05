@@ -7,18 +7,10 @@ import Quickshell.Widgets
 Page {
     id: pg
     title: Tr.t("Settings")
-    Component.onCompleted: Holidays.listCountries()
-    property var walls: []
+    Component.onCompleted: { Holidays.listCountries(); Profiles.keepWallpaper() }
     property bool creating: false
     property bool armed: false
     Timer { running: pg.armed; interval: 5000; onTriggered: pg.armed = false }
-
-    Process {
-        running: true
-        command: ["find", Quickshell.env("HOME") + "/.local/share/atoll/wallpapers", Quickshell.env("HOME") + "/Pictures/Wallpapers", "-maxdepth", "2", "-type", "f", "(", "-iname", "*.png", "-o", "-iname", "*.jpg", "-o", "-iname", "*.jpeg", "-o", "-iname", "*.webp", ")"]
-        stderr: StdioCollector {}
-        stdout: StdioCollector { onStreamFinished: pg.walls = text.trim().split("\n").filter(Boolean).sort() }
-    }
 
     component Line: RowLayout {
         property string label: ""
@@ -156,27 +148,27 @@ Page {
         }
     }
     Tx { text: Tr.t("Wallpaper"); Layout.topMargin: 6 }
-    Tx { visible: pg.walls.length === 0; text: Tr.t("Add images to ~/Pictures/Wallpapers"); dim: true }
     Flow {
         Layout.fillWidth: true; spacing: 8
         Repeater {
-            model: pg.walls
+            model: Profiles.wallpapers
             Rectangle {
                 required property string modelData
-                width: 268; height: 120; radius: Theme.radiusSmall; clip: true
+                width: 208; height: 112; radius: Theme.radiusSmall; clip: true
                 color: Theme.raised
                 border.width: Cfg.v.wallpaper === modelData || activeFocus ? 2 : 0
                 border.color: Theme.accent
                 activeFocusOnTab: true
-                Accessible.role: Accessible.Button
-                Accessible.name: Tr.t("Wallpaper %1").arg(modelData.split("/").pop())
+                Accessible.role: Accessible.RadioButton
+                Accessible.name: Tr.t("Wallpaper")
+                Accessible.checked: Cfg.v.wallpaper === modelData
                 Keys.onSpacePressed: Cfg.v.wallpaper = modelData
-                Image { anchors.fill: parent; anchors.margins: 2; source: "file://" + parent.modelData; fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(536, 240); asynchronous: true }
+                Image { anchors.fill: parent; anchors.margins: 2; source: "file://" + parent.modelData; fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(416, 224); asynchronous: true }
                 MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Cfg.v.wallpaper = parent.modelData }
             }
         }
         Rectangle {
-            width: 268; height: 120; radius: Theme.radiusSmall; color: Theme.ground
+            width: 208; height: 112; radius: Theme.radiusSmall; color: Theme.ground
             border.width: !Cfg.v.wallpaper || activeFocus ? 2 : 1
             border.color: !Cfg.v.wallpaper || activeFocus ? Theme.accent : Theme.line
             activeFocusOnTab: true
@@ -185,6 +177,19 @@ Page {
             Keys.onSpacePressed: Cfg.v.wallpaper = ""
             Tx { anchors.centerIn: parent; text: Tr.t("Solid color"); dim: true }
             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Cfg.v.wallpaper = "" }
+        }
+        Rectangle {
+            width: 208; height: 112; radius: Theme.radiusSmall
+            color: addWallpaper.containsMouse ? Theme.raised : Theme.hover
+            border.width: activeFocus ? 2 : 1
+            border.color: activeFocus ? Theme.ink : Theme.lineStrong
+            activeFocusOnTab: true
+            Accessible.role: Accessible.Button
+            Accessible.name: Tr.t("Add wallpaper")
+            Keys.onSpacePressed: Profiles.addWallpaper()
+            Keys.onReturnPressed: Profiles.addWallpaper()
+            Ic { anchors.centerIn: parent; name: "plus"; size: 32 }
+            MouseArea { id: addWallpaper; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Profiles.addWallpaper() }
         }
     }
 
@@ -212,7 +217,7 @@ Page {
 
 
     Sec {
-        title: Tr.t("Idle time (minutes, 0 = never)")
+        title: Tr.t("Idle time")
         Btn { text: Tr.t("Apply"); variant: "solid"; onClicked: { Idle.apply(); applied.visible = true } }
     }
     Tx { id: applied; visible: false; text: Tr.t("Applied."); color: Theme.good }
@@ -223,18 +228,25 @@ Page {
         Tx { text: Tr.t("Turn off screen"); dim: true; size: 13; Layout.fillWidth: true }
         Tx { text: Tr.t("Suspend"); dim: true; size: 13; Layout.fillWidth: true }
         Tx { text: Tr.t("Plugged in") }
-        Mins { key: "lockAc" } Mins { key: "dpmsAc" } Mins { key: "sleepAc" }
+        Mins { key: "lockAc"; a11y: Tr.t("Plugged in") + ": " + Tr.t("Lock") }
+        Mins { key: "dpmsAc"; a11y: Tr.t("Plugged in") + ": " + Tr.t("Turn off screen") }
+        Mins { key: "sleepAc"; a11y: Tr.t("Plugged in") + ": " + Tr.t("Suspend") }
         Tx { text: Tr.t("On battery") }
-        Mins { key: "lockBat" } Mins { key: "dpmsBat" } Mins { key: "sleepBat" }
+        Mins { key: "lockBat"; a11y: Tr.t("On battery") + ": " + Tr.t("Lock") }
+        Mins { key: "dpmsBat"; a11y: Tr.t("On battery") + ": " + Tr.t("Turn off screen") }
+        Mins { key: "sleepBat"; a11y: Tr.t("On battery") + ": " + Tr.t("Suspend") }
     }
-    component Mins: Fld {
+    component Mins: Cmb {
         property string key: ""
+        readonly property int minutes: Cfg.v[key]
+        // Times set by hand in an older version stay available.
+        readonly property var choices: [...new Set([0, 1, 2, 3, 5, 10, 15, 20, 30, 45, 60, 90, 120, 180, 240, minutes])].sort((a, b) => a - b)
         Layout.fillWidth: true
-        font.family: Theme.mono
-        text: Cfg.v[key]
-        validator: IntValidator { bottom: 0; top: 240 }
-        Accessible.name: key
-        onTextEdited: if (acceptableInput) Cfg.v[key] = Number(text)
+        implicitWidth: 120
+        textRole: "name"
+        model: choices.map(m => ({ name: m ? Tr.t("%1 min").arg(m) : Tr.t("Never") }))
+        currentIndex: choices.indexOf(minutes)
+        onActivated: i => Cfg.v[key] = choices[i]
     }
 
     Sec { title: Tr.t("Shortcuts") }

@@ -12,8 +12,9 @@ Singleton {
     readonly property string path: home + "/.config/atoll/profiles/" + active + ".json"
     property var list: []
     property var photos: []
+    property var wallpapers: []
 
-    function refresh() { lister.running = false; lister.running = true; photoLister.running = true }
+    function refresh() { lister.running = false; lister.running = true; photoLister.running = true; wallpaperLister.running = true }
     function run(args, then) {
         task.then = then ?? null
         task.command = [script].concat(args)
@@ -37,9 +38,18 @@ Singleton {
         run(["delete", old])
     }
     // The picker is a normal window, and the control center would cover it, so it closes meanwhile.
-    function addPhoto() {
+    function addPhoto() { pick("photo", Tr.t("Choose a photo")) }
+    function addWallpaper() { pick("wallpaper", Tr.t("Choose a wallpaper")) }
+    function pick(kind, title) {
         Ui.open = false
+        picker.kind = kind
+        picker.title = title
         picker.running = true
+    }
+    // A wallpaper chosen before the gallery existed joins it, so it stays there after picking another one.
+    function keepWallpaper() {
+        const dir = home + "/.local/share/atoll/backgrounds/"
+        if (Cfg.v.wallpaper && !Cfg.v.wallpaper.startsWith(dir)) run(["wallpaper", Cfg.v.wallpaper], out => Cfg.v.wallpaper = out)
     }
 
     FileView {
@@ -61,14 +71,22 @@ Singleton {
         stdout: StdioCollector { onStreamFinished: root.photos = text.split("\n").filter(Boolean) }
     }
     Process {
+        id: wallpaperLister
+        command: [root.script, "wallpapers"]
+        running: true
+        stdout: StdioCollector { onStreamFinished: root.wallpapers = text.split("\n").filter(Boolean) }
+    }
+    Process {
         id: picker
-        command: ["zenity", "--file-selection", "--title=" + Tr.t("Choose a photo"), "--filename=" + root.home + "/Pictures/",
+        property string kind: ""
+        property string title: ""
+        command: ["zenity", "--file-selection", "--title=" + title, "--filename=" + root.home + "/Pictures/",
             "--file-filter=" + Tr.t("Images") + " | *.png *.PNG *.jpg *.JPG *.jpeg *.JPEG *.webp *.WEBP"]
         stdout: StdioCollector { id: picked }
         onExited: {
             Ui.show("ajustes")
             const image = picked.text.trim()
-            if (image) root.run(["photo", image], out => Cfg.v.photo = out)
+            if (image) root.run([kind, image], out => Cfg.v[kind] = out)
         }
     }
     Process {

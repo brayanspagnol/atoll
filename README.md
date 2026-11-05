@@ -19,22 +19,22 @@ wallpaper, and windows keep the rest of the screen.
 
 - **Island:** workspaces, clock, media and status in a floating pill at the top.
 - **Dock:** hides at the bottom edge, so windows get the full height. Hover the edge or press `Super+Z`. The gear opens a full-screen launchpad to choose its apps, from the installed list or any program in your files, and to reorder them.
-- **Control center:** sound, internet, Bluetooth, performance, calendar, notifications, settings and power.
+- **Control center:** sound, internet, Bluetooth, performance, calendar, notifications, monitor, settings, about and power.
 - **Music card:** cover art, colors taken from the album, seek bar, repeat, shuffle, likes, volume and output switching.
 - **Notifications and volume:** glass cards that drop from under the island.
 - **Search:** apps and system screens in one box. Type "wifi" or "volume".
 - **Languages:** English, Português (Brasil), Español, Français, Deutsch, Русский and 简体中文. It follows your system language, or pick one in Settings.
 - **Lock screen:** a large clock, the current song and your profile's name and picture over your sharp wallpaper. It also greets you when waking from suspend, with no flash of the desktop.
-- **Profiles:** each one keeps its own name, picture (from a saved gallery you add to), language, accent, wallpaper, dock and idle times. Create and switch them in Settings.
+- **Profiles:** each one keeps its own name, picture and wallpaper (from galleries you add to), language, accent, dock and idle times. Create and switch them in Settings.
 - **Public holidays:** for over 200 countries in the calendar, or none. Choose in Settings.
 - **Monitors:** drag your screens into place, and set resolution, refresh rate, scale, rotation, mirroring, VRR, brightness, workspaces and what closing the lid does. A new layout goes back by itself in 15 seconds unless you keep it.
-- **Idle:** timers per power source and night light.
+- **Idle:** lock, screen off and suspend times per power source, each with a Never option, and night light.
 - **About:** version, update check, project links and system details to paste in a bug report.
 - **Resilient by design:** if the shell crashes, it restarts by itself. Your windows stay open.
 
 ## Screenshots
 
-Personal data such as network and device names is covered with solid blocks.
+Screenshots use demo data.
 
 ![Lock screen](docs/screenshots/lock.webp)
 
@@ -127,7 +127,7 @@ The full list is in [`hypr/binds.lua`](hypr/binds.lua).
 ## Configure
 
 **Most things** are in the Settings screen: profile, language, accent color, wallpaper, night light and idle timers. Screens are in the Monitor screen, saved in `~/.config/atoll/monitors.lua`.
-Your wallpapers go in `~/Pictures/Wallpapers`, and the lock screen follows the one you pick. Your lock screen picture is set per profile, and falls back to `~/.face`.
+Atoll ships no wallpapers and starts on a solid color. Add yours with the **+** in Settings: they stay in the gallery, and the lock screen follows the one you pick. Your lock screen picture is set per profile, and falls back to `~/.face`.
 
 **The lock screen** is `~/.config/atoll/hyprlock.conf`. Updates replace it and save your version as `hyprlock.conf.bak`.
 

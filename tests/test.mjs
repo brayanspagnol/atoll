@@ -76,6 +76,12 @@ assert.equal(profiles("photo", home + "/a.png").stdout.trim(), first)
 assert.notEqual(profiles("photo", home + "/b.png").stdout.trim(), first)
 assert.equal(profiles("photos").stdout.trim().split("\n").length, 2)
 assert.equal(profiles("photo", home + "/missing.png").status, 1)
+// Wallpapers keep their own gallery, the same way.
+const wall = profiles("wallpaper", home + "/a.png").stdout.trim()
+assert.equal(profiles("wallpaper", home + "/a.png").stdout.trim(), wall)
+assert.notEqual(wall, first)
+assert.deepEqual(profiles("wallpapers").stdout.trim().split("\n"), [wall])
+assert.equal(profiles("wallpaper", home + "/missing.png").status, 1)
 fs.rmSync(home, { recursive: true })
 
 // Every string the interface asks for must exist in every language, with the same placeholders.

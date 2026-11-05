@@ -18,7 +18,7 @@ Singleton {
         JsonAdapter {
             id: adapter
             property string accent: "gelo"
-            property string wallpaper: Quickshell.env("HOME") + "/.local/share/atoll/wallpapers/atoll-dusk.jpg"
+            property string wallpaper: ""
             property bool dnd: false
             property string name: Quickshell.env("USER")
             property string photo: "" // this profile's picture; empty uses ~/.face

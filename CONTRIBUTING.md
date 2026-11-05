@@ -11,7 +11,6 @@ Thanks for helping. Issues and pull requests can be written in English or Portug
 | `scripts/` | Session helpers installed to `~/.local/share/atoll/scripts` |
 | `config/` | Lock screen and default idle configuration |
 | `tests/` | Automated tests for the pure logic |
-| `tools/` | Maintainer tools, such as the wallpaper generator |
 
 ## Test your change
 
