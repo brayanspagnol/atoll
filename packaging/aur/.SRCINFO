@@ -1,6 +1,6 @@
 pkgbase = atoll
 	pkgdesc = A complete glass desktop shell for Hyprland, built with Quickshell
-	pkgver = 1.12.0
+	pkgver = 1.12.1
 	pkgrel = 1
 	url = https://github.com/brayanspagnol/atoll
 	install = atoll.install
@@ -38,7 +38,7 @@ pkgbase = atoll
 	optdepends = power-profiles-daemon: choose a power mode
 	optdepends = networkmanager-openvpn: import OpenVPN files
 	optdepends = ddcutil: brightness of external monitors
-	source = atoll-1.12.0.tar.gz::https://github.com/brayanspagnol/atoll/archive/refs/tags/v1.12.0.tar.gz
-	sha256sums = 536353b3cf383dd63d26505a789c5fe75d335f5a56405fda08e7db2de03f54c3
+	source = atoll-1.12.1.tar.gz::https://github.com/brayanspagnol/atoll/archive/refs/tags/v1.12.1.tar.gz
+	sha256sums = ec96f2596a2b0528cee057b3965d2f462cd94825fb9af83e18dd1790b9595e92
 
 pkgname = atoll
