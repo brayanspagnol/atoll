@@ -6,7 +6,7 @@ const load = (file, names) => {
     return ctx.x
 }
 const C = load("cal.js", "key,addDays,monthGrid,weekOf,isoWeek,occurs,on,upcoming,validTime")
-const P = load("parse.js", "cpu,mem,net,top,bytes,shQuote,newerVersion,zipLayouts,joinLayouts,xkbCatalog,powerProfiles,inWindow,nmcliRows")
+const P = load("parse.js", "cpu,mem,net,top,bytes,shQuote,newerVersion,zipLayouts,joinLayouts,xkbCatalog,powerProfiles,inWindow,nmcliRows,modelName,chassisKind,cpuName,duration")
 const g = C.monthGrid(2026, 10); assert.equal(g.length, 42); assert.equal(g[0], "2026-11-01"); assert.equal(g[41], "2026-12-12")
 assert.equal(C.monthGrid(2026, 9)[0], "2026-09-27") // October 2026 starts on a Thursday
 assert.deepEqual([C.isoWeek("2026-01-01"), C.isoWeek("2026-11-05"), C.isoWeek("2027-01-03")], [1, 45, 53])
@@ -91,6 +91,16 @@ for (const n of [2, 3, 5, 7]) {
     })
 }
 assert.equal(O.spread([], 100, 100, 100, 100, 10).length, 0)
+assert.equal(P.modelName("LENOVO", "82AB", "Lenovo IdeaPad 5 14"), "Lenovo IdeaPad 5 14")
+assert.equal(P.modelName("Dell Inc.", "XPS 13 9310", ""), "Dell XPS 13 9310")
+assert.equal(P.modelName("ASUSTeK COMPUTER INC.", "ROG Strix G15", "1.0"), "ASUSTeK COMPUTER ROG Strix G15")
+assert.equal(P.modelName("System manufacturer", "System Product Name", "System Version"), "System manufacturer")
+assert.equal(P.modelName("HP", "HP Pavilion Laptop 15-eg0xxx", "Type1ProductConfigId"), "HP Pavilion Laptop 15-eg0xxx")
+assert.equal(P.chassisKind("10"), "laptop"); assert.equal(P.chassisKind("3"), "desktop"); assert.equal(P.chassisKind(""), "")
+assert.equal(P.cpuName("13th Gen Intel(R) Core(TM) i5-13420H"), "Intel Core i5-13420H")
+assert.equal(P.cpuName("AMD Ryzen 7 5800H with Radeon Graphics"), "AMD Ryzen 7 5800H")
+assert.equal(P.cpuName("Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz"), "Intel Core i7-8650U")
+assert.deepEqual([P.duration(720), P.duration(12000), P.duration(190000)], ["12 min", "3 h 20 min", "2 d 4 h"])
 const kb = P.zipLayouts("br,us", "abnt2,")
 assert.deepEqual(JSON.parse(JSON.stringify(kb)), [{ layout: "br", variant: "abnt2" }, { layout: "us", variant: "" }])
 assert.deepEqual(JSON.parse(JSON.stringify(P.joinLayouts(kb))), { layout: "br,us", variant: "abnt2," })

@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-11-05
+
+### Added
+
+- About shows the computer's model and type, processor with cores and threads, storage with its use, battery health and charge cycles, screens, uptime and firmware, and includes them in the report.
+
 ## [1.12.1] - 2026-11-05
 
 ### Fixed
@@ -211,7 +217,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.12.1...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.13.0...HEAD
+[1.13.0]: https://github.com/brayanspagnol/atoll/compare/v1.12.1...v1.13.0
 [1.12.1]: https://github.com/brayanspagnol/atoll/compare/v1.12.0...v1.12.1
 [1.12.0]: https://github.com/brayanspagnol/atoll/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/brayanspagnol/atoll/compare/v1.10.1...v1.11.0

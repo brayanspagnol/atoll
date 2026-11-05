@@ -31,7 +31,7 @@ Os prints estão no [README em inglês](README.md#screenshots).
 - **Ociosidade e energia:** tempos de bloqueio, desligar a tela e suspender para tomada e bateria, cada um com a opção Nunca, modos de energia e luz noturna com horário próprio.
 - **Teclado e mouse:** layouts, velocidade do ponteiro, rolagem natural e opções do touchpad em Ajustes.
 - **Internet:** Wi-Fi com redes ocultas e corporativas (802.1X: PEAP, TTLS e TLS com certificado), mais arquivos WireGuard e OpenVPN que você importa.
-- **Sobre:** versão, atualização com um clique, links do projeto e dados do sistema para relatar bugs.
+- **Sobre:** versão, atualização com um clique, links do projeto e dados do seu computador (modelo, processador, vídeo, memória, armazenamento, saúde da bateria, telas e software) para consultar ou colar ao relatar bugs.
 - **Resistente:** se o shell cair, ele volta sozinho. Suas janelas continuam abertas.
 
 ## Requisitos

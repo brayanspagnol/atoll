@@ -128,3 +128,35 @@ function emojiSearch(entries, query) {
     }
     return tiers[0].concat(tiers[1], tiers[2], tiers[3])
 }
+
+// DMI names are often a part number ("82AB") with the marketing name in the version field, or placeholders.
+function modelName(vendor, name, version) {
+    const junk = /^(|none|n\/a|default string|system (product name|version)|to be filled by o\.e\.m\.|not applicable|0+|\d+(\.\d+)*)$/i
+    const clean = s => (s || "").trim()
+    let v = clean(vendor).replace(/,? (inc|corporation|co\.,? ltd|ltd|gmbh)\.?$/i, "")
+    if (v === v.toUpperCase() && v.length > 3) v = v.charAt(0) + v.slice(1).toLowerCase()
+    const n = clean(name), ver = clean(version)
+    const coded = !/\s/.test(n) && n.length <= 8 && /\d/.test(n)
+    const pick = coded && !junk.test(ver) ? ver : junk.test(n) ? "" : n
+    if (!pick) return v
+    return pick.toLowerCase().startsWith(v.toLowerCase()) ? pick : (v + " " + pick).trim()
+}
+// SMBIOS chassis types: the portable ones are laptops.
+function chassisKind(code) {
+    const c = Number(code)
+    if ([8, 9, 10, 11, 14, 30, 31, 32].includes(c)) return "laptop"
+    if ([3, 4, 5, 6, 7, 13, 15, 16, 35, 36].includes(c)) return "desktop"
+    return ""
+}
+function cpuName(raw) {
+    return (raw || "").trim().replace(/\((R|TM)\)/gi, "").replace(/^\d+(th|st|nd|rd) Gen /i, "").replace(/ CPU @.*$/i, "").replace(/ with Radeon.*$/i, "")
+        .replace(/ \d+-Core Processor$/i, "").replace(/\s+/g, " ").trim()
+}
+// "2 d 3 h", "3 h 20 min" or "12 min".
+function duration(seconds) {
+    const m = Math.floor(seconds / 60), h = Math.floor(m / 60), d = Math.floor(h / 24)
+    if (d) return d + " d " + (h % 24) + " h"
+    if (h) return h + " h " + (m % 60) + " min"
+    return m + " min"
+}
+

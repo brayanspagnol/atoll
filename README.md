@@ -33,7 +33,7 @@ wallpaper, and windows keep the rest of the screen.
 - **Idle and power:** lock, screen off and suspend times per power source, each with a Never option, power modes, and a night light with its own schedule.
 - **Keyboard and mouse:** layouts, pointer speed, natural scrolling and touchpad options in Settings.
 - **Internet:** Wi-Fi with hidden and enterprise (802.1X: PEAP, TTLS and certificate-based TLS) networks, plus WireGuard and OpenVPN files you import.
-- **About:** version, one-click update, project links and system details to paste in a bug report.
+- **About:** version, one-click update, project links, and your computer's details (model, processor, graphics, memory, storage, battery health, screens and software) to read or paste in a bug report.
 - **Resilient by design:** if the shell crashes, it restarts by itself. Your windows stay open.
 
 ## Screenshots

@@ -18,7 +18,15 @@ Page {
     property string updateError: ""
     property bool packaged: false // installed by a package manager, which then owns updates
     readonly property bool hasUpdate: !!latest && P.newerVersion(latest, Ui.version)
-    readonly property string report: "Atoll " + Ui.version + "\n" + facts.trim() + "\nMemory=" + P.bytes(Sys.memInfo.total)
+    readonly property string model: P.modelName(info.Vendor, info.Product, info.ProductVersion)
+    readonly property string kind: P.chassisKind(info.Chassis)
+    readonly property string cpu: P.cpuName(info.CPU) + (info.Threads ? " · " + Tr.t("%1 cores, %2 threads").arg(info.Cores || "?").arg(info.Threads) : "")
+    readonly property string disk: info.DiskSize ? (info.Disk ? info.Disk + " · " : "") + Tr.t("%1 of %2 used").arg(P.bytes(Number(info.DiskUsed))).arg(P.bytes(Number(info.DiskSize))) : ""
+    readonly property string battery: info.BatteryHealth ? Tr.t("%1% of its original capacity").arg(info.BatteryHealth) + (info.BatteryCycles && info.BatteryCycles !== "0" ? " · " + Tr.t("%1 cycles").arg(info.BatteryCycles) : "") : ""
+    readonly property string screens: Displays.monitors.filter(m => m.on).map(m => Displays.labelOf(m) + " · " + m.w + "×" + m.h + " @ " + Math.round(Number(m.rate)) + " Hz").join("\n")
+    readonly property string report: ["Atoll " + Ui.version, "Model=" + model, "CPU=" + cpu, "GPU=" + (info.GPU ?? ""), "Memory=" + P.bytes(Sys.memInfo.total),
+        "Disk=" + disk, "Battery=" + battery, "Screens=" + screens.replace(/\n/g, "; "), "Firmware=" + (info.Firmware ?? "").trim(),
+        "Distribution=" + (info.Distribution ?? ""), "Kernel=" + (info.Kernel ?? ""), "Hyprland=" + (info.Hyprland ?? ""), "Quickshell=" + (info.Quickshell ?? "")].join("\n")
 
     component Fact: ColumnLayout {
         property string k: ""; property string val: ""
@@ -41,6 +49,27 @@ Page {
             echo "Kernel=$(uname -r)"
             echo "Distribution=$(. /etc/os-release 2>/dev/null; echo "$NAME")"
             echo "GPU=$(command -v lspci >/dev/null && lspci | grep -Ei 'vga|3d' | head -1 | cut -d: -f3- | sed 's/^ *//; s/ Corporation//; s/ (rev.*//')"
+            d=/sys/class/dmi/id
+            echo "Vendor=$(cat $d/sys_vendor 2>/dev/null)"
+            echo "Product=$(cat $d/product_name 2>/dev/null)"
+            echo "ProductVersion=$(cat $d/product_version 2>/dev/null)"
+            echo "Chassis=$(cat $d/chassis_type 2>/dev/null)"
+            echo "Firmware=$(cat $d/bios_version 2>/dev/null) $(cat $d/bios_date 2>/dev/null)"
+            echo "CPU=$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2-)"
+            echo "Cores=$(lscpu -p=CORE,SOCKET 2>/dev/null | grep -v '^#' | sort -u | wc -l)"
+            echo "Threads=$(nproc)"
+            root=$(findmnt -no SOURCE / | cut -d[ -f1); disk=$(lsblk -no PKNAME "$root" 2>/dev/null | head -1)
+            echo "Disk=$(lsblk -dno MODEL "/dev/\${disk:-x}" 2>/dev/null | sed 's/ *$//')"
+            echo "DiskSize=$(df -B1 --output=size / | tail -1 | tr -d ' ')"
+            echo "DiskUsed=$(df -B1 --output=used / | tail -1 | tr -d ' ')"
+            for b in /sys/class/power_supply/BAT*; do
+                [ -e "$b" ] || continue
+                full=$(cat $b/energy_full $b/charge_full 2>/dev/null | head -1); design=$(cat $b/energy_full_design $b/charge_full_design 2>/dev/null | head -1)
+                echo "BatteryHealth=$([ -n "$design" ] && [ "$design" -gt 0 ] && echo $((full * 100 / design)))"
+                echo "BatteryCycles=$(cat $b/cycle_count 2>/dev/null)"
+                break
+            done
+            echo "Uptime=$(cut -d. -f1 /proc/uptime)"
         `]
         stdout: StdioCollector { onStreamFinished: pg.facts = text }
     }
@@ -129,14 +158,26 @@ Page {
     }
     Tx { visible: copied.running; text: Tr.t("Copied."); color: Theme.good }
     Timer { id: copied; interval: 2500 }
+    Tx { text: pg.kind === "laptop" ? Tr.t("Laptop") : pg.kind === "desktop" ? Tr.t("Desktop") : Tr.t("Computer"); dim: true; size: 13; Layout.topMargin: 2 }
+    Tx { text: pg.model || "—"; size: 22; strong: true; Layout.fillWidth: true; wrapMode: Text.Wrap }
     GridLayout {
-        Layout.fillWidth: true; columns: 3; columnSpacing: 16; rowSpacing: 16
-        Fact { k: "Hyprland"; val: pg.info.Hyprland ?? "" }
-        Fact { k: "Quickshell"; val: pg.info.Quickshell ?? "" }
-        Fact { k: Tr.t("Kernel"); val: pg.info.Kernel ?? "" }
-        Fact { k: Tr.t("Distribution"); val: pg.info.Distribution ?? "" }
+        Layout.fillWidth: true; Layout.topMargin: 6; columns: 3; columnSpacing: 16; rowSpacing: 16
+        Fact { k: Tr.t("Processor"); val: pg.cpu }
         Fact { k: Tr.t("Graphics card"); val: pg.info.GPU ?? "" }
         Fact { k: Tr.t("Memory"); val: P.bytes(Sys.memInfo.total) }
+        Fact { k: Tr.t("Storage"); val: pg.disk }
+        Fact { visible: !!pg.battery; k: Tr.t("Battery"); val: pg.battery }
+        Fact { k: Tr.t("Screens"); val: pg.screens }
+    }
+    Tx { text: Tr.t("Software").toUpperCase(); dim: true; size: 12; strong: true; font.letterSpacing: 1; Layout.topMargin: 10 }
+    GridLayout {
+        Layout.fillWidth: true; columns: 3; columnSpacing: 16; rowSpacing: 16
+        Fact { k: Tr.t("Distribution"); val: pg.info.Distribution ?? "" }
+        Fact { k: Tr.t("Kernel"); val: pg.info.Kernel ?? "" }
+        Fact { k: Tr.t("Uptime"); val: pg.info.Uptime ? P.duration(Number(pg.info.Uptime)) : "" }
+        Fact { k: "Hyprland"; val: pg.info.Hyprland ?? "" }
+        Fact { k: "Quickshell"; val: pg.info.Quickshell ?? "" }
+        Fact { k: Tr.t("Firmware"); val: (pg.info.Firmware ?? "").trim() }
     }
 
     Sec { title: Tr.t("Credits") }
