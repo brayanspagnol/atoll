@@ -71,3 +71,22 @@ function xkbCatalog(text) {
     }
     return out.sort((a, b) => a.name.localeCompare(b.name))
 }
+
+// "  performance:" lines of powerprofilesctl list; the active one starts with "*".
+function powerProfiles(text) {
+    const order = ["power-saver", "balanced", "performance"], found = []
+    let active = ""
+    for (const line of text.split("\n")) {
+        const m = line.match(/^(\*?)\s*([a-z-]+):\s*$/)
+        if (!m) continue
+        found.push(m[2])
+        if (m[1]) active = m[2]
+    }
+    return { names: order.filter(n => found.includes(n)), active }
+}
+
+// Times as "HH:MM". A window ending before it starts runs past midnight.
+function inWindow(now, from, to) {
+    if (from === to) return false
+    return from < to ? now >= from && now < to : now >= from || now < to
+}

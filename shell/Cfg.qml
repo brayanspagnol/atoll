@@ -19,6 +19,7 @@ Singleton {
             id: adapter
             property string accent: "gelo"
             property string wallpaper: ""
+            property var wallpapers: ({}) // per screen, by output name; the others use wallpaper
             property bool dnd: false
             property string name: Quickshell.env("USER")
             property string photo: "" // this profile's picture; empty uses ~/.face
@@ -35,6 +36,9 @@ Singleton {
             ]
             property bool nightOn: false
             property int nightK: 4500
+            property bool nightAuto: false
+            property string nightFrom: "20:00"
+            property string nightTo: "07:00"
             // Minutes; 0 = never.
             property int lockAc: 5
             property int dpmsAc: 6

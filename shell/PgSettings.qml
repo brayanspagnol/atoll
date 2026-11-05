@@ -10,6 +10,12 @@ Page {
     Component.onCompleted: { Holidays.listCountries(); Profiles.keepWallpaper() }
     property bool creating: false
     property bool addingLayout: false
+    property string wallScreen: "" // empty means every screen
+    readonly property string wallNow: wallScreen ? (Cfg.v.wallpapers ?? {})[wallScreen] ?? Cfg.v.wallpaper : Cfg.v.wallpaper
+    function setWall(path) {
+        if (!wallScreen) { Cfg.v.wallpaper = path; Cfg.v.wallpapers = {}; return }
+        Cfg.v.wallpapers = Object.assign({}, Cfg.v.wallpapers ?? {}, { [wallScreen]: path })
+    }
     property bool armed: false
     Timer { running: pg.armed; interval: 5000; onTriggered: pg.armed = false }
 
@@ -176,6 +182,20 @@ Page {
     }
     Tx { text: Tr.t("Wallpaper"); Layout.topMargin: 6 }
     Flow {
+        visible: Quickshell.screens.length > 1
+        Layout.fillWidth: true; spacing: 8
+        Btn { text: Tr.t("All screens"); variant: pg.wallScreen === "" ? "solid" : "ghost"; onClicked: pg.wallScreen = "" }
+        Repeater {
+            model: Quickshell.screens
+            Btn {
+                required property var modelData
+                text: Displays.monitors.find(m => m.name === modelData.name) ? Displays.labelOf(Displays.monitors.find(m => m.name === modelData.name)) : modelData.name
+                variant: pg.wallScreen === modelData.name ? "solid" : "ghost"
+                onClicked: pg.wallScreen = modelData.name
+            }
+        }
+    }
+    Flow {
         Layout.fillWidth: true; spacing: 8
         Repeater {
             model: Profiles.wallpapers
@@ -183,15 +203,15 @@ Page {
                 required property string modelData
                 width: 208; height: 112; radius: Theme.radiusSmall; clip: true
                 color: Theme.raised
-                border.width: Cfg.v.wallpaper === modelData || activeFocus ? 2 : 0
+                border.width: pg.wallNow === modelData || activeFocus ? 2 : 0
                 border.color: Theme.accent
                 activeFocusOnTab: true
                 Accessible.role: Accessible.RadioButton
                 Accessible.name: Tr.t("Wallpaper")
-                Accessible.checked: Cfg.v.wallpaper === modelData
-                Keys.onSpacePressed: Cfg.v.wallpaper = modelData
+                Accessible.checked: pg.wallNow === modelData
+                Keys.onSpacePressed: pg.setWall(modelData)
                 Image { anchors.fill: parent; anchors.margins: 2; source: "file://" + parent.modelData; fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(416, 224); asynchronous: true }
-                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Cfg.v.wallpaper = parent.modelData }
+                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: pg.setWall(parent.modelData) }
                 HoverHandler { id: wallHover }
                 Keys.onDeletePressed: forgetWall.tap()
                 Forget { id: forgetWall; anchors { right: parent.right; top: parent.top; margins: 6 } kind: "wallpaper"; path: parent.modelData; hovered: wallHover.hovered || parent.activeFocus }
@@ -199,14 +219,14 @@ Page {
         }
         Rectangle {
             width: 208; height: 112; radius: Theme.radiusSmall; color: Theme.ground
-            border.width: !Cfg.v.wallpaper || activeFocus ? 2 : 1
-            border.color: !Cfg.v.wallpaper || activeFocus ? Theme.accent : Theme.line
+            border.width: !pg.wallNow || activeFocus ? 2 : 1
+            border.color: !pg.wallNow || activeFocus ? Theme.accent : Theme.line
             activeFocusOnTab: true
             Accessible.role: Accessible.Button
             Accessible.name: Tr.t("No image, solid color")
-            Keys.onSpacePressed: Cfg.v.wallpaper = ""
+            Keys.onSpacePressed: pg.setWall("")
             Tx { anchors.centerIn: parent; text: Tr.t("Solid color"); dim: true }
-            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Cfg.v.wallpaper = "" }
+            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: pg.setWall("") }
         }
         Rectangle {
             width: 208; height: 112; radius: Theme.radiusSmall
@@ -229,6 +249,26 @@ Page {
         Sld { visible: Cfg.v.nightOn; Layout.preferredWidth: 180; a11y: Tr.t("Night light temperature"); from: 2500; to: 6000; stepSize: 100; value: Cfg.v.nightK; onMoved: { Cfg.v.nightK = value; Night.apply() } }
         Tx { visible: Cfg.v.nightOn; mono: true; text: Cfg.v.nightK + " K"; Layout.preferredWidth: 58; horizontalAlignment: Text.AlignRight }
         Swt { a11y: Tr.t("Night light"); checked: Cfg.v.nightOn; onToggled: { Cfg.v.nightOn = checked; Night.apply() } }
+    }
+
+    Line {
+        label: Tr.t("Automatic")
+        hint: Tr.t("Turns on and off by itself at these times")
+        Fld {
+            visible: Cfg.v.nightAuto; implicitWidth: 86; font.family: Theme.mono
+            Accessible.name: Tr.t("Night light") + ": " + Tr.t("Start")
+            text: Cfg.v.nightFrom
+            validator: RegularExpressionValidator { regularExpression: /^([01][0-9]|2[0-3]):[0-5][0-9]$/ }
+            onTextEdited: if (acceptableInput) Cfg.v.nightFrom = text
+        }
+        Fld {
+            visible: Cfg.v.nightAuto; implicitWidth: 86; font.family: Theme.mono
+            Accessible.name: Tr.t("Night light") + ": " + Tr.t("End")
+            text: Cfg.v.nightTo
+            validator: RegularExpressionValidator { regularExpression: /^([01][0-9]|2[0-3]):[0-5][0-9]$/ }
+            onTextEdited: if (acceptableInput) Cfg.v.nightTo = text
+        }
+        Swt { a11y: Tr.t("Night light") + ": " + Tr.t("Automatic"); checked: Cfg.v.nightAuto; onToggled: Cfg.v.nightAuto = checked }
     }
 
     Sec { title: Tr.t("Keyboard and mouse") }

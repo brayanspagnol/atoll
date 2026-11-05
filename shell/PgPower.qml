@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
+import "parse.js" as P
 
 Page {
     id: pg
@@ -17,6 +19,31 @@ Page {
         { id: "reboot", label: Tr.t("Restart"), hint: Tr.t("Closes everything and restarts"), icon: "redo", confirm: true, cmd: "systemctl reboot" },
         { id: "off", label: Tr.t("Shut down"), hint: Tr.t("Closes everything and shuts down"), icon: "energia", confirm: true, cmd: "systemctl poweroff" }
     ]
+    property var modes: []
+    property string mode: ""
+    readonly property var modeLabels: ({ "power-saver": Tr.t("Power saver"), "balanced": Tr.t("Balanced"), "performance": Tr.t("Performance") })
+    Process {
+        id: modeList
+        running: true
+        command: ["sh", "-c", "command -v powerprofilesctl >/dev/null && powerprofilesctl list"]
+        stderr: StdioCollector {}
+        stdout: StdioCollector {
+            onStreamFinished: { const r = P.powerProfiles(text); pg.modes = r.names; pg.mode = r.active }
+        }
+    }
+    Process {
+        id: modeSet
+        onExited: modeList.running = true
+    }
+    Sec { title: Tr.t("Power mode") }
+    Seg {
+        visible: pg.modes.length > 0
+        options: pg.modes.map(m => pg.modeLabels[m] ?? m)
+        current: pg.modes.indexOf(pg.mode)
+        onPicked: i => { modeSet.command = ["powerprofilesctl", "set", pg.modes[i]]; modeSet.running = true }
+    }
+    Tx { visible: pg.modes.length === 0; text: Tr.t("Install power-profiles-daemon to choose a power mode."); dim: true; Layout.fillWidth: true }
+
     Sec { title: Tr.t("Actions") }
     Repeater {
         model: pg.actions

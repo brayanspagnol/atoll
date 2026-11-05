@@ -28,7 +28,11 @@ Rectangle {
         }
         ColumnLayout {
             Layout.fillWidth: true; spacing: 1
-            Tx { text: c.modelData.appName; dim: true; size: 12; Layout.fillWidth: true }
+            Tx {
+                dim: true; size: 12; Layout.fillWidth: true
+                readonly property date when: new Date(c.modelData.time || Date.now())
+                text: when.toDateString() === new Date().toDateString() ? Qt.formatTime(when, "hh:mm") : Tr.date(when, "MMM d") + " " + Qt.formatTime(when, "hh:mm")
+            }
             Tx { text: c.modelData.summary; strong: true; Layout.fillWidth: true }
             Tx { text: c.modelData.body; visible: !!text; dim: true; wrapMode: Text.Wrap; maximumLineCount: 4; Layout.fillWidth: true }
             RowLayout {

@@ -38,9 +38,10 @@ forget_image() {
     rm -f -- "$path"
     shopt -s nullglob
     for file in "$dir"/*.json; do
-        jq -e --arg key "$kind" --arg path "$path" '.[$key] == $path' "$file" >/dev/null || continue
+        jq -e --arg key "$kind" --arg path "$path" '.[$key] == $path or (.wallpapers // {} | any(. == $path))' "$file" >/dev/null || continue
         part="$(mktemp "$dir/.XXXXXX")"
-        jq --arg key "$kind" '.[$key] = ""' "$file" >"$part"
+        jq --arg key "$kind" --arg path "$path" '(if .[$key] == $path then .[$key] = "" else . end)
+            | (if has("wallpapers") then .wallpapers |= with_entries(select(.value != $path)) else . end)' "$file" >"$part"
         mv "$part" "$file"
     done
 }

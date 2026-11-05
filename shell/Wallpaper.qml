@@ -11,10 +11,12 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Background
     WlrLayershell.namespace: "atoll-wallpaper"
     color: Theme.ground
+    // The lock screen is a separate program and uses the main wallpaper on every screen.
+    readonly property string path: (Cfg.v.wallpapers ?? {})[modelData.name] ?? Cfg.v.wallpaper
     Image {
         anchors.fill: parent
-        visible: !!Cfg.v.wallpaper
-        source: Cfg.v.wallpaper ? "file://" + Cfg.v.wallpaper : ""
+        visible: !!path
+        source: path ? "file://" + path : ""
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
         cache: false

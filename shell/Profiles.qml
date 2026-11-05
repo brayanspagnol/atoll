@@ -48,6 +48,9 @@ Singleton {
     }
     function forget(kind, path) {
         if (Cfg.v[kind] === path) Cfg.v[kind] = ""
+        const screens = Object.assign({}, Cfg.v.wallpapers ?? {})
+        for (const name in screens) if (screens[name] === path) delete screens[name]
+        Cfg.v.wallpapers = screens
         run(["forget", kind, path])
     }
     // A wallpaper chosen before the gallery existed joins it, so it stays there after picking another one.
