@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Exports the Wayland session to systemd user services, so portals can reach the display.
+vars=(WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP)
+dbus-update-activation-environment --systemd "${vars[@]}" >/dev/null 2>&1 || true
+systemctl --user import-environment "${vars[@]}" >/dev/null 2>&1 || true

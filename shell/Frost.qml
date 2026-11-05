@@ -1,0 +1,19 @@
+import QtQuick
+
+// Floating glass. The blur comes from the Hyprland layer rule in hypr/look.lua; this only adds tint, rim and sheen.
+Rectangle {
+    id: frost
+    radius: Theme.radius
+    color: Theme.surface
+    border.width: 1
+    border.color: Theme.lineStrong
+    Rectangle {
+        anchors.fill: parent
+        anchors.margins: 1
+        radius: frost.radius - 1
+        gradient: Gradient {
+            GradientStop { position: 0; color: Qt.rgba(1, 1, 1, 0.1) }
+            GradientStop { position: 0.45; color: Qt.rgba(1, 1, 1, 0) }
+        }
+    }
+}

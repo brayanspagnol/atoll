@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Starts an Atoll session from a TTY or a display manager.
+exec start-hyprland -- --config "$HOME/.config/atoll/hypr/main.lua"

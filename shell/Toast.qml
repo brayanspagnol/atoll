@@ -1,0 +1,69 @@
+import QtQuick
+import QtQuick.Layouts
+import Quickshell
+import Quickshell.Services.Notifications
+import Quickshell.Widgets
+
+// New notification: a glass card of its own under the island.
+Frost {
+    id: c
+    required property var modelData
+    readonly property bool critical: modelData.urgency === NotificationUrgency.Critical
+    readonly property string iconSource: Notifs.iconOf(modelData)
+    implicitHeight: lay.implicitHeight + 28
+    radius: 24
+    border.color: critical ? Theme.danger : Theme.lineStrong
+    transformOrigin: Item.Top
+    // Here, not in the list's add transition: a second arrival interrupts that one and would strand the card.
+    NumberAnimation on opacity { from: 0; to: 1; duration: 180 }
+    NumberAnimation on scale { from: 0.9; to: 1; duration: 340; easing.type: Easing.OutBack; easing.overshoot: 1.3 }
+    Accessible.role: Accessible.AlertMessage
+    Accessible.name: modelData.summary + ". " + modelData.body
+
+    HoverHandler { id: hover }
+    Timer {
+        // Critical stays until dismissed; -1/0 means "server decides": 6 s.
+        running: !c.critical && !hover.hovered
+        interval: c.modelData.expireTimeout > 0 ? c.modelData.expireTimeout : 6000
+        onTriggered: Notifs.drop(c.modelData)
+    }
+    TapHandler { onTapped: Notifs.drop(c.modelData) }
+
+    RowLayout {
+        id: lay
+        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14 }
+        spacing: 12
+        ClippingRectangle {
+            Layout.alignment: Qt.AlignTop
+            implicitWidth: 44; implicitHeight: 44; radius: 12
+            color: Theme.raised
+            IconImage { anchors.centerIn: parent; implicitSize: c.iconSource.startsWith("image://icon") || c.iconSource.endsWith(".svg") ? 30 : 44; source: c.iconSource; visible: !!c.iconSource }
+            Tx { anchors.centerIn: parent; visible: !c.iconSource; text: (c.modelData.appName || "?").charAt(0).toUpperCase(); size: 20; strong: true }
+        }
+        ColumnLayout {
+            Layout.fillWidth: true; spacing: 1
+            RowLayout {
+                Layout.fillWidth: true; spacing: 6
+                Tx { text: c.modelData.appName; dim: true; size: 12; Layout.fillWidth: true }
+                Tx { text: c.critical ? "importante" : "agora"; size: 12; color: c.critical ? Theme.danger : Theme.muted; Layout.rightMargin: closeBtn.visible ? 26 : 0 }
+            }
+            Tx { text: c.modelData.summary; strong: true; Layout.fillWidth: true }
+            Tx { text: c.modelData.body; visible: !!text; dim: true; wrapMode: Text.Wrap; maximumLineCount: 3; Layout.fillWidth: true }
+            RowLayout {
+                visible: c.modelData.actions.length > 0; Layout.topMargin: 8; spacing: 6
+                Repeater {
+                    model: c.modelData.actions
+                    Btn { required property var modelData; text: modelData.text; onClicked: modelData.invoke() }
+                }
+            }
+        }
+    }
+    Btn {
+        id: closeBtn
+        anchors { top: parent.top; right: parent.right; margins: 8 }
+        visible: hover.hovered || c.critical
+        variant: "quiet"; icon: "x"; iconSize: 16; implicitWidth: 30; implicitHeight: 30
+        a11y: "Dispensar"
+        onClicked: c.modelData.dismiss()
+    }
+}

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Keeps the shell running: a crash restarts the UI, never the compositor or the apps.
+log="${XDG_STATE_HOME:-$HOME/.local/state}/atoll"
+mkdir -p "$log"
+fails=0
+while :; do
+    started=$SECONDS
+    qs -c atoll >>"$log/shell.log" 2>&1
+    code=$?
+    [[ $code -eq 0 ]] && exit 0
+    # Compositor gone (logout, shutdown): restarting would only fail without a display.
+    { [[ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]] && hyprctl version >/dev/null 2>&1; } || exit 0
+    ((SECONDS - started > 60)) && fails=0
+    fails=$((fails + 1))
+    echo "$(date -Is) qs exited with $code (failure $fails)" >>"$log/shell.log"
+    if ((fails >= 5)); then
+        notify-send -u critical Atoll "O shell caiu 5 vezes. Veja $log/shell.log"
+        exit 1
+    fi
+    sleep 1
+done

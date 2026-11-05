@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Exit 0 on external power, or on machines without a battery.
+shopt -s nullglob
+batteries=(/sys/class/power_supply/BAT*)
+((${#batteries[@]} == 0)) && exit 0
+for online in /sys/class/power_supply/*/online; do
+    grep -q 1 "$online" && exit 0
+done
+exit 1
