@@ -182,8 +182,9 @@ Scope {
                         }
                     }
                     Btn {
-                        implicitHeight: 44
+                        implicitHeight: 46
                         icon: "trash"; variant: "danger"
+                        color: hovered ? Theme.danger : Qt.rgba(Theme.danger.r, Theme.danger.g, Theme.danger.b, 0.22)
                         text: win.wipeArmed ? Tr.t("Click again to clear") : Tr.t("Clear history")
                         a11y: win.wipeArmed ? Tr.t("Click again within 5 s to confirm") : Tr.t("Clear history")
                         enabledB: !act.running && win.clips.length > 0
@@ -311,14 +312,17 @@ Scope {
                         }
                         RowLayout {
                             spacing: 10
-                            Btn { text: Tr.t("Copy"); icon: "copy"; variant: "solid"; onClicked: win.copy(win.current) }
+                            Btn { text: Tr.t("Copy"); icon: "copy"; variant: "solid"; implicitHeight: 46; Layout.fillWidth: true; onClicked: win.copy(win.current) }
                             Btn {
+                                implicitHeight: 46
+                                color: pressed ? Qt.rgba(1, 1, 1, 0.3) : hovered ? Qt.rgba(1, 1, 1, 0.24) : Qt.rgba(1, 1, 1, 0.16)
+                                border.color: activeFocus ? Theme.ink : Theme.lineStrong
                                 readonly property bool pinned: !!win.current?.pinned
                                 text: pinned ? Tr.t("Unpin") : Tr.t("Pin"); icon: pinned ? "pinOff" : "pin"
                                 enabledB: !act.running
                                 onClicked: pinned ? win.unpin(win.current) : win.pin(win.current)
                             }
-                            Btn { text: Tr.t("Delete"); icon: "trash"; variant: "danger"; enabledB: !act.running; onClicked: win.remove(win.current) }
+                            Btn { text: Tr.t("Delete"); icon: "trash"; variant: "danger"; implicitHeight: 46; color: hovered ? Theme.danger : Qt.rgba(Theme.danger.r, Theme.danger.g, Theme.danger.b, 0.22); enabledB: !act.running; onClicked: win.remove(win.current) }
                         }
                     }
                 }

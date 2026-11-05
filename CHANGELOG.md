@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.12.1] - 2026-11-05
+
+### Fixed
+
+- The clipboard panel's buttons have filled backgrounds, so they stay visible over light wallpapers, and Copy spans the free width.
+
 ## [1.12.0] - 2026-11-05
 
 ### Added
@@ -205,7 +211,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.12.0...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.12.1...HEAD
+[1.12.1]: https://github.com/brayanspagnol/atoll/compare/v1.12.0...v1.12.1
 [1.12.0]: https://github.com/brayanspagnol/atoll/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/brayanspagnol/atoll/compare/v1.10.1...v1.11.0
 [1.10.1]: https://github.com/brayanspagnol/atoll/compare/v1.10.0...v1.10.1

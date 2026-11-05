@@ -13,6 +13,8 @@ Rectangle {
     property bool enabledB: true
     property string a11y: text
     signal clicked()
+    readonly property bool hovered: ma.containsMouse
+    readonly property bool pressed: ma.pressed
     implicitHeight: 36
     implicitWidth: text ? row.implicitWidth + 28 : 44
     radius: Theme.radiusSmall
