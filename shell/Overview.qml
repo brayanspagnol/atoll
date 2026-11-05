@@ -5,20 +5,34 @@ import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Widgets
+import "overview.js" as O
 
 // Workspaces in a strip, with the current one's windows spread out below. Super+O.
-LazyLoader {
-    active: Ui.overview && !!Ui.screen
+Scope {
+    id: overview
+    // Outlives Ui.overview by the closing animation; the window must exist to play it.
+    property bool alive: false
+    readonly property bool isOpen: Ui.overview
+    onIsOpenChanged: {
+        if (isOpen) { closing.stop(); alive = true }
+        else closing.restart()
+    }
+    Timer { id: closing; interval: 260; onTriggered: overview.alive = false }
+    LazyLoader {
+    active: overview.alive && !!Ui.screen
     PanelWindow {
         id: win
         screen: Ui.screen
         anchors { top: true; bottom: true; left: true; right: true }
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+        WlrLayershell.keyboardFocus: Ui.overview ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         WlrLayershell.namespace: "atoll-overview"
-        color: Theme.ground
+        color: "transparent"
 
+        // 0 is the desktop as it is, 1 the overview. Windows travel between their real place and the spread.
+        property real p: 0
+        Behavior on p { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
         readonly property var mon: Hyprland.monitorFor(screen)
         readonly property real monW: (mon?.width ?? 1920) / (mon?.scale || 1)
         readonly property real monH: (mon?.height ?? 1080) / (mon?.scale || 1)
@@ -66,7 +80,7 @@ LazyLoader {
         }
         Timer { id: refresh; interval: 120; onTriggered: { clientList.running = false; clientList.running = true } }
         Connections { target: Hyprland; function onRawEvent() { refresh.restart() } }
-        Component.onCompleted: Hyprland.refreshToplevels()
+        Component.onCompleted: { Hyprland.refreshToplevels(); p = Qt.binding(() => Ui.overview ? 1 : 0) }
 
         // One window, in the same place it has on the screen. k scales screen pixels to this view.
         component Mini: ClippingRectangle {
@@ -90,27 +104,34 @@ LazyLoader {
                 anchors.fill: parent
                 captureSource: win.toplevelOf(mini.modelData)
                 live: mini.live
+                opacity: hasContent ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: 180 } }
             }
         }
 
-        Image {
+        Item {
             anchors.fill: parent
-            visible: !!win.wallpaper
-            source: win.wallpaper ? "file://" + win.wallpaper : ""
-            fillMode: Image.PreserveAspectCrop
-            // Decoded very small and stretched: a blur for free.
-            sourceSize: Qt.size(480, 270)
-            asynchronous: true
-            cache: false
+            opacity: win.p
+            Rectangle { anchors.fill: parent; color: Theme.ground }
+            Image {
+                anchors.fill: parent
+                visible: !!win.wallpaper
+                source: win.wallpaper ? "file://" + win.wallpaper : ""
+                fillMode: Image.PreserveAspectCrop
+                // Decoded very small and stretched: a blur for free.
+                sourceSize: Qt.size(480, 270)
+                asynchronous: true
+                cache: false
+            }
+            Rectangle { anchors.fill: parent; color: Qt.rgba(8 / 255, 14 / 255, 22 / 255, 0.55) }
         }
-        Rectangle { anchors.fill: parent; color: Qt.rgba(8 / 255, 14 / 255, 22 / 255, 0.55) }
-        MouseArea { anchors.fill: parent; onClicked: Ui.overview = false }
+        MouseArea { anchors.fill: parent; enabled: Ui.overview; onClicked: Ui.overview = false }
 
         Item {
             id: stage
             anchors.fill: parent
             focus: true
-            NumberAnimation on opacity { from: 0; to: 1; duration: 140; easing.type: Easing.OutCubic }
+            enabled: Ui.overview
             Keys.onEscapePressed: Ui.overview = false
             Keys.onReturnPressed: Ui.overview = false
             Keys.onLeftPressed: win.step(-1)
@@ -123,6 +144,7 @@ LazyLoader {
             Rectangle {
                 anchors { top: parent.top; topMargin: 14; horizontalCenter: parent.horizontalCenter }
                 implicitWidth: clockRow.implicitWidth + 36; implicitHeight: 46; radius: 23
+                opacity: win.p
                 color: Qt.rgba(12 / 255, 18 / 255, 26 / 255, 0.62)
                 border.width: 1; border.color: Theme.lineStrong
                 SystemClock { id: clock; precision: SystemClock.Minutes }
@@ -138,6 +160,8 @@ LazyLoader {
                 id: strip
                 anchors { left: parent.left; right: parent.right; top: parent.top; topMargin: 76; leftMargin: 60; rightMargin: 60 }
                 spacing: 12
+                opacity: win.p
+                transform: Translate { y: -(strip.height + 90) * (1 - win.p) }
                 Repeater {
                     model: win.slots
                     Rectangle {
@@ -178,35 +202,41 @@ LazyLoader {
             Item {
                 id: area
                 anchors { left: parent.left; right: parent.right; top: strip.bottom; bottom: hints.top; margins: 60; topMargin: 24; bottomMargin: 18 }
-                readonly property real k: Math.min(width / win.monW, height / win.monH)
-                readonly property real ox: (width - win.monW * k) / 2
-                readonly property real oy: (height - win.monH * k) / 2
-                Tx { visible: win.windowsOf(win.shown).length === 0; anchors.centerIn: parent; text: Tr.t("No windows on this workspace"); dim: true; size: 18 }
+                readonly property var windows: win.windowsOf(win.shown)
+                readonly property var rects: O.spread(windows.map(c => ({ x: c.at[0] - (win.mon?.x ?? 0), y: c.at[1] - (win.mon?.y ?? 0), w: c.size[0], h: c.size[1] })), win.monW, win.monH, width, height, 24)
+                Tx { visible: area.windows.length === 0; opacity: win.p; anchors.centerIn: parent; text: Tr.t("No windows on this workspace"); dim: true; size: 18 }
                 Repeater {
-                    model: win.windowsOf(win.shown)
+                    model: area.windows
                     Item {
                         id: spread
                         required property var modelData
-                        x: area.ox + (modelData.at[0] - (win.mon?.x ?? 0)) * area.k
-                        y: area.oy + (modelData.at[1] - (win.mon?.y ?? 0)) * area.k
-                        width: modelData.size[0] * area.k
-                        height: modelData.size[1] * area.k
+                        required property int index
+                        readonly property var rect: area.rects[index] ?? { x: 0, y: 0, w: modelData.size[0], h: modelData.size[1] }
+                        readonly property real zoom: 1 + (rect.w / modelData.size[0] - 1) * win.p
+                        readonly property real realX: modelData.at[0] - (win.mon?.x ?? 0)
+                        readonly property real realY: modelData.at[1] - (win.mon?.y ?? 0)
+                        x: (realX - area.x) * (1 - win.p) + rect.x * win.p
+                        y: (realY - area.y) * (1 - win.p) + rect.y * win.p
+                        width: modelData.size[0] * zoom
+                        height: modelData.size[1] * zoom
                         activeFocusOnTab: true
                         Accessible.role: Accessible.Button
                         Accessible.name: modelData.title
                         Keys.onReturnPressed: win.focusWindow(modelData)
                         Keys.onSpacePressed: win.focusWindow(modelData)
-                        Mini { modelData: spread.modelData; k: area.k; x: 0; y: 0; live: true }
+                        Mini { modelData: spread.modelData; k: spread.zoom; x: 0; y: 0; live: true }
                         Rectangle {
                             anchors.fill: parent
-                            radius: Math.max(4, 16 * area.k)
+                            radius: Math.max(4, 16 * spread.zoom)
                             color: "transparent"
+                            opacity: win.p
                             border.width: pick.containsMouse || spread.activeFocus ? 2 : 1
                             border.color: spread.activeFocus ? Theme.ink : pick.containsMouse ? Theme.accent : Theme.lineStrong
                         }
                         Rectangle {
                             anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: 8 }
                             implicitHeight: 34; radius: 12
+                            opacity: win.p
                             color: Qt.rgba(8 / 255, 14 / 255, 22 / 255, 0.82)
                             Tx { anchors.fill: parent; anchors.leftMargin: 12; anchors.rightMargin: 12; text: spread.modelData.title || spread.modelData.class; size: 14 }
                         }
@@ -249,6 +279,7 @@ LazyLoader {
                 id: hints
                 anchors { bottom: parent.bottom; bottomMargin: 20; horizontalCenter: parent.horizontalCenter }
                 spacing: 24
+                opacity: win.p
                 Repeater {
                     model: [Tr.t("Drag a window to the strip"), Tr.t("Click a window to focus it"), Tr.t("1 to 9 go straight there"), Tr.t("Esc to close")]
                     Tx { required property string modelData; text: modelData; dim: true; size: 13 }
@@ -266,5 +297,6 @@ LazyLoader {
                 Tx { anchors.fill: parent; anchors.margins: 12; text: ghost.title; size: 14 }
             }
         }
+    }
     }
 }

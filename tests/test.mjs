@@ -75,6 +75,22 @@ assert.ok(!P.inWindow("07:00", "20:00", "07:00") && !P.inWindow("12:00", "20:00"
 assert.ok(P.inWindow("09:00", "08:00", "17:00") && !P.inWindow("17:00", "08:00", "17:00"))
 assert.ok(!P.inWindow("08:00", "08:00", "08:00"))
 assert.deepEqual(JSON.parse(JSON.stringify(P.nmcliRows("Home\\: VPN:abc:wireguard:yes\nback\\\\slash:def:vpn:no\n"))), [["Home: VPN", "abc", "wireguard", "yes"], ["back\\slash", "def", "vpn", "no"]])
+const O = load("overview.js", "spread")
+const plain = v => JSON.parse(JSON.stringify(v))
+// Tiled windows keep their arrangement, centered at the scale that fits.
+assert.deepEqual(plain(O.spread([{ x: 0, y: 0, w: 50, h: 100 }, { x: 50, y: 0, w: 50, h: 100 }], 100, 100, 200, 100, 10)),
+    [{ x: 50, y: 0, w: 50, h: 100 }, { x: 100, y: 0, w: 50, h: 100 }])
+// Overlapping windows never overlap afterwards, and stay inside the area.
+const full = { x: 0, y: 0, w: 1920, h: 1080 }
+for (const n of [2, 3, 5, 7]) {
+    const r = O.spread(Array(n).fill(full), 1920, 1080, 1200, 800, 16)
+    assert.equal(r.length, n)
+    r.forEach((a, i) => {
+        assert.ok(a.x >= -0.01 && a.y >= -0.01 && a.x + a.w <= 1200.01 && a.y + a.h <= 800.01)
+        r.slice(i + 1).forEach(b => assert.ok(a.x + a.w <= b.x + 0.01 || b.x + b.w <= a.x + 0.01 || a.y + a.h <= b.y + 0.01 || b.y + b.h <= a.y + 0.01))
+    })
+}
+assert.equal(O.spread([], 100, 100, 100, 100, 10).length, 0)
 const kb = P.zipLayouts("br,us", "abnt2,")
 assert.deepEqual(JSON.parse(JSON.stringify(kb)), [{ layout: "br", variant: "abnt2" }, { layout: "us", variant: "" }])
 assert.deepEqual(JSON.parse(JSON.stringify(P.joinLayouts(kb))), { layout: "br,us", variant: "abnt2," })
