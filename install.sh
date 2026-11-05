@@ -105,4 +105,5 @@ Atoll $(cat "$repo/VERSION") installed.
 Start it from a TTY with:  atoll-session
 Make sure $bin is in your PATH, or pick "Atoll" in your display manager after ./install.sh --session.
 Personal Hyprland settings go in $config/user.lua.
+If Atoll is already running, press Super+Shift+R to restart the shell with this version.
 EOF
