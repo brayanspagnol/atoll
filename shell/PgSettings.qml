@@ -10,17 +10,9 @@ Page {
     title: Tr.t("Settings")
     Component.onCompleted: { Bright.refresh(); Holidays.listCountries() }
     property var walls: []
-    property var photos: []
     property bool creating: false
     property bool armed: false
-    property bool pickingPhoto: false
-    function choosePhoto(image) { Profiles.setPhoto(image); pickingPhoto = false }
     Timer { running: pg.armed; interval: 5000; onTriggered: pg.armed = false }
-    Process {
-        running: pg.pickingPhoto
-        command: ["sh", "-c", 'find "$HOME/Pictures" "$HOME/Downloads" -maxdepth 3 -type f \\( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.webp" \\) 2>/dev/null | head -60']
-        stdout: StdioCollector { onStreamFinished: pg.photos = text.split("\n").filter(Boolean).sort() }
-    }
     readonly property var monitors: Hyprland.monitors.values
 
     Process {
@@ -79,11 +71,6 @@ Page {
             onEditingFinished: { if (text.trim()) { Cfg.v.name = text.trim(); nameSaved.restart() } else text = Cfg.v.name }
             Timer { id: nameSaved; interval: 300; onTriggered: Profiles.refresh() }
         }
-    }
-    Line {
-        label: Tr.t("Photo")
-        hint: Tr.t("Shown on the lock screen")
-        Btn { text: pg.pickingPhoto ? Tr.t("Cancel") : Tr.t("Change photo"); onClicked: pg.pickingPhoto = !pg.pickingPhoto }
         Btn {
             visible: Profiles.list.length > 1
             text: pg.armed ? Tr.t("Click again to delete") : Tr.t("Delete profile")
@@ -95,27 +82,44 @@ Page {
             }
         }
     }
-    Tx { visible: pg.pickingPhoto && pg.photos.length === 0; text: Tr.t("No images in ~/Pictures or ~/Downloads."); dim: true }
+    Tx { text: Tr.t("Photo"); Layout.topMargin: 6 }
+    Tx { text: Tr.t("Shown on the lock screen"); dim: true; size: 13 }
     Flow {
-        visible: pg.pickingPhoto
-        Layout.fillWidth: true; spacing: 8
+        Layout.fillWidth: true; spacing: 12
         Repeater {
-            model: pg.pickingPhoto ? pg.photos : []
+            model: Profiles.photos
             Rectangle {
                 id: choice
                 required property string modelData
-                width: 80; height: 80; radius: 40; clip: true; color: Theme.raised
+                readonly property bool on: Cfg.v.photo === modelData
+                width: 88; height: 88; radius: 44
+                color: "transparent"
+                border.width: on || activeFocus ? 3 : 0
+                border.color: activeFocus ? Theme.ink : Theme.accent
                 activeFocusOnTab: true
-                border.width: activeFocus ? 2 : 0; border.color: Theme.accent
-                Accessible.role: Accessible.Button
-                Accessible.name: modelData.split("/").pop()
-                Keys.onSpacePressed: pg.choosePhoto(modelData)
+                Accessible.role: Accessible.RadioButton
+                Accessible.name: Tr.t("Photo")
+                Accessible.checked: on
+                Keys.onSpacePressed: Cfg.v.photo = modelData
                 ClippingRectangle {
-                    anchors.fill: parent; radius: 40; color: "transparent"
+                    anchors.fill: parent; anchors.margins: 5; radius: width / 2; color: Theme.raised
                     Image { anchors.fill: parent; source: "file://" + choice.modelData; fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(160, 160); asynchronous: true }
                 }
-                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: pg.choosePhoto(parent.modelData) }
+                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Cfg.v.photo = choice.modelData }
             }
+        }
+        Rectangle {
+            width: 88; height: 88; radius: 44
+            color: addPhoto.containsMouse ? Theme.raised : Theme.hover
+            border.width: activeFocus ? 3 : 1
+            border.color: activeFocus ? Theme.ink : Theme.lineStrong
+            activeFocusOnTab: true
+            Accessible.role: Accessible.Button
+            Accessible.name: Tr.t("Add photo")
+            Keys.onSpacePressed: Profiles.addPhoto()
+            Keys.onReturnPressed: Profiles.addPhoto()
+            Ic { anchors.centerIn: parent; name: "plus"; size: 32 }
+            MouseArea { id: addPhoto; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Profiles.addPhoto() }
         }
     }
 

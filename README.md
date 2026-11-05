@@ -25,7 +25,7 @@ wallpaper, and windows keep the rest of the screen.
 - **Search:** apps and system screens in one box. Type "wifi" or "volume".
 - **Languages:** English, Português (Brasil), Español, Français, Deutsch, Русский and 简体中文. It follows your system language, or pick one in Settings.
 - **Lock screen:** a large clock, the current song and your profile's name and picture over your sharp wallpaper. It also greets you when waking from suspend, with no flash of the desktop.
-- **Profiles:** each one keeps its own name, picture, language, accent, wallpaper, dock and idle times. Create and switch them in Settings.
+- **Profiles:** each one keeps its own name, picture (from a saved gallery you add to), language, accent, wallpaper, dock and idle times. Create and switch them in Settings.
 - **Public holidays:** for over 200 countries in the calendar, or none. Choose in Settings.
 - **Idle and display:** idle timers per power source, night light and monitor brightness.
 - **Resilient by design:** if the shell crashes, it restarts by itself. Your windows stay open.

@@ -2,8 +2,9 @@
 # Atoll profiles: one settings file each, in ~/.config/atoll/profiles.
 #   profiles list                  -> [{"id", "name", "photo"}]
 #   profiles create ID FROM NAME   -> copies profile FROM as ID
-#   profiles delete ID             -> removes the profile and its photo
-#   profiles photo ID IMAGE        -> stores a copy of IMAGE, prints its path
+#   profiles delete ID             -> removes the profile
+#   profiles photos                -> paths of the saved pictures, newest first
+#   profiles photo IMAGE           -> saves a copy of IMAGE, prints its path
 set -euo pipefail
 dir="$HOME/.config/atoll/profiles"
 faces="$HOME/.local/share/atoll/faces"
@@ -28,20 +29,23 @@ case "${1:-}" in
         ;;
     delete)
         valid "$2"
-        rm -f "$dir/$2.json" "$faces/$2"-*
+        rm -f "$dir/$2.json"
+        ;;
+    photos)
+        [[ -d "$faces" ]] || exit 0
+        find "$faces" -maxdepth 1 -type f -printf '%T@ %p\n' | sort -rn | cut -d' ' -f2-
         ;;
     photo)
-        valid "$2"
-        [[ -f "$3" ]] || { echo "not a file: $3" >&2; exit 1; }
+        [[ -f "$2" ]] || { echo "not a file: $2" >&2; exit 1; }
         mkdir -p "$faces"
-        # A new name each time, because an unchanged path would not reload the picture.
-        rm -f "$faces/$2"-*
-        target="$faces/$2-$(date +%s)"
-        cp "$3" "$target"
+        # Named by content: the same image is kept once, and a new image gets a new path, which reloads the picture.
+        target="$faces/$(sha256sum "$2" | cut -c1-32)"
+        [[ -e "$target" ]] || cp "$2" "$target"
+        touch "$target"
         echo "$target"
         ;;
     *)
-        echo "usage: profiles list|create|delete|photo" >&2
+        echo "usage: profiles list|create|delete|photos|photo" >&2
         exit 2
         ;;
 esac

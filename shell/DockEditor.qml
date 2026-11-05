@@ -122,11 +122,11 @@ Scope {
                         Layout.fillWidth: true; Layout.fillHeight: true
                         Layout.leftMargin: side; Layout.rightMargin: side
                         readonly property int side: Math.max(48, win.width * 0.1)
-                        readonly property int columns: Math.max(3, Math.min(8, Math.floor(width / 200)))
-                        readonly property int iconSize: Math.min(128, cellWidth * 0.6)
+                        readonly property int columns: Math.max(3, Math.min(8, Math.floor(width / 230)))
+                        readonly property int iconSize: Math.min(176, cellWidth * 0.64)
                         clip: true
                         cellWidth: width / columns
-                        cellHeight: iconSize + 92
+                        cellHeight: iconSize + 100
                         boundsBehavior: Flickable.StopAtBounds
                         model: win.apps
                         ScrollBar.vertical: ScrollBar { policy: grid.contentHeight > grid.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff; width: 6 }
@@ -177,13 +177,13 @@ Scope {
                                     Rectangle {
                                         visible: cell.on
                                         anchors { right: parent.right; top: parent.top; margins: -4 }
-                                        width: 34; height: 34; radius: 17
+                                        width: 38; height: 38; radius: 19
                                         color: Theme.accent
                                         border.width: 2; border.color: Theme.ground
-                                        Ic { anchors.centerIn: parent; name: "check"; size: 20; color: Theme.accentInk }
+                                        Ic { anchors.centerIn: parent; name: "check"; size: 22; color: Theme.accentInk }
                                     }
                                 }
-                                Tx { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: cell.modelData.name; size: 20 }
+                                Tx { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: cell.modelData.name; size: 22 }
                             }
                         }
 

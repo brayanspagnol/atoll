@@ -23,7 +23,7 @@ Os prints estão no [README em inglês](README.md#screenshots).
 - **Busca:** aplicativos e telas do sistema no mesmo lugar. Digite "wifi" ou "volume".
 - **Idiomas:** English, Português (Brasil), Español, Français, Deutsch, Русский e 简体中文. Segue o idioma do sistema, ou escolha em Ajustes.
 - **Tela de bloqueio:** relógio grande, música atual, nome e foto do perfil, sobre o seu papel de parede nítido. Ela também recebe você ao voltar da suspensão, sem o desktop piscar antes.
-- **Perfis:** cada um guarda nome, foto, idioma, cor, papel de parede, dock e tempos de ociosidade. Crie e troque em Ajustes.
+- **Perfis:** cada um guarda nome, foto (de uma galeria que você vai adicionando), idioma, cor, papel de parede, dock e tempos de ociosidade. Crie e troque em Ajustes.
 - **Feriados:** de mais de 200 países no calendário, ou nenhum. Escolha em Ajustes.
 - **Ociosidade e tela:** tempos separados para tomada e bateria, luz noturna e brilho do monitor.
 - **Resistente:** se o shell cair, ele volta sozinho. Suas janelas continuam abertas.

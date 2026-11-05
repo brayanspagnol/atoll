@@ -36,6 +36,17 @@ assert.equal(script("holidays", "BR", "20;26"), 2)
 assert.equal(script("profiles", "delete", "../settings"), 2)
 assert.equal(script("profiles", "create", "A B", "default", "x"), 2)
 
+// Saving the same picture twice keeps one copy, and listing shows it.
+const home = fs.mkdtempSync("/tmp/atoll-test-")
+const profiles = (...args) => spawnSync(new URL("../scripts/profiles", import.meta.url).pathname, args, { env: { ...process.env, HOME: home }, encoding: "utf8" })
+fs.writeFileSync(home + "/a.png", "one"); fs.writeFileSync(home + "/b.png", "two")
+const first = profiles("photo", home + "/a.png").stdout.trim()
+assert.equal(profiles("photo", home + "/a.png").stdout.trim(), first)
+assert.notEqual(profiles("photo", home + "/b.png").stdout.trim(), first)
+assert.equal(profiles("photos").stdout.trim().split("\n").length, 2)
+assert.equal(profiles("photo", home + "/missing.png").status, 1)
+fs.rmSync(home, { recursive: true })
+
 // Every string the interface asks for must exist in every language, with the same placeholders.
 const shell = new URL("../shell/", import.meta.url)
 const used = new Set()

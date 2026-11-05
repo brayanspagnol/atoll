@@ -10,5 +10,10 @@ for _, match in ipairs(floating) do
     hl.window_rule({ match = match, float = true })
 end
 
+-- File choosers: floating and centered, or they would tile across the whole screen.
+for _, class in ipairs({ "^(zenity)$", "^(xdg-desktop-portal-gtk)$" }) do
+    hl.window_rule({ match = { class = class }, float = true, size = "1100 760", center = true })
+end
+
 -- Selection overlays must appear instantly.
 hl.layer_rule({ match = { namespace = "selection" }, no_anim = true })

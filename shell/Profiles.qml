@@ -11,8 +11,9 @@ Singleton {
     readonly property string active: activeFile.text().trim() || "default"
     readonly property string path: home + "/.config/atoll/profiles/" + active + ".json"
     property var list: []
+    property var photos: []
 
-    function refresh() { lister.running = false; lister.running = true }
+    function refresh() { lister.running = false; lister.running = true; photoLister.running = true }
     function run(args, then) {
         task.then = then ?? null
         task.command = [script].concat(args)
@@ -35,8 +36,10 @@ Singleton {
         select(next.id)
         run(["delete", old])
     }
-    function setPhoto(image) {
-        run(["photo", active, image], out => Cfg.v.photo = out)
+    // The picker is a normal window, and the control center would cover it, so it closes meanwhile.
+    function addPhoto() {
+        Ui.open = false
+        picker.running = true
     }
 
     FileView {
@@ -50,6 +53,23 @@ Singleton {
         command: [root.script, "list"]
         running: true
         stdout: StdioCollector { onStreamFinished: if (text.trim()) root.list = JSON.parse(text) }
+    }
+    Process {
+        id: photoLister
+        command: [root.script, "photos"]
+        running: true
+        stdout: StdioCollector { onStreamFinished: root.photos = text.split("\n").filter(Boolean) }
+    }
+    Process {
+        id: picker
+        command: ["zenity", "--file-selection", "--title=" + Tr.t("Choose a photo"), "--filename=" + root.home + "/Pictures/",
+            "--file-filter=" + Tr.t("Images") + " | *.png *.PNG *.jpg *.JPG *.jpeg *.JPEG *.webp *.WEBP"]
+        stdout: StdioCollector { id: picked }
+        onExited: {
+            Ui.show("ajustes")
+            const image = picked.text.trim()
+            if (image) root.run(["photo", image], out => Cfg.v.photo = out)
+        }
     }
     Process {
         id: task
