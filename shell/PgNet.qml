@@ -12,7 +12,7 @@ Page {
     readonly property var wired: Net.wired
     readonly property var nets: wifi ? [...wifi.networks.values].sort((a, b) => (b.connected - a.connected) || (b.known - a.known) || (b.signalStrength - a.signalStrength)) : []
     readonly property var current: nets.find(n => n.connected) ?? null
-    readonly property var conn: [Tr.t("Unknown"), Tr.t("No internet"), Tr.t("Login portal"), Tr.t("Limited"), Tr.t("Full")]
+    readonly property var conn: [Tr.t("Unknown"), Tr.t("No internet"), Tr.t("Login portal"), Tr.t("Limited"), Tr.t("Full access")]
     subtitle: wired?.connected ? Tr.t("Cable connected") : current ? "Wi-Fi: " + current.name : Tr.t("Disconnected")
     property string askFor: ""
     property string err: ""

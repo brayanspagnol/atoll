@@ -34,7 +34,7 @@ Scope {
             rede: Net.status,
             bt: !Bluetooth.defaultAdapter?.enabled ? Tr.t("Off") : Tr.t("Connected: %1").arg(Bluetooth.defaultAdapter.devices.values.filter(d => d.connected).length),
             perf: "CPU " + Math.round(Sys.cpu) + "% · " + Math.round(Sys.temp) + " °C",
-            cal: Tr.date(new Date(), "MMM d").replace(".", ""),
+            cal: Tr.date(new Date(), "MMM d").replace(/\./g, ""),
             avisos: Notifs.all.length ? Tr.t("Notifications: %1").arg(Notifs.all.length) : Tr.t("All caught up"),
             ajustes: Tr.t("Profile, color, idle"),
             monitor: Tr.t("Screens: %1").arg(Displays.count_on),
