@@ -31,7 +31,7 @@ bin="$HOME/.local/bin"
 
 packages=(hyprland quickshell hyprlock hypridle hyprsunset xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
     polkit-gnome networkmanager bluez bluez-utils pipewire wireplumber libnotify cliphist wl-clipboard wofi
-    grim slurp jq brightnessctl ttf-jetbrains-mono-nerd papirus-icon-theme qt6-svg noto-fonts noto-fonts-cjk playerctl)
+    grim slurp jq brightnessctl ttf-jetbrains-mono-nerd papirus-icon-theme qt6-svg curl noto-fonts noto-fonts-cjk playerctl)
 commands=(Hyprland start-hyprland qs hyprlock hypridle hyprsunset nmcli bluetoothctl wpctl notify-send cliphist
     wl-paste wofi grim slurp jq brightnessctl)
 
@@ -53,7 +53,15 @@ fi
 echo "Installing to $config, $shell_dir and $data"
 mkdir -p "$config/hypr" "$shell_dir" "$data/scripts" "$data/wallpapers" "$bin"
 
-# Replace managed files only: settings.json, user.lua and likes stay.
+# Settings moved into profiles in 1.4.0.
+mkdir -p "$config/profiles"
+if [[ -f "$config/settings.json" && ! -e "$config/profiles/default.json" ]]; then
+    # "on" used to mean Brazil, the only country supported before 1.4.0.
+    jq 'if .holidays == "on" then .holidays = "BR" else . end' "$config/settings.json" >"$config/profiles/default.json"
+    rm "$config/settings.json"
+fi
+
+# Replace managed files only: profiles, user.lua and likes stay.
 rm -rf "$shell_dir"/*.qml "$shell_dir"/*.js "$shell_dir/i18n"
 cp -r "$repo"/shell/* "$shell_dir/"
 cp "$repo"/hypr/*.lua "$config/hypr/"

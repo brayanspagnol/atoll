@@ -6,7 +6,7 @@ hl.config({
     },
     decoration = {
         rounding = 24, rounding_power = 2.0,
-        blur = { enabled = true, size = 12, passes = 3, vibrancy = 0.35, brightness = 0.72, contrast = 1.1, noise = 0.01, xray = false }, -- only translucent shell layers use it
+        blur = { enabled = true, size = 8, passes = 3, vibrancy = 0.2, noise = 0.01, xray = false }, -- only translucent shell layers use it
         shadow = { enabled = false },
     },
     input = {

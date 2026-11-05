@@ -6,6 +6,23 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-05
+
+### Added
+
+- Profiles: create, switch and delete them in Settings. Each keeps its own name, picture, language, accent, wallpaper, dock and idle times.
+- Each profile can have its own picture, which the lock screen shows.
+- Public holidays for over 200 countries, chosen in Settings, from [date.nager.at](https://date.nager.at) and cached.
+
+### Changed
+
+- Settings moved from `settings.json` to `profiles/default.json`. `install.sh` migrates them.
+- Blur no longer darkens translucent windows, which look clearer again.
+
+### Removed
+
+- Built-in Brazilian holiday calculation, replaced by the per-country list.
+
 ## [1.3.0] - 2026-11-05
 
 ### Added
@@ -59,7 +76,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/brayanspagnol/atoll/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/brayanspagnol/atoll/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/brayanspagnol/atoll/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/brayanspagnol/atoll/compare/v1.0.0...v1.1.0

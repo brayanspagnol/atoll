@@ -20,6 +20,8 @@ Singleton {
             + listener(v.lockBat, false, lock) + listener(v.dpmsBat, false, off) + listener(v.sleepBat, false, sl)
     }
     function apply() {
+        // A nested test must not restart the real session's idle daemon.
+        if (Quickshell.env("ATOLL_NESTED")) return
         file.setText(render())
         Quickshell.execDetached(["sh", "-c", `pkill -x hypridle; sleep 0.2; setsid hypridle -c "${path}" >/dev/null 2>&1 &`])
     }

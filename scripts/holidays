@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Public holidays from date.nager.at, cached per country and year.
+#   holidays countries            -> [{"countryCode", "name"}]
+#   holidays CC YEAR [YEAR...]    -> [{"date", "localName", "name"}], nationwide only
+set -euo pipefail
+cache="${XDG_CACHE_HOME:-$HOME/.cache}/atoll/holidays"
+api=https://date.nager.at/api/v3
+mkdir -p "$cache"
+
+fetch() {
+    local target="$cache/$1" part
+    if [[ ! -s "$target" ]]; then
+        part="$(mktemp "$target.XXXXXX")"
+        curl -fsS -m 8 "$api/$2" >"$part" || { rm -f "$part"; return 1; }
+        mv "$part" "$target"
+    fi
+    cat "$target"
+}
+
+if [[ "${1:-}" == countries ]]; then
+    fetch countries.json AvailableCountries
+    exit 0
+fi
+
+country="${1:-}"
+[[ "$country" =~ ^[A-Z]{2}$ ]] || { echo "invalid country: $country" >&2; exit 2; }
+shift
+for year in "$@"; do
+    [[ "$year" =~ ^[0-9]{4}$ ]] || { echo "invalid year: $year" >&2; exit 2; }
+    fetch "$country-$year.json" "PublicHolidays/$year/$country"
+done | jq -s 'add // [] | map(select(.global) | {date, localName, name})'

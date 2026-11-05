@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Atoll profiles: one settings file each, in ~/.config/atoll/profiles.
+#   profiles list                  -> [{"id", "name", "photo"}]
+#   profiles create ID FROM NAME   -> copies profile FROM as ID
+#   profiles delete ID             -> removes the profile and its photo
+#   profiles photo ID IMAGE        -> stores a copy of IMAGE, prints its path
+set -euo pipefail
+dir="$HOME/.config/atoll/profiles"
+faces="$HOME/.local/share/atoll/faces"
+
+valid() { [[ "$1" =~ ^[a-z0-9-]{1,40}$ ]] || { echo "invalid profile id: $1" >&2; exit 2; }; }
+
+case "${1:-}" in
+    list)
+        shopt -s nullglob
+        for file in "$dir"/*.json; do
+            id="$(basename "$file" .json)"
+            jq -c --arg id "$id" '{id: $id, name: (.name // env.USER // $id), photo: (.photo // "")}' "$file"
+        done | jq -s 'sort_by(.name | ascii_downcase)'
+        ;;
+    create)
+        valid "$2"
+        valid "$3"
+        [[ ! -e "$dir/$2.json" ]] || { echo "profile exists: $2" >&2; exit 1; }
+        part="$(mktemp "$dir/.XXXXXX")"
+        jq --arg name "$4" '.name = $name | .photo = ""' "$dir/$3.json" >"$part"
+        mv "$part" "$dir/$2.json"
+        ;;
+    delete)
+        valid "$2"
+        rm -f "$dir/$2.json" "$faces/$2"-*
+        ;;
+    photo)
+        valid "$2"
+        [[ -f "$3" ]] || { echo "not a file: $3" >&2; exit 1; }
+        mkdir -p "$faces"
+        # A new name each time, because an unchanged path would not reload the picture.
+        rm -f "$faces/$2"-*
+        target="$faces/$2-$(date +%s)"
+        cp "$3" "$target"
+        echo "$target"
+        ;;
+    *)
+        echo "usage: profiles list|create|delete|photo" >&2
+        exit 2
+        ;;
+esac

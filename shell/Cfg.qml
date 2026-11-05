@@ -6,18 +6,24 @@ import Quickshell.Io
 Singleton {
     property alias v: adapter
     FileView {
-        path: Quickshell.env("HOME") + "/.config/atoll/settings.json"
+        path: Profiles.path
         watchChanges: true
         onFileChanged: reload()
         onAdapterUpdated: writeAdapter()
+        // The adapter keeps its old value for a key the file lacks, which would leak one profile into another.
+        // So the first load of each profile writes back a complete file.
+        property string completed: ""
+        onLoaded: if (completed !== path.toString()) { completed = path.toString(); writeAdapter() }
         onLoadFailed: err => { if (err === FileViewError.FileNotFound) writeAdapter() }
         JsonAdapter {
             id: adapter
             property string accent: "gelo"
             property string wallpaper: Quickshell.env("HOME") + "/.local/share/atoll/wallpapers/atoll-dusk.jpg"
             property bool dnd: false
+            property string name: Quickshell.env("USER")
+            property string photo: "" // this profile's picture; empty uses ~/.face
             property string language: "auto" // a code from Tr.languages, or "auto" for the system language
-            property string holidays: "auto" // Brazilian national holidays: "on", "off", or "auto" for Brazilian locales
+            property string holidays: "auto" // a country code, "off", or "auto" for the system locale's country
             // Pinned apps. ids are lowercase Wayland app ids; icon is a key from Icons.qml.
             property var dock: [
                 { label: "Terminal", icon: "term", ids: ["kitty"], cmd: "kitty" },

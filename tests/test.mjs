@@ -1,15 +1,12 @@
 // Self-check for cal.js and parse.js: node test.mjs
-import fs from "node:fs"; import vm from "node:vm"; import assert from "node:assert"
+import fs from "node:fs"; import vm from "node:vm"; import assert from "node:assert"; import { spawnSync } from "node:child_process"
 const load = (file, names) => {
     const ctx = {}; vm.createContext(ctx)
     vm.runInContext(fs.readFileSync(new URL("../shell/" + file, import.meta.url), "utf8").replace(".pragma library", "") + `;globalThis.x={${names}}`, ctx)
     return ctx.x
 }
-const C = load("cal.js", "key,addDays,easter,holidays,monthGrid,weekOf,isoWeek,occurs,on,upcoming,validTime")
+const C = load("cal.js", "key,addDays,monthGrid,weekOf,isoWeek,occurs,on,upcoming,validTime")
 const P = load("parse.js", "cpu,mem,net,top,bytes,shQuote")
-assert.equal(C.easter(2026), "2026-04-05"); assert.equal(C.easter(2027), "2027-03-28")
-const h = C.holidays(2026)
-assert.equal(h["2026-02-17"], "Carnival"); assert.equal(h["2026-04-03"], "Good Friday"); assert.equal(h["2026-06-04"], "Corpus Christi"); assert.equal(h["2026-11-20"], "Black Awareness Day")
 const g = C.monthGrid(2026, 10); assert.equal(g.length, 42); assert.equal(g[0], "2026-11-01"); assert.equal(g[41], "2026-12-12")
 assert.equal(C.monthGrid(2026, 9)[0], "2026-09-27") // October 2026 starts on a Thursday
 assert.deepEqual([C.isoWeek("2026-01-01"), C.isoWeek("2026-11-05"), C.isoWeek("2027-01-03")], [1, 45, 53])
@@ -32,6 +29,13 @@ assert.equal(t.length, 1); assert.equal(t[0].name, "Web Content"); assert.equal(
 assert.equal(P.shQuote("/opt/my app"), "'/opt/my app'")
 assert.equal(P.shQuote("it's"), "'it'\\''s'")
 assert.equal(P.bytes(1536), "1.5 KB"); assert.equal(P.bytes(500), "500 B")
+// Scripts take values from settings files, so they must refuse anything that could reach a path or a URL.
+const script = (name, ...args) => spawnSync(new URL("../scripts/" + name, import.meta.url).pathname, args).status
+assert.equal(script("holidays", "../x", "2026"), 2)
+assert.equal(script("holidays", "BR", "20;26"), 2)
+assert.equal(script("profiles", "delete", "../settings"), 2)
+assert.equal(script("profiles", "create", "A B", "default", "x"), 2)
+
 // Every string the interface asks for must exist in every language, with the same placeholders.
 const shell = new URL("../shell/", import.meta.url)
 const used = new Set()
@@ -40,7 +44,6 @@ for (const file of fs.readdirSync(shell).filter(f => f.endsWith(".qml"))) {
     for (const m of code.matchAll(/Tr\.t\("((?:[^"\\]|\\.)+)"\)/g)) used.add(m[1])
     for (const m of code.matchAll(/Tr\.date\([^"]*"([^"]+)"\)/g)) used.add(m[1])
 }
-for (const name of Object.values(C.holidays(2026))) used.add(name)
 for (const label of ["Browser", "Code", "Files", "Terminal"]) used.add(label) // default dock labels in Cfg.qml
 const placeholders = text => (text.match(/%\d/g) || []).sort().join()
 for (const file of fs.readdirSync(new URL("i18n/", shell))) {

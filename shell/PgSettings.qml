@@ -3,12 +3,24 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
+import Quickshell.Widgets
 
 Page {
     id: pg
     title: Tr.t("Settings")
-    Component.onCompleted: Bright.refresh()
+    Component.onCompleted: { Bright.refresh(); Holidays.listCountries() }
     property var walls: []
+    property var photos: []
+    property bool creating: false
+    property bool armed: false
+    property bool pickingPhoto: false
+    function choosePhoto(image) { Profiles.setPhoto(image); pickingPhoto = false }
+    Timer { running: pg.armed; interval: 5000; onTriggered: pg.armed = false }
+    Process {
+        running: pg.pickingPhoto
+        command: ["sh", "-c", 'find "$HOME/Pictures" "$HOME/Downloads" -maxdepth 3 -type f \\( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.webp" \\) 2>/dev/null | head -60']
+        stdout: StdioCollector { onStreamFinished: pg.photos = text.split("\n").filter(Boolean).sort() }
+    }
     readonly property var monitors: Hyprland.monitors.values
 
     Process {
@@ -26,6 +38,84 @@ Page {
             Layout.fillWidth: true; spacing: 0
             Tx { text: label; Layout.fillWidth: true }
             Tx { visible: hint; text: hint; dim: true; size: 13; Layout.fillWidth: true }
+        }
+    }
+
+    Sec { title: Tr.t("Profile") }
+    Flow {
+        Layout.fillWidth: true; spacing: 8
+        Repeater {
+            model: Profiles.list
+            ProfileChip {
+                required property var modelData
+                profile: modelData
+            }
+        }
+        Btn { icon: "plus"; text: Tr.t("New profile"); implicitHeight: 56; onClicked: { pg.creating = !pg.creating; pg.armed = false } }
+    }
+    RowLayout {
+        visible: pg.creating
+        Layout.fillWidth: true; spacing: 8
+        Fld {
+            id: newName
+            Layout.fillWidth: true
+            placeholderText: Tr.t("Profile name")
+            Accessible.name: Tr.t("Profile name")
+            onVisibleChanged: if (visible) { text = ""; forceActiveFocus() }
+            onAccepted: createBtn.clicked()
+        }
+        Btn {
+            id: createBtn
+            text: Tr.t("Create"); variant: "solid"; enabledB: newName.text.trim().length > 0
+            onClicked: { Profiles.create(newName.text.trim()); pg.creating = false }
+        }
+    }
+    Line {
+        label: Tr.t("Name")
+        Fld {
+            Layout.preferredWidth: 260
+            text: Cfg.v.name
+            Accessible.name: Tr.t("Profile name")
+            onEditingFinished: { if (text.trim()) { Cfg.v.name = text.trim(); nameSaved.restart() } else text = Cfg.v.name }
+            Timer { id: nameSaved; interval: 300; onTriggered: Profiles.refresh() }
+        }
+    }
+    Line {
+        label: Tr.t("Photo")
+        hint: Tr.t("Shown on the lock screen")
+        Btn { text: pg.pickingPhoto ? Tr.t("Cancel") : Tr.t("Change photo"); onClicked: pg.pickingPhoto = !pg.pickingPhoto }
+        Btn {
+            visible: Profiles.list.length > 1
+            text: pg.armed ? Tr.t("Click again to delete") : Tr.t("Delete profile")
+            variant: "danger"
+            onClicked: {
+                if (!pg.armed) { pg.armed = true; return }
+                pg.armed = false
+                Profiles.removeActive()
+            }
+        }
+    }
+    Tx { visible: pg.pickingPhoto && pg.photos.length === 0; text: Tr.t("No images in ~/Pictures or ~/Downloads."); dim: true }
+    Flow {
+        visible: pg.pickingPhoto
+        Layout.fillWidth: true; spacing: 8
+        Repeater {
+            model: pg.pickingPhoto ? pg.photos : []
+            Rectangle {
+                id: choice
+                required property string modelData
+                width: 80; height: 80; radius: 40; clip: true; color: Theme.raised
+                activeFocusOnTab: true
+                border.width: activeFocus ? 2 : 0; border.color: Theme.accent
+                Accessible.role: Accessible.Button
+                Accessible.name: modelData.split("/").pop()
+                Keys.onSpacePressed: pg.choosePhoto(modelData)
+                ClippingRectangle {
+                    anchors.fill: parent; radius: 40; color: "transparent"
+                    Image { anchors.fill: parent; source: "file://" + choice.modelData; fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(160, 160); asynchronous: true }
+                }
+                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: pg.choosePhoto(parent.modelData) }
+            }
         }
     }
 
@@ -98,8 +188,16 @@ Page {
 
     Sec { title: Tr.t("Calendar") }
     Line {
-        label: Tr.t("Brazilian holidays in the calendar")
-        Swt { a11y: Tr.t("Brazilian holidays in the calendar"); checked: Cfg.v.holidays === "on" || (Cfg.v.holidays !== "off" && Qt.locale().name.endsWith("_BR")); onToggled: Cfg.v.holidays = checked ? "on" : "off" }
+        label: Tr.t("Public holidays")
+        hint: Tr.t("Downloaded from date.nager.at")
+        Cmb {
+            id: holidayPick
+            a11y: Tr.t("Public holidays")
+            textRole: "name"
+            model: [{ code: "off", name: Tr.t("None") }, { code: "auto", name: Tr.t("Automatic") }].concat(Holidays.countries.map(c => ({ code: c.countryCode, name: c.name })))
+            currentIndex: Math.max(0, model.findIndex(o => o.code === (Cfg.v.holidays || "auto")))
+            onActivated: i => Cfg.v.holidays = model[i].code
+        }
     }
 
     Sec { title: Tr.t("Display") }

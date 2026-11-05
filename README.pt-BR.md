@@ -23,6 +23,8 @@ Os prints estão no [README em inglês](README.md#screenshots).
 - **Busca:** aplicativos e telas do sistema no mesmo lugar. Digite "wifi" ou "volume".
 - **Idiomas:** English, Português (Brasil), Español, Français, Deutsch, Русский e 简体中文. Segue o idioma do sistema, ou escolha em Ajustes.
 - **Tela de bloqueio:** relógio grande, música atual, bateria e sua foto, sobre o seu papel de parede. Ela também recebe você ao voltar da suspensão, sem o desktop piscar antes.
+- **Perfis:** cada um guarda nome, foto, idioma, cor, papel de parede, dock e tempos de ociosidade. Crie e troque em Ajustes.
+- **Feriados:** de mais de 200 países no calendário, ou nenhum. Escolha em Ajustes.
 - **Ociosidade e tela:** tempos separados para tomada e bateria, luz noturna e brilho do monitor.
 - **Resistente:** se o shell cair, ele volta sozinho. Suas janelas continuam abertas.
 
@@ -86,7 +88,7 @@ A lista completa está em [`hypr/binds.lua`](hypr/binds.lua).
 ## Configurar
 
 **Quase tudo** está na tela Ajustes: idioma, cor de destaque, papel de parede, brilho, luz noturna e tempos de ociosidade.
-Seus papéis de parede vão em `~/Pictures/Wallpapers`, e a tela de bloqueio segue o que você escolher. Sua foto nela é o arquivo `~/.face`.
+Seus papéis de parede vão em `~/Pictures/Wallpapers`, e a tela de bloqueio segue o que você escolher. A foto é definida por perfil e, sem uma, usa `~/.face`.
 
 **Tela de bloqueio:** é o arquivo `~/.config/atoll/hyprlock.conf`. Atualizações o substituem e guardam sua versão como `hyprlock.conf.bak`.
 
@@ -100,13 +102,14 @@ hl.unbind("SUPER + Return") -- sem isso, os dois comandos rodam
 hl.bind("SUPER + Return", hl.dsp.exec_cmd("foot"))
 ```
 
-**Shell:** as opções ficam em `~/.config/atoll/settings.json`, criado na primeira execução e aplicado ao salvar:
+**Shell:** as opções ficam em `~/.config/atoll/profiles/<perfil>.json`, um arquivo por perfil, aplicado ao salvar:
 
 | Chave | Significado |
 |---|---|
 | `dock` | Apps fixados, normalmente editados pela engrenagem do dock. Cada um tem `label`, `ids` (app ids do Wayland em minúsculas), um ícone (`icon`, chave de [`Icons.qml`](shell/Icons.qml), ou `appIcon`, nome no tema de ícones) e o que iniciar (`desktopId` ou `cmd`) |
 | `language` | `auto`, ou um código de idioma como `en`, `pt-BR`, `es`, `fr`, `de`, `ru` ou `zh-CN` |
-| `holidays` | Feriados do Brasil no calendário: `on`, `off`, ou `auto` para idioma do sistema brasileiro |
+| `holidays` | Código de país como `BR` ou `DE`, `off`, ou `auto` para o país do idioma do sistema |
+| `name`, `photo` | Nome e foto do perfil |
 | `accent` | `gelo`, `areia`, `hortela` ou `coral` |
 | `wallpaper` | Caminho da imagem, ou vazio para cor sólida |
 
@@ -123,9 +126,17 @@ git pull && ./install.sh   # atualiza; ajustes, eventos e curtidas ficam
   voltando ao início 1,5 s antes do fim, e o aleatório fica indisponível nesses casos.
 - **Curtidas são locais.** Não chegam ao Spotify nem ao YouTube Music, porque o MPRIS não tem esse conceito.
 - **Eventos do calendário são locais.** Não há sincronização com Google Agenda ou CalDAV.
+- **Feriados são só nacionais,** com nome em inglês ou no idioma do país, e precisam de conexão na primeira vez.
+- **Eventos e curtidas são compartilhados** entre os perfis.
 - **Parear Bluetooth** funciona com aparelhos que não pedem código. Para teclados que mostram um, use `bluetoothctl`.
 - **Blur** usa a GPU. Se ficar lento, desligue em `user.lua`:
   `hl.config({ decoration = { blur = { enabled = false } } })`.
+
+## Privacidade
+
+O Atoll não pede conta nem envia telemetria. Só um recurso usa a rede: ao abrir o calendário ou os Ajustes, ele baixa feriados de
+[date.nager.at](https://date.nager.at), que vê seu IP, o país e os anos pedidos. O resultado fica em `~/.cache/atoll/holidays`.
+Para desligar, deixe `holidays` em `off`.
 
 ## Problemas comuns
 

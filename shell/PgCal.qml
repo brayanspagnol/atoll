@@ -12,12 +12,12 @@ Item {
     property string sel: Cal.key(new Date())
     property int view: 0 // 0 month, 1 week, 2 year
     property var editing: null // event being edited, {} when new
-    readonly property bool showHolidays: Cfg.v.holidays === "on" || (Cfg.v.holidays !== "off" && Qt.locale().name.endsWith("_BR"))
     readonly property int first: Tr.locale.firstDayOfWeek % 7
     readonly property var dayNames: [0, 1, 2, 3, 4, 5, 6].map(i => Tr.locale.dayName((first + i) % 7, Locale.ShortFormat).replace(".", ""))
     function dateOf(k) { return new Date(k + "T12:00:00") }
-    readonly property var hol: showHolidays ? Object.assign({}, Cal.holidays(year - 1), Cal.holidays(year), Cal.holidays(year + 1)) : ({})
-    Component.onCompleted: { year = clk.date.getFullYear(); month = clk.date.getMonth() }
+    readonly property var hol: Holidays.names
+    onYearChanged: Holidays.load(year)
+    Component.onCompleted: { year = clk.date.getFullYear(); month = clk.date.getMonth(); Holidays.load(year) }
 
     function go(k) { sel = k; const d = new Date(k + "T12:00:00"); year = d.getFullYear(); month = d.getMonth(); editing = null }
     function shift(n) {
@@ -36,7 +36,7 @@ Item {
             ColumnLayout {
                 Layout.fillWidth: true; spacing: 2
                 Tx { text: pg.heading; size: 30; strong: true; Layout.fillWidth: true; Accessible.role: Accessible.Heading; Accessible.name: text }
-                Tx { visible: pg.showHolidays; text: Tr.t("Brazilian national holidays included"); dim: true; Layout.fillWidth: true }
+                Tx { visible: Holidays.failed; text: Tr.t("Couldn't load holidays. Check your connection."); dim: true; Layout.fillWidth: true }
             }
             Btn { text: Tr.t("Today"); onClicked: pg.go(pg.today) }
             Btn { icon: "left"; a11y: Tr.t("Previous"); onClicked: pg.shift(-1) }
@@ -87,7 +87,7 @@ Item {
         property string day: ""
         property bool inMonth: true
         readonly property var evs: Cal.on(Events.list, day)
-        readonly property string holiday: Tr.t(pg.hol[day] ?? "")
+        readonly property string holiday: pg.hol[day] ?? ""
         readonly property bool isToday: day === pg.today
         radius: Theme.radiusSmall
         color: pg.sel === day ? Theme.raised : ma.containsMouse ? Theme.hover : "transparent"
@@ -170,7 +170,7 @@ Item {
         ColumnLayout {
             spacing: 8
             Tx { text: Tr.date(pg.dateOf(pg.sel), "dddd, MMMM d"); strong: true; size: 15; wrapMode: Text.Wrap; Layout.fillWidth: true }
-            Tx { visible: !!pg.hol[pg.sel]; text: Tr.t("Holiday: %1").arg(Tr.t(pg.hol[pg.sel] ?? "")); color: Theme.holiday }
+            Tx { visible: !!pg.hol[pg.sel]; text: Tr.t("Holiday: %1").arg(pg.hol[pg.sel] ?? ""); color: Theme.holiday }
             Btn { text: Tr.t("New event"); icon: "plus"; variant: "solid"; onClicked: pg.editing = {} }
             Sec { title: Tr.t("On this day") }
             Tx { visible: Cal.on(Events.list, pg.sel).length === 0; text: Tr.t("Nothing scheduled."); dim: true }

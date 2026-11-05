@@ -25,6 +25,8 @@ wallpaper, and windows keep the rest of the screen.
 - **Search:** apps and system screens in one box. Type "wifi" or "volume".
 - **Languages:** English, Português (Brasil), Español, Français, Deutsch, Русский and 简体中文. It follows your system language, or pick one in Settings.
 - **Lock screen:** large clock, the current song, battery and your picture, over your wallpaper. It also greets you when waking from suspend, with no flash of the desktop.
+- **Profiles:** each one keeps its own name, picture, language, accent, wallpaper, dock and idle times. Create and switch them in Settings.
+- **Public holidays:** for over 200 countries in the calendar, or none. Choose in Settings.
 - **Idle and display:** idle timers per power source, night light and monitor brightness.
 - **Resilient by design:** if the shell crashes, it restarts by itself. Your windows stay open.
 
@@ -118,7 +120,7 @@ The full list is in [`hypr/binds.lua`](hypr/binds.lua).
 ## Configure
 
 **Most things** are in the Settings screen: language, accent color, wallpaper, brightness, night light and idle timers.
-Your wallpapers go in `~/Pictures/Wallpapers`, and the lock screen follows the one you pick. Your lock screen picture is `~/.face`.
+Your wallpapers go in `~/Pictures/Wallpapers`, and the lock screen follows the one you pick. Your lock screen picture is set per profile, and falls back to `~/.face`.
 
 **The lock screen** is `~/.config/atoll/hyprlock.conf`. Updates replace it and save your version as `hyprlock.conf.bak`.
 
@@ -132,13 +134,14 @@ hl.unbind("SUPER + Return") -- without this, both commands would run
 hl.bind("SUPER + Return", hl.dsp.exec_cmd("foot"))
 ```
 
-**Shell** options are in `~/.config/atoll/settings.json`, created on first run and applied as you save it:
+**Shell** options are in `~/.config/atoll/profiles/<profile>.json`, one file per profile, applied as you save it:
 
 | Key | Meaning |
 |---|---|
 | `dock` | Pinned apps, normally edited with the gear on the dock. Each has a `label`, `ids` (lowercase Wayland app ids), an icon (`icon`, a key from [`Icons.qml`](shell/Icons.qml), or `appIcon`, an icon theme name) and what to start (`desktopId` or `cmd`) |
 | `language` | `auto`, or a language code such as `en`, `pt-BR`, `es`, `fr`, `de`, `ru` or `zh-CN` |
-| `holidays` | Brazilian national holidays in the calendar: `on`, `off`, or `auto` for Brazilian locales |
+| `holidays` | A country code such as `BR` or `DE`, `off`, or `auto` for your system locale's country |
+| `name`, `photo` | The profile's name and picture |
 | `accent` | `gelo`, `areia`, `hortela` or `coral` |
 | `wallpaper` | Image path, or empty for a solid color |
 
@@ -155,9 +158,17 @@ git pull && ./install.sh   # update; settings, events and likes stay
   repeat-one by seeking back 1.5 seconds before the end, and shuffle stays off for them.
 - **Likes are local.** They don't reach Spotify or YouTube Music, because MPRIS has no such concept.
 - **Calendar events are local.** There is no Google Calendar or CalDAV sync.
+- **Holidays are nationwide only,** with names in English or in the country's language, and they need a connection the first time.
+- **Events and likes are shared** by all profiles.
 - **Bluetooth pairing** works for devices that need no code. For keyboards that show one, use `bluetoothctl`.
 - **Blur** uses the GPU. If it feels slow, disable it in `user.lua`:
   `hl.config({ decoration = { blur = { enabled = false } } })`.
+
+## Privacy
+
+Atoll needs no account and sends no telemetry. One feature uses the network: when you open the calendar or Settings, it
+downloads public holidays from [date.nager.at](https://date.nager.at), which sees your IP address and the country and years
+requested. Results stay cached in `~/.cache/atoll/holidays`. Set `holidays` to `off` to turn this off.
 
 ## Troubleshooting
 

@@ -4,7 +4,7 @@ import Quickshell
 import Quickshell.Io
 import "parse.js" as P
 
-// The apps pinned to the dock, stored in settings.json.
+// The apps pinned to the dock, stored in the active profile.
 Singleton {
     id: pins
     readonly property var list: Cfg.v.dock

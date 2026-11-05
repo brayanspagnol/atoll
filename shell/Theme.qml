@@ -12,7 +12,7 @@ Singleton {
     readonly property color accent: (accents[Cfg.v.accent] ?? accents.gelo).hex
     readonly property color accentInk: "#08131D"
     readonly property color ground: "#0D151F"
-    readonly property color surface: Qt.rgba(12 / 255, 18 / 255, 26 / 255, 0.5)
+    readonly property color surface: Qt.rgba(12 / 255, 18 / 255, 26 / 255, 0.6)
     readonly property color raised: Qt.rgba(1, 1, 1, 0.12)
     readonly property color hover: Qt.rgba(1, 1, 1, 0.08)
     readonly property color line: Qt.rgba(1, 1, 1, 0.16)
@@ -40,5 +40,11 @@ Singleton {
         Quickshell.execDetached(["sh", "-c", 'if [ -n "$1" ]; then ln -sfn "$1" "$2"; else rm -f "$2"; fi', "sh", wallpaper, Quickshell.env("HOME") + "/.local/share/atoll/current-wallpaper"])
     }
     onWallpaperChanged: linkWallpaper()
-    Component.onCompleted: { pushBorder(); linkWallpaper() }
+    // Same for the picture. Without one of its own, a profile uses the system-wide ~/.face.
+    readonly property string photo: Cfg.v.photo
+    function linkPhoto() {
+        Quickshell.execDetached(["sh", "-c", 'if [ -e "$1" ]; then ln -sfn "$1" "$2"; else rm -f "$2"; fi', "sh", photo || Quickshell.env("HOME") + "/.face", Quickshell.env("HOME") + "/.local/share/atoll/current-face"])
+    }
+    onPhotoChanged: linkPhoto()
+    Component.onCompleted: { pushBorder(); linkWallpaper(); linkPhoto() }
 }
