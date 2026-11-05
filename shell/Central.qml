@@ -36,7 +36,9 @@ Scope {
             perf: "CPU " + Math.round(Sys.cpu) + "% · " + Math.round(Sys.temp) + " °C",
             cal: Tr.date(new Date(), "MMM d").replace(".", ""),
             avisos: Notifs.all.length ? Tr.t("Notifications: %1").arg(Notifs.all.length) : Tr.t("All caught up"),
-            ajustes: Tr.t("Color, display, idle"),
+            ajustes: Tr.t("Profile, color, idle"),
+            monitor: Tr.t("Screens: %1").arg(Displays.count_on),
+            sobre: "Atoll " + Ui.version,
             energia: UPower.displayDevice?.isLaptopBattery ? Tr.t("Battery %1%").arg(Math.round(UPower.displayDevice.percentage * 100)) : Tr.t("Shut down, suspend")
         })
         MouseArea { anchors.fill: parent; enabled: Ui.open; onClicked: Ui.open = false }
@@ -119,7 +121,7 @@ Scope {
                     property string shown: ""
                     Component.onCompleted: shown = Ui.page
                     property int direction: 1
-                    source: ({ som: "PgSound.qml", rede: "PgNet.qml", bt: "PgBt.qml", perf: "PgPerf.qml", cal: "PgCal.qml", avisos: "PgNotif.qml", ajustes: "PgSettings.qml", energia: "PgPower.qml" })[shown]
+                    source: ({ som: "PgSound.qml", rede: "PgNet.qml", bt: "PgBt.qml", perf: "PgPerf.qml", cal: "PgCal.qml", avisos: "PgNotif.qml", ajustes: "PgSettings.qml", energia: "PgPower.qml", monitor: "PgMonitor.qml", sobre: "PgAbout.qml" })[shown]
                     transform: Translate { id: slide }
                     Connections {
                         target: Ui

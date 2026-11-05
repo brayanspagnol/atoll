@@ -35,6 +35,12 @@ function top(text, limit) { // last batch of `top -b -n2`, default field order
 function shQuote(text) { // one safe shell word
     return "'" + text.replace(/'/g, "'\\''") + "'"
 }
+function newerVersion(latest, current) { // "v1.10.0" against "1.9.2"
+    const parts = text => text.replace(/^v/, "").split(".").map(Number)
+    const a = parts(latest), b = parts(current)
+    for (let i = 0; i < 3; i++) if ((a[i] || 0) !== (b[i] || 0)) return (a[i] || 0) > (b[i] || 0)
+    return false
+}
 function bytes(n) {
     const u = ["B", "KB", "MB", "GB", "TB"]; let i = 0
     while (n >= 1024 && i < 4) { n /= 1024; i++ }

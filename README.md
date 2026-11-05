@@ -27,7 +27,9 @@ wallpaper, and windows keep the rest of the screen.
 - **Lock screen:** a large clock, the current song and your profile's name and picture over your sharp wallpaper. It also greets you when waking from suspend, with no flash of the desktop.
 - **Profiles:** each one keeps its own name, picture (from a saved gallery you add to), language, accent, wallpaper, dock and idle times. Create and switch them in Settings.
 - **Public holidays:** for over 200 countries in the calendar, or none. Choose in Settings.
-- **Idle and display:** idle timers per power source, night light and monitor brightness.
+- **Monitors:** drag your screens into place, and set resolution, refresh rate, scale, rotation, mirroring, VRR, brightness, workspaces and what closing the lid does. A new layout goes back by itself in 15 seconds unless you keep it.
+- **Idle:** timers per power source and night light.
+- **About:** version, update check, project links and system details to paste in a bug report.
 - **Resilient by design:** if the shell crashes, it restarts by itself. Your windows stay open.
 
 ## Screenshots
@@ -53,6 +55,10 @@ Personal data such as network and device names is covered with solid blocks.
 ![Choosing the apps on the dock](docs/screenshots/dock-editor.webp)
 
 ![Search](docs/screenshots/launcher.webp)
+
+| Monitor | About |
+|---|---|
+| ![Monitor](docs/screenshots/monitor.webp) | ![About](docs/screenshots/about.webp) |
 
 | Settings | Power |
 |---|---|
@@ -104,6 +110,7 @@ for `sudo`; everything else stays in your home directory. See `./install.sh --he
 | `Super+N` | Control center |
 | `Super+Alt+A` / `I` / `B` / `D` | Sound / Internet / Bluetooth / Performance |
 | `Super+Alt+C` / `V` / `J` / `E` | Calendar / Notifications / Settings / Power |
+| `Super+Alt+M` / `O` | Monitor / About |
 | `Super+Enter` | Terminal |
 | `Super+B` / `E` | Browser / Files |
 | `Super+C` | Close window |
@@ -119,17 +126,16 @@ The full list is in [`hypr/binds.lua`](hypr/binds.lua).
 
 ## Configure
 
-**Most things** are in the Settings screen: language, accent color, wallpaper, brightness, night light and idle timers.
+**Most things** are in the Settings screen: profile, language, accent color, wallpaper, night light and idle timers. Screens are in the Monitor screen, saved in `~/.config/atoll/monitors.lua`.
 Your wallpapers go in `~/Pictures/Wallpapers`, and the lock screen follows the one you pick. Your lock screen picture is set per profile, and falls back to `~/.face`.
 
 **The lock screen** is `~/.config/atoll/hyprlock.conf`. Updates replace it and save your version as `hyprlock.conf.bak`.
 
 **Hyprland** overrides go in `~/.config/atoll/user.lua`, which updates never touch. For example, a keyboard
-layout, a monitor and another terminal:
+layout and another terminal:
 
 ```lua
 hl.config({ input = { kb_layout = "br,us", kb_variant = "abnt2," } })
-hl.monitor({ output = "HDMI-A-1", mode = "3440x1440@60", position = "0x0", scale = 1 })
 hl.unbind("SUPER + Return") -- without this, both commands would run
 hl.bind("SUPER + Return", hl.dsp.exec_cmd("foot"))
 ```
@@ -166,7 +172,7 @@ git pull && ./install.sh   # update; settings, events and likes stay
 
 ## Privacy
 
-Atoll needs no account and sends no telemetry. One feature uses the network: when you open the calendar or Settings, it
+Atoll needs no account and sends no telemetry. Two features use the network. The update check in About asks GitHub for the latest release, only when you click it. And when you open the calendar or Settings, it
 downloads public holidays from [date.nager.at](https://date.nager.at), which sees your IP address and the country and years
 requested. Results stay cached in `~/.cache/atoll/holidays`. Set `holidays` to `off` to turn this off.
 

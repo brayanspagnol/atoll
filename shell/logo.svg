@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Atoll">
+  <defs>
+    <linearGradient id="a" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8CC8F5"/>
+      <stop offset="1" stop-color="#2F6EA5"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="30" fill="#0D151F"/>
+  <path d="M64 24a40 40 0 1 1-28.3 11.7" fill="none" stroke="url(#a)" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="64" cy="64" r="8" fill="#E8CFA6"/>
+</svg>

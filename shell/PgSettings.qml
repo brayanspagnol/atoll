@@ -1,19 +1,17 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Widgets
 
 Page {
     id: pg
     title: Tr.t("Settings")
-    Component.onCompleted: { Bright.refresh(); Holidays.listCountries() }
+    Component.onCompleted: Holidays.listCountries()
     property var walls: []
     property bool creating: false
     property bool armed: false
     Timer { running: pg.armed; interval: 5000; onTriggered: pg.armed = false }
-    readonly property var monitors: Hyprland.monitors.values
 
     Process {
         running: true
@@ -190,6 +188,14 @@ Page {
         }
     }
 
+    Line {
+        label: Tr.t("Night light")
+        hint: Tr.t("Warmer screen, less blue")
+        Sld { visible: Cfg.v.nightOn; Layout.preferredWidth: 180; a11y: Tr.t("Night light temperature"); from: 2500; to: 6000; stepSize: 100; value: Cfg.v.nightK; onMoved: { Cfg.v.nightK = value; Night.apply() } }
+        Tx { visible: Cfg.v.nightOn; mono: true; text: Cfg.v.nightK + " K"; Layout.preferredWidth: 58; horizontalAlignment: Text.AlignRight }
+        Swt { a11y: Tr.t("Night light"); checked: Cfg.v.nightOn; onToggled: { Cfg.v.nightOn = checked; Night.apply() } }
+    }
+
     Sec { title: Tr.t("Calendar") }
     Line {
         label: Tr.t("Public holidays")
@@ -204,35 +210,6 @@ Page {
         }
     }
 
-    Sec { title: Tr.t("Display") }
-    Repeater {
-        model: pg.monitors
-        Line {
-            required property var modelData
-            label: modelData.name
-            hint: modelData.width + "×" + modelData.height + " · " + Math.round(modelData.lastIpcObject?.refreshRate ?? 0) + " Hz · " + Tr.t("scale %1").arg(modelData.scale)
-        }
-    }
-    Line {
-        visible: Bright.external >= 0
-        label: Tr.t("External monitor brightness")
-        hint: Tr.t("Through DDC/CI")
-        Sld { Layout.preferredWidth: 260; a11y: Tr.t("External brightness"); from: 0; to: 100; stepSize: 5; value: Bright.external; onPressedChanged: if (!pressed) Bright.setExternal(value) }
-        Tx { mono: true; text: Bright.external + "%"; Layout.preferredWidth: 42; horizontalAlignment: Text.AlignRight }
-    }
-    Line {
-        visible: Bright.panel >= 0
-        label: Tr.t("Laptop screen brightness")
-        Sld { Layout.preferredWidth: 260; a11y: Tr.t("Laptop brightness"); from: 1; to: 100; value: Bright.panel; onMoved: Bright.setPanel(Math.round(value)) }
-        Tx { mono: true; text: Bright.panel + "%"; Layout.preferredWidth: 42; horizontalAlignment: Text.AlignRight }
-    }
-    Line {
-        label: Tr.t("Night light")
-        hint: Tr.t("Warmer screen, less blue")
-        Sld { visible: Cfg.v.nightOn; Layout.preferredWidth: 180; a11y: Tr.t("Night light temperature"); from: 2500; to: 6000; stepSize: 100; value: Cfg.v.nightK; onMoved: { Cfg.v.nightK = value; Night.apply() } }
-        Tx { visible: Cfg.v.nightOn; mono: true; text: Cfg.v.nightK + " K"; Layout.preferredWidth: 58; horizontalAlignment: Text.AlignRight }
-        Swt { a11y: Tr.t("Night light"); checked: Cfg.v.nightOn; onToggled: { Cfg.v.nightOn = checked; Night.apply() } }
-    }
 
     Sec {
         title: Tr.t("Idle time (minutes, 0 = never)")
@@ -266,7 +243,7 @@ Page {
         Repeater {
             model: [["Super + R", Tr.t("Apps and commands")], ["Super + Z", Tr.t("Show the bottom bar")],
                     ["Super + Alt + A", Tr.t("Sound")], ["Super + Alt + I", "Internet"], ["Super + Alt + B", "Bluetooth"], ["Super + Alt + D", Tr.t("Performance")],
-                    ["Super + Alt + C", Tr.t("Calendar")], ["Super + Alt + V", Tr.t("Notifications")], ["Super + Alt + J", Tr.t("Settings")], ["Super + Alt + E", Tr.t("Power")],
+                    ["Super + Alt + C", Tr.t("Calendar")], ["Super + Alt + V", Tr.t("Notifications")], ["Super + Alt + J", Tr.t("Settings")], ["Super + Alt + M", Tr.t("Monitor")], ["Super + Alt + O", Tr.t("About")], ["Super + Alt + E", Tr.t("Power")],
                     ["Super + L", Tr.t("Lock")], ["Super + Enter", Tr.t("Terminal")], ["Super + B", Tr.t("Browser")], ["Super + E", Tr.t("Files")],
                     ["Super + C", Tr.t("Close window")], ["Super + Shift + V", Tr.t("Clipboard history")], ["Print", Tr.t("Area screenshot")], [Tr.t("Super + Space"), Tr.t("Switch keyboard layout")]]
             RowLayout {
@@ -276,13 +253,5 @@ Page {
                 Tx { text: parent.modelData[0]; mono: true; size: 13 }
             }
         }
-    }
-
-    Sec { title: Tr.t("About") }
-    FileView { id: versionFile; path: Quickshell.env("HOME") + "/.local/share/atoll/VERSION"; blockLoading: true }
-    Line {
-        label: "Atoll " + (versionFile.text().trim() || "dev")
-        hint: Tr.t("Free software under the MIT license")
-        Btn { text: Tr.t("Open on GitHub"); onClicked: Qt.openUrlExternally("https://github.com/brayanspagnol/atoll") }
     }
 }
