@@ -6,7 +6,7 @@ import Quickshell.Widgets
 Item {
     id: root
     required property var pin
-    property int size: 26
+    property int size: 40
     readonly property string source: pin.appIcon ? Quickshell.iconPath(pin.appIcon, true) : ""
     implicitWidth: size; implicitHeight: size
     Ic { anchors.centerIn: parent; visible: !!root.pin.icon; name: root.pin.icon ?? ""; size: root.size }

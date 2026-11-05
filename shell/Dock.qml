@@ -10,7 +10,7 @@ PanelWindow {
     screen: modelData
     anchors.bottom: true
     implicitWidth: pill.implicitWidth + 200
-    implicitHeight: 96
+    implicitHeight: 112
     exclusionMode: ExclusionMode.Ignore // hidden by default: windows keep the full height
     color: "transparent"
     WlrLayershell.namespace: "atoll-dock"
@@ -52,7 +52,7 @@ PanelWindow {
         property bool active: false
         default property alias content: slot.data
         signal clicked()
-        implicitWidth: 60; implicitHeight: 60; radius: 16
+        implicitWidth: 72; implicitHeight: 72; radius: 20
         color: m.pressed ? Theme.lineStrong : m.containsMouse || active ? Qt.rgba(1, 1, 1, 0.16) : Theme.raised
         border.width: activeFocus ? 2 : 0; border.color: Theme.ink
         activeFocusOnTab: true
@@ -60,7 +60,7 @@ PanelWindow {
         Accessible.name: running ? Tr.t("%1, open").arg(label) : label
         Keys.onSpacePressed: clicked()
         Keys.onReturnPressed: clicked()
-        Item { id: slot; anchors.centerIn: parent; anchors.verticalCenterOffset: -3; width: 26; height: 26 }
+        Item { id: slot; anchors.centerIn: parent; anchors.verticalCenterOffset: -3; width: 40; height: 40 }
         Rectangle { visible: tile.running; anchors { bottom: parent.bottom; bottomMargin: 6; horizontalCenter: parent.horizontalCenter } width: 5; height: 5; radius: 3; color: Theme.accent }
         MouseArea {
             id: m; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
@@ -81,16 +81,16 @@ PanelWindow {
 
         Frost {
             id: pill
-            property real offset: win.open ? 0 : 96
+            property real offset: win.open ? 0 : 112
             Behavior on offset { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-            visible: offset < 96
+            visible: offset < 112
             transform: Translate { y: pill.offset }
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 16
             implicitWidth: row.implicitWidth + 20
-            implicitHeight: 80
-            radius: 26
+            implicitHeight: 92
+            radius: 30
             RowLayout {
                 id: row
                 anchors.centerIn: parent
@@ -98,12 +98,12 @@ PanelWindow {
                 Tile {
                     label: Tr.t("Customize dock")
                     onClicked: Ui.editDock()
-                    Ic { anchors.centerIn: parent; anchors.verticalCenterOffset: 3; name: "gear"; size: 26 }
+                    Ic { anchors.centerIn: parent; anchors.verticalCenterOffset: 3; name: "gear"; size: 36 }
                 }
                 Tile {
                     label: Tr.t("Apps and commands"); color: Theme.accent
                     onClicked: { Ui.open = false; Ui.launcher = !Ui.launcher }
-                    Ic { anchors.centerIn: parent; anchors.verticalCenterOffset: 3; name: "search"; size: 26; color: Theme.accentInk }
+                    Ic { anchors.centerIn: parent; anchors.verticalCenterOffset: 3; name: "search"; size: 36; color: Theme.accentInk }
                 }
                 Repeater {
                     model: win.pinned
@@ -131,8 +131,8 @@ PanelWindow {
                         running: true
                         active: ws.some(t => t.activated)
                         onClicked: win.focusOrLaunch(ws, {})
-                        IconImage { visible: !!et.entry?.icon; anchors.centerIn: parent; implicitSize: 26; source: et.entry?.icon ? Quickshell.iconPath(et.entry.icon, true) : "" }
-                        Tx { visible: !et.entry?.icon; anchors.centerIn: parent; text: et.appId.charAt(0).toUpperCase(); size: 20; strong: true }
+                        IconImage { visible: !!et.entry?.icon; anchors.centerIn: parent; implicitSize: 40; source: et.entry?.icon ? Quickshell.iconPath(et.entry.icon, true) : "" }
+                        Tx { visible: !et.entry?.icon; anchors.centerIn: parent; text: et.appId.charAt(0).toUpperCase(); size: 28; strong: true }
                     }
                 }
             }

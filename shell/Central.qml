@@ -112,9 +112,35 @@ Scope {
                 }
                 Rectangle { Layout.fillHeight: true; implicitWidth: 1; color: Theme.line }
                 Loader {
+                    id: page
                     Layout.fillWidth: true; Layout.fillHeight: true
                     Layout.topMargin: 26; Layout.bottomMargin: 26; Layout.leftMargin: 30; Layout.rightMargin: 16
-                    source: ({ som: "PgSound.qml", rede: "PgNet.qml", bt: "PgBt.qml", perf: "PgPerf.qml", cal: "PgCal.qml", avisos: "PgNotif.qml", ajustes: "PgSettings.qml", energia: "PgPower.qml" })[Ui.page]
+                    // Follows Ui.page only through the animation, so the old screen can leave first.
+                    property string shown: ""
+                    Component.onCompleted: shown = Ui.page
+                    property int direction: 1
+                    source: ({ som: "PgSound.qml", rede: "PgNet.qml", bt: "PgBt.qml", perf: "PgPerf.qml", cal: "PgCal.qml", avisos: "PgNotif.qml", ajustes: "PgSettings.qml", energia: "PgPower.qml" })[shown]
+                    transform: Translate { id: slide }
+                    Connections {
+                        target: Ui
+                        function onPageChanged() {
+                            const order = Ui.pages.map(p => p.id)
+                            page.direction = order.indexOf(Ui.page) >= order.indexOf(page.shown) ? 1 : -1
+                            swap.restart()
+                        }
+                    }
+                    SequentialAnimation {
+                        id: swap
+                        ParallelAnimation {
+                            NumberAnimation { target: page; property: "opacity"; to: 0; duration: 90 }
+                            NumberAnimation { target: slide; property: "y"; to: -18 * page.direction; duration: 90; easing.type: Easing.InCubic }
+                        }
+                        ScriptAction { script: { page.shown = Ui.page; slide.y = 26 * page.direction } }
+                        ParallelAnimation {
+                            NumberAnimation { target: page; property: "opacity"; to: 1; duration: 200 }
+                            NumberAnimation { target: slide; property: "y"; to: 0; duration: 260; easing.type: Easing.OutCubic }
+                        }
+                    }
                 }
             }
             Btn { anchors { top: parent.top; right: parent.right; margins: 18 } variant: "quiet"; icon: "x"; implicitHeight: 44; a11y: Tr.t("Close panel"); onClicked: Ui.open = false }

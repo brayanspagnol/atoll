@@ -88,7 +88,7 @@ Scope {
 
                 ColumnLayout {
                     id: content
-                    anchors { fill: parent; topMargin: 90; bottomMargin: 130 }
+                    anchors { fill: parent; topMargin: 90; bottomMargin: 140 }
                     spacing: 40
                     scale: stage.shown ? 1 : 1.05
                     Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
@@ -227,15 +227,15 @@ Scope {
                 Frost {
                     anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 16 }
                     implicitWidth: pinRow.implicitWidth + 20
-                    implicitHeight: 80
-                    radius: 26
+                    implicitHeight: 92
+                    radius: 30
                     MouseArea { anchors.fill: parent; onClicked: win.selected = -1 }
                     RowLayout {
                         id: pinRow
                         anchors.centerIn: parent
                         spacing: 8
                         Rectangle {
-                            implicitWidth: 60; implicitHeight: 60; radius: 16
+                            implicitWidth: 72; implicitHeight: 72; radius: 20
                             color: Theme.accent
                             activeFocusOnTab: true
                             border.width: activeFocus ? 2 : 0; border.color: Theme.ink
@@ -243,7 +243,7 @@ Scope {
                             Accessible.name: Tr.t("Close panel")
                             Keys.onSpacePressed: Ui.dockEditor = false
                             Keys.onReturnPressed: Ui.dockEditor = false
-                            Ic { anchors.centerIn: parent; name: "gear"; size: 26; color: Theme.accentInk }
+                            Ic { anchors.centerIn: parent; name: "gear"; size: 36; color: Theme.accentInk }
                             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Ui.dockEditor = false }
                         }
                         Rectangle { implicitWidth: 1; implicitHeight: 36; color: Theme.line; Layout.leftMargin: 4; Layout.rightMargin: 4 }
@@ -255,7 +255,7 @@ Scope {
                                 required property var modelData
                                 required property int index
                                 readonly property bool sel: win.selected === index
-                                implicitWidth: 60; implicitHeight: 60; radius: 16
+                                implicitWidth: 72; implicitHeight: 72; radius: 20
                                 color: sel ? Qt.rgba(140 / 255, 200 / 255, 245 / 255, 0.25) : pm.containsMouse ? Qt.rgba(1, 1, 1, 0.2) : Theme.raised
                                 border.width: sel || activeFocus ? 2 : 0
                                 border.color: activeFocus ? Theme.ink : Theme.accent

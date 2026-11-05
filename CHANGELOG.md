@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.6.1] - 2026-11-05
+
+### Changed
+
+- Larger icons on the dock.
+- Switching screens in the control center now animates.
+
 ## [1.6.0] - 2026-11-05
 
 ### Changed
@@ -91,7 +98,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.6.1...HEAD
+[1.6.1]: https://github.com/brayanspagnol/atoll/compare/v1.6.0...v1.6.1
 [1.6.0]: https://github.com/brayanspagnol/atoll/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/brayanspagnol/atoll/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/brayanspagnol/atoll/compare/v1.3.0...v1.4.0
