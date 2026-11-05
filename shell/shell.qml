@@ -10,6 +10,7 @@ ShellRoot {
     Central {}
     Launcher {}
     Overview {}
+    Clipboard {}
     DockEditor {}
     Variants { model: Quickshell.screens; DisplayOverlay {} }
     Variants { model: Quickshell.screens; Sheet {} }
