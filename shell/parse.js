@@ -90,3 +90,16 @@ function inWindow(now, from, to) {
     if (from === to) return false
     return from < to ? now >= from && now < to : now >= from || now < to
 }
+
+// nmcli -t output: fields split by ":", with ":" and "\\" escaped inside them.
+function nmcliRows(text) {
+    return text.split("\n").filter(Boolean).map(line => {
+        const fields = [""]
+        for (let i = 0; i < line.length; i++) {
+            if (line[i] === "\\" && i + 1 < line.length) fields[fields.length - 1] += line[++i]
+            else if (line[i] === ":") fields.push("")
+            else fields[fields.length - 1] += line[i]
+        }
+        return fields
+    })
+}

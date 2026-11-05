@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# Atoll networks, on top of nmcli. Passwords arrive on stdin: command line arguments are visible to every process.
+#   net wifi SSID HIDDEN(yes|no) open|psk                     -> prints the new profile's uuid
+#   net wifi-eap SSID HIDDEN(yes|no) peap|ttls IDENTITY [DOMAIN] -> prints the new profile's uuid
+#   net connect-new UUID                                      -> connects; a profile that fails is removed
+#   net vpn-import FILE                                       -> WireGuard .conf or OpenVPN .ovpn; prints the uuid
+#   net vpn-up|vpn-down|vpn-forget UUID
+set -euo pipefail
+
+uuid_of() { sed -nE 's/.*\(([0-9a-f-]{36})\).*/\1/p' <<<"$1" | head -1; }
+valid_uuid() { [[ "${1:-}" =~ ^[0-9a-f-]{36}$ ]] || { echo "invalid uuid: ${1:-}" >&2; exit 2; }; }
+valid_hidden() { [[ "$1" == yes || "$1" == no ]] || { echo "hidden must be yes or no" >&2; exit 2; }; }
+one_line() { [[ "$1" != *$'\n'* ]] || { echo "line breaks are not allowed" >&2; exit 2; }; }
+
+new_profile() {
+    local out
+    out="$(LC_ALL=C nmcli connection add type wifi con-name "$1" ssid "$1" wifi.hidden "$2")"
+    uuid_of "$out"
+}
+
+# nmcli's editor reads commands from stdin, which keeps the secret off the command line.
+edit_profile() {
+    local uuid="$1" script="$2"
+    if ! nmcli connection edit uuid "$uuid" <<<"$script"$'\nsave\nquit' >/dev/null; then
+        nmcli connection delete uuid "$uuid" >/dev/null 2>&1 || true
+        echo "could not save the network" >&2
+        exit 1
+    fi
+}
+
+vpn_only() {
+    local type
+    type="$(nmcli -g connection.type connection show uuid "$1")"
+    [[ "$type" == vpn || "$type" == wireguard ]] || { echo "not a VPN: $1" >&2; exit 1; }
+}
+
+case "${1:-}" in
+    wifi)
+        valid_hidden "$3"
+        uuid="$(new_profile "$2" "$3")"
+        if [[ "$4" == psk ]]; then
+            IFS= read -r password
+            edit_profile "$uuid" "set wifi-sec.key-mgmt wpa-psk"$'\n'"set wifi-sec.psk $password"
+        fi
+        echo "$uuid"
+        ;;
+    wifi-eap)
+        valid_hidden "$3"
+        [[ "$4" == peap || "$4" == ttls ]] || { echo "unsupported method: $4" >&2; exit 2; }
+        one_line "$5"
+        one_line "${6:-}"
+        IFS= read -r password
+        uuid="$(new_profile "$2" "$3")"
+        commands="set wifi-sec.key-mgmt wpa-eap"$'\n'"set 802-1x.eap $4"$'\n'"set 802-1x.phase2-auth mschapv2"$'\n'"set 802-1x.identity $5"$'\n'"set 802-1x.password $password"
+        # With a domain the server must prove who it is, using the system's certificates.
+        [[ -z "${6:-}" ]] || commands+=$'\n'"set 802-1x.system-ca-certs yes"$'\n'"set 802-1x.domain-suffix-match $6"
+        edit_profile "$uuid" "$commands"
+        echo "$uuid"
+        ;;
+    connect-new)
+        valid_uuid "$2"
+        if ! nmcli --wait 45 connection up uuid "$2" >/dev/null; then
+            nmcli connection delete uuid "$2" >/dev/null 2>&1 || true
+            exit 1
+        fi
+        ;;
+    vpn-import)
+        [[ -f "$2" ]] || { echo "not a file: $2" >&2; exit 1; }
+        case "${2##*.}" in
+            conf) type=wireguard ;;
+            ovpn) type=openvpn ;;
+            *) echo "expected a .conf or .ovpn file" >&2; exit 1 ;;
+        esac
+        out="$(LC_ALL=C nmcli connection import type "$type" file "$2")"
+        uuid="$(uuid_of "$out")"
+        # An import can connect right away. A VPN should only start when asked to.
+        nmcli connection modify uuid "$uuid" connection.autoconnect no
+        nmcli connection down uuid "$uuid" >/dev/null 2>&1 || true
+        echo "$uuid"
+        ;;
+    vpn-up)
+        valid_uuid "$2"; vpn_only "$2"
+        nmcli --wait 30 connection up uuid "$2" >/dev/null
+        ;;
+    vpn-down)
+        valid_uuid "$2"; vpn_only "$2"
+        nmcli connection down uuid "$2" >/dev/null
+        ;;
+    vpn-forget)
+        valid_uuid "$2"; vpn_only "$2"
+        nmcli connection delete uuid "$2" >/dev/null
+        ;;
+    *)
+        echo "usage: net wifi|wifi-eap|connect-new|vpn-import|vpn-up|vpn-down|vpn-forget" >&2
+        exit 2
+        ;;
+esac

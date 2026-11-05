@@ -17,7 +17,26 @@ Page {
     property string askFor: ""
     property string err: ""
     property var details: ({})
+    property bool formOpen: false
+    property bool formHidden: true
+    property int formKind: 1 // 0 no password, 1 password, 2 enterprise
+    property int formEap: 0
+    property string armedVpn: ""
+    Timer { running: pg.armedVpn !== ""; interval: 5000; onTriggered: pg.armedVpn = "" }
+    Timer { interval: 5000; running: true; repeat: true; triggeredOnStart: true; onTriggered: Net.refreshVpns() }
+    function openForm(name, hidden, kind) {
+        Net.addErr = ""
+        formOpen = true; formHidden = hidden; formKind = kind
+        formSsid.text = name; formPass.text = ""; formUser.text = ""; formDomain.text = ""
+        // The form sits below the list of networks.
+        Qt.callLater(() => pg.contentY = Math.max(0, pg.contentHeight - pg.height))
+        if (hidden) formSsid.forceActiveFocus(); else formUser.forceActiveFocus()
+    }
 
+    Connections {
+        target: Net
+        function onAddStateChanged() { if (!Net.addState && !Net.addErr) pg.formOpen = false }
+    }
     Binding { target: pg.wifi; property: "scannerEnabled"; value: Networking.wifiEnabled; when: !!pg.wifi }
 
     Process {
@@ -93,7 +112,7 @@ Page {
                 clickable: !n.modelData.connected
                 onClicked: {
                     pg.err = ""
-                    if (n.enterprise && !n.modelData.known) pg.err = Tr.t("Enterprise network (802.1X): set it up once with nmcli.")
+                    if (n.enterprise && !n.modelData.known) pg.openForm(n.modelData.name, false, 2)
                     else if (n.modelData.known || n.open) n.modelData.connect()
                     else pg.askFor = pg.askFor === n.modelData.name ? "" : n.modelData.name
                 }
@@ -118,6 +137,83 @@ Page {
                 Btn {
                     id: go; text: Tr.t("Connect"); variant: "solid"; enabledB: psk.text.length >= 8
                     onClicked: { n.modelData.connectWithPsk(psk.text); pg.askFor = "" }
+                }
+            }
+        }
+    }
+    Btn { visible: Networking.wifiEnabled && !pg.formOpen; text: Tr.t("Other network…"); onClicked: pg.openForm("", true, 1) }
+    ColumnLayout {
+        visible: pg.formOpen
+        Layout.fillWidth: true; spacing: 8
+        Sec { title: pg.formHidden ? Tr.t("Other network") : Tr.t("Enterprise network") }
+        Fld {
+            id: formSsid
+            visible: pg.formHidden
+            Layout.fillWidth: true; placeholderText: Tr.t("Network name"); Accessible.name: Tr.t("Network name")
+        }
+        Tx { visible: !pg.formHidden; text: formSsid.text; strong: true }
+        Seg {
+            visible: pg.formHidden
+            options: [Tr.t("No password"), Tr.t("Password"), Tr.t("Enterprise (802.1X)")]
+            current: pg.formKind
+            onPicked: i => pg.formKind = i
+        }
+        Seg { id: formEap; visible: pg.formKind === 2; options: ["PEAP", "TTLS"]; current: pg.formEap; onPicked: i => pg.formEap = i }
+        Fld { id: formUser; visible: pg.formKind === 2; Layout.fillWidth: true; placeholderText: Tr.t("User"); Accessible.name: Tr.t("User") }
+        Fld {
+            id: formPass
+            visible: pg.formKind !== 0
+            Layout.fillWidth: true; placeholderText: Tr.t("Password"); Accessible.name: Tr.t("Password")
+            echoMode: TextInput.Password
+            onAccepted: if (formGo.enabledB) formGo.clicked()
+        }
+        Fld { id: formDomain; visible: pg.formKind === 2; Layout.fillWidth: true; placeholderText: Tr.t("Server domain (optional)"); Accessible.name: Tr.t("Server domain (optional)") }
+        Tx { visible: pg.formKind === 2; text: Tr.t("Without a domain, the server's identity isn't checked, and a fake network could capture your password."); color: Theme.warn; size: 13; wrapMode: Text.Wrap; Layout.fillWidth: true }
+        Tx { visible: !!Net.addState; text: Net.addState === "saving" ? Tr.t("Saving…") : Tr.t("Connecting…"); dim: true }
+        Tx { visible: !!Net.addErr; text: Net.addErr; color: Theme.danger; wrapMode: Text.Wrap; Layout.fillWidth: true }
+        RowLayout {
+            spacing: 8
+            Btn {
+                id: formGo
+                text: Tr.t("Connect"); variant: "solid"
+                enabledB: !Net.addState && formSsid.text.trim().length > 0
+                    && (pg.formKind === 0 || (pg.formKind === 1 && formPass.text.length >= 8) || (pg.formKind === 2 && formPass.text.length > 0 && formUser.text.trim().length > 0))
+                onClicked: {
+                    const hidden = pg.formHidden ? "yes" : "no", ssid = formSsid.text.trim()
+                    if (pg.formKind === 2) Net.addWifi(["wifi-eap", ssid, hidden, pg.formEap === 0 ? "peap" : "ttls", formUser.text.trim()].concat(formDomain.text.trim() ? [formDomain.text.trim()] : []), formPass.text)
+                    else Net.addWifi(["wifi", ssid, hidden, pg.formKind === 1 ? "psk" : "open"], pg.formKind === 1 ? formPass.text : "")
+                    formPass.text = ""
+                }
+            }
+            Btn { text: Tr.t("Cancel"); onClicked: pg.formOpen = false }
+        }
+    }
+
+    Sec {
+        title: "VPN"
+        Btn { text: Tr.t("Import…"); onClicked: Net.importVpn() }
+    }
+    Tx { visible: !!Net.vpnErr; text: Net.vpnErr; color: Theme.danger; wrapMode: Text.Wrap; Layout.fillWidth: true }
+    Tx { visible: Net.vpns.length === 0; text: Tr.t("No VPNs yet. Import a WireGuard (.conf) or OpenVPN (.ovpn) file."); dim: true; wrapMode: Text.Wrap; Layout.fillWidth: true }
+    Repeater {
+        model: Net.vpns
+        Rowi {
+            id: v
+            required property var modelData
+            readonly property bool sure: pg.armedVpn === modelData.uuid
+            a11y: modelData.name
+            selected: modelData.active
+            clickable: false
+            Ic { name: "lock"; color: v.modelData.active ? Theme.accent : Theme.muted; Layout.preferredWidth: 20 }
+            Tx { text: v.modelData.name; Layout.fillWidth: true; strong: v.modelData.active }
+            Tx { mono: true; size: 11; dim: true; text: v.modelData.type === "wireguard" ? "WireGuard" : "VPN" }
+            Tx { visible: Net.vpnBusy === v.modelData.uuid; text: Tr.t("Connecting…"); dim: true; size: 12 }
+            Btn { text: v.modelData.active ? Tr.t("Disconnect") : Tr.t("Connect"); onClicked: Net.vpn(v.modelData.active ? "vpn-down" : "vpn-up", v.modelData.uuid) }
+            Btn {
+                text: v.sure ? Tr.t("Confirm") : Tr.t("Forget"); variant: "danger"
+                onClicked: {
+                    if (v.sure) { pg.armedVpn = ""; Net.vpn("vpn-forget", v.modelData.uuid) }
+                    else pg.armedVpn = v.modelData.uuid
                 }
             }
         }
