@@ -15,9 +15,6 @@ Atoll replaces the usual pile of bar, launcher, notification daemon and settings
 consistent interface, built with [Quickshell](https://quickshell.org). Every piece floats over your
 wallpaper, and windows keep the rest of the screen.
 
-> [!NOTE]
-> The interface is in **Brazilian Portuguese**. Translations are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
-
 ## Features
 
 - **Island:** workspaces, clock, media and status in a floating pill at the top.
@@ -26,6 +23,7 @@ wallpaper, and windows keep the rest of the screen.
 - **Music card:** cover art, colors taken from the album, seek bar, repeat, shuffle, likes, volume and output switching.
 - **Notifications and volume:** glass cards that drop from under the island.
 - **Search:** apps and system screens in one box. Type "wifi" or "volume".
+- **Languages:** English, Português (Brasil), Español, Français, Deutsch, Русский and 简体中文. It follows your system language, or pick one in Settings.
 - **Lock and idle:** lock screen, per-power-source idle timers, night light and monitor brightness.
 - **Resilient by design:** if the shell crashes, it restarts by itself. Your windows stay open.
 
@@ -115,7 +113,7 @@ The full list is in [`hypr/binds.lua`](hypr/binds.lua).
 
 ## Configure
 
-**Most things** are in the Settings screen: accent color, wallpaper, brightness, night light and idle timers.
+**Most things** are in the Settings screen: language, accent color, wallpaper, brightness, night light and idle timers.
 Your wallpapers go in `~/Pictures/Wallpapers`.
 
 **Hyprland** overrides go in `~/.config/atoll/user.lua`, which updates never touch. For example, a keyboard
@@ -133,7 +131,8 @@ hl.bind("SUPER + Return", hl.dsp.exec_cmd("foot"))
 | Key | Meaning |
 |---|---|
 | `dock` | Pinned apps: `label`, `icon` (a key from [`Icons.qml`](shell/Icons.qml)), `ids` (lowercase Wayland app ids) and `cmd` |
-| `holidays` | Show Brazilian national holidays in the calendar |
+| `language` | `auto`, or a language code such as `en`, `pt-BR`, `es`, `fr`, `de`, `ru` or `zh-CN` |
+| `holidays` | Brazilian national holidays in the calendar: `on`, `off`, or `auto` for Brazilian locales |
 | `accent` | `gelo`, `areia`, `hortela` or `coral` |
 | `wallpaper` | Image path, or empty for a solid color |
 
@@ -162,7 +161,7 @@ git pull && ./install.sh   # update; settings, events and likes stay
 
 ## Contributing
 
-Bug reports, translations and pull requests are welcome: read [CONTRIBUTING.md](CONTRIBUTING.md) and the
+Bug reports, translation fixes and pull requests are welcome: read [CONTRIBUTING.md](CONTRIBUTING.md) and the
 [Code of Conduct](CODE_OF_CONDUCT.md). For security problems, see [SECURITY.md](SECURITY.md). Versions follow
 [Semantic Versioning](https://semver.org), and changes are recorded in the [changelog](CHANGELOG.md).
 

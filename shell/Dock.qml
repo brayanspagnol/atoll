@@ -57,7 +57,7 @@ PanelWindow {
         border.width: activeFocus ? 2 : 0; border.color: Theme.ink
         activeFocusOnTab: true
         Accessible.role: Accessible.Button
-        Accessible.name: label + (running ? ", aberto" : "")
+        Accessible.name: running ? Tr.t("%1, open").arg(label) : label
         Keys.onSpacePressed: clicked()
         Keys.onReturnPressed: clicked()
         Item { id: slot; anchors.centerIn: parent; anchors.verticalCenterOffset: -3; width: 26; height: 26 }
@@ -96,7 +96,7 @@ PanelWindow {
                 anchors.centerIn: parent
                 spacing: 8
                 Tile {
-                    label: "Aplicativos e comandos"; color: Theme.accent
+                    label: Tr.t("Apps and commands"); color: Theme.accent
                     onClicked: { Ui.open = false; Ui.launcher = !Ui.launcher }
                     Ic { anchors.centerIn: parent; anchors.verticalCenterOffset: 3; name: "search"; size: 26; color: Theme.accentInk }
                 }
@@ -106,7 +106,7 @@ PanelWindow {
                         id: pt
                         required property var modelData
                         readonly property var ws: win.windowsOf(modelData.ids)
-                        label: modelData.label
+                        label: Tr.t(modelData.label)
                         running: ws.length > 0
                         active: ws.some(t => t.activated)
                         onClicked: win.focusOrLaunch(ws, modelData.cmd)

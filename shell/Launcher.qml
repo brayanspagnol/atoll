@@ -19,9 +19,9 @@ LazyLoader {
         property int sel: 0
         readonly property var results: {
             const q = field.text.trim().toLowerCase()
-            const pages = Ui.pages.map(p => ({ name: p.label, kind: "tela", icon: p.icon, hay: (p.label + " " + p.kw).toLowerCase(), run: () => Ui.show(p.id) }))
+            const pages = Ui.pages.map(p => ({ name: p.label, kind: Tr.t("screen"), icon: p.icon, hay: (p.label + " " + p.kw).toLowerCase(), run: () => Ui.show(p.id) }))
             const apps = [...DesktopEntries.applications.values].filter(a => !a.noDisplay).sort((a, b) => a.name.localeCompare(b.name))
-                .map(a => ({ name: a.name, kind: "aplicativo", app: a, hay: (a.name + " " + a.genericName + " " + a.keywords.join(" ")).toLowerCase(), run: () => { a.execute(); Ui.launcher = false } }))
+                .map(a => ({ name: a.name, kind: Tr.t("app"), app: a, hay: (a.name + " " + a.genericName + " " + a.keywords.join(" ")).toLowerCase(), run: () => { a.execute(); Ui.launcher = false } }))
             if (!q) return pages.concat(apps).slice(0, 40)
             const score = r => r.name.toLowerCase().startsWith(q) ? 0 : 1
             return pages.concat(apps).filter(r => r.hay.includes(q)).sort((a, b) => score(a) - score(b)).slice(0, 40)
@@ -48,7 +48,7 @@ LazyLoader {
                             color: Theme.ink; selectionColor: Theme.accent; selectedTextColor: Theme.accentInk
                             font.family: Theme.sans; font.pixelSize: 18
                             focus: true
-                            Accessible.name: "Buscar aplicativos e comandos"
+                            Accessible.name: Tr.t("Search apps and commands")
                             Component.onCompleted: forceActiveFocus()
                             onTextChanged: { win.sel = 0; list.positionViewAtBeginning() }
                             Keys.onEscapePressed: Ui.launcher = false
@@ -56,7 +56,7 @@ LazyLoader {
                             Keys.onUpPressed: { win.sel = Math.max(win.sel - 1, 0); list.positionViewAtIndex(win.sel, ListView.Contain) }
                             Keys.onReturnPressed: win.run(win.results[win.sel])
                             Keys.onEnterPressed: win.run(win.results[win.sel])
-                            Tx { visible: !field.text; text: "Abrir aplicativo ou ajuste…"; size: 18; dim: true; anchors.verticalCenter: parent.verticalCenter }
+                            Tx { visible: !field.text; text: Tr.t("Open an app or setting…"); size: 18; dim: true; anchors.verticalCenter: parent.verticalCenter }
                         }
                     }
                 }
@@ -79,7 +79,7 @@ LazyLoader {
                         Tx { text: it.modelData.name; Layout.fillWidth: true }
                         Tx { text: it.modelData.kind; dim: true; size: 13; mono: true }
                     }
-                    Tx { anchors.centerIn: parent; visible: win.results.length === 0; text: "Nada encontrado. Tente “wifi”, “volume” ou “suspender”."; dim: true }
+                    Tx { anchors.centerIn: parent; visible: win.results.length === 0; text: Tr.t("Nothing found. Try “wifi”, “volume” or “suspend”."); dim: true }
                 }
             }
         }

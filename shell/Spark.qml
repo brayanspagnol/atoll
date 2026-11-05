@@ -52,7 +52,7 @@ Item {
             width: tip.implicitWidth + 12; height: 22; radius: 4; color: Theme.raised
             Tx {
                 id: tip; anchors.centerIn: parent; mono: true; size: 11
-                text: cv.idx >= 0 ? c.fmt(c.values[cv.idx]) + " · há " + (c.values.length - 1 - cv.idx) * c.stepSeconds + " s" : ""
+                text: cv.idx >= 0 ? c.fmt(c.values[cv.idx]) + " · " + Tr.t("%1 s ago").arg((c.values.length - 1 - cv.idx) * c.stepSeconds) : ""
             }
         }
     }

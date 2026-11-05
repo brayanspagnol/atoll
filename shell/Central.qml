@@ -30,14 +30,14 @@ Scope {
         WlrLayershell.namespace: "atoll-central"
         color: "transparent"
         readonly property var status: ({
-            som: Audio.sink?.audio ? Math.round(Audio.sink.audio.volume * 100) + "%" : "Sem saída",
+            som: Audio.sink?.audio ? Math.round(Audio.sink.audio.volume * 100) + "%" : Tr.t("No output"),
             rede: Net.status,
-            bt: !Bluetooth.defaultAdapter?.enabled ? "Desligado" : (Bluetooth.defaultAdapter.devices.values.filter(d => d.connected).length + " conectado(s)"),
+            bt: !Bluetooth.defaultAdapter?.enabled ? Tr.t("Off") : Tr.t("Connected: %1").arg(Bluetooth.defaultAdapter.devices.values.filter(d => d.connected).length),
             perf: "CPU " + Math.round(Sys.cpu) + "% · " + Math.round(Sys.temp) + " °C",
-            cal: Qt.locale("pt_BR").toString(new Date(), "d 'de' MMM").replace(".", ""),
-            avisos: Notifs.all.length ? Notifs.all.length + " aviso(s)" : "Tudo em dia",
-            ajustes: "Cor, tela, ociosidade",
-            energia: UPower.displayDevice?.isLaptopBattery ? "Bateria " + Math.round(UPower.displayDevice.percentage * 100) + "%" : "Desligar, suspender"
+            cal: Tr.date(new Date(), "MMM d").replace(".", ""),
+            avisos: Notifs.all.length ? Tr.t("Notifications: %1").arg(Notifs.all.length) : Tr.t("All caught up"),
+            ajustes: Tr.t("Color, display, idle"),
+            energia: UPower.displayDevice?.isLaptopBattery ? Tr.t("Battery %1%").arg(Math.round(UPower.displayDevice.percentage * 100)) : Tr.t("Shut down, suspend")
         })
         MouseArea { anchors.fill: parent; enabled: Ui.open; onClicked: Ui.open = false }
         Frost {
@@ -99,16 +99,16 @@ Scope {
                     }
                     Rowi {
                         clickable: false
-                        Tx { text: "Luz noturna"; Layout.fillWidth: true }
-                        Swt { a11y: "Luz noturna"; checked: Cfg.v.nightOn; onToggled: { Cfg.v.nightOn = checked; Night.apply() } }
+                        Tx { text: Tr.t("Night light"); Layout.fillWidth: true }
+                        Swt { a11y: Tr.t("Night light"); checked: Cfg.v.nightOn; onToggled: { Cfg.v.nightOn = checked; Night.apply() } }
                     }
                     Rowi {
                         clickable: false
-                        Tx { text: "Não perturbe"; Layout.fillWidth: true }
-                        Swt { a11y: "Não perturbe"; checked: Cfg.v.dnd; onToggled: Cfg.v.dnd = checked }
+                        Tx { text: Tr.t("Do not disturb"); Layout.fillWidth: true }
+                        Swt { a11y: Tr.t("Do not disturb"); checked: Cfg.v.dnd; onToggled: Cfg.v.dnd = checked }
                     }
                     Item { Layout.fillHeight: true }
-                    Tx { text: "Esc para fechar"; dim: true; size: 13; Layout.leftMargin: 12 }
+                    Tx { text: Tr.t("Esc to close"); dim: true; size: 13; Layout.leftMargin: 12 }
                 }
                 Rectangle { Layout.fillHeight: true; implicitWidth: 1; color: Theme.line }
                 Loader {
@@ -117,7 +117,7 @@ Scope {
                     source: ({ som: "PgSound.qml", rede: "PgNet.qml", bt: "PgBt.qml", perf: "PgPerf.qml", cal: "PgCal.qml", avisos: "PgNotif.qml", ajustes: "PgSettings.qml", energia: "PgPower.qml" })[Ui.page]
                 }
             }
-            Btn { anchors { top: parent.top; right: parent.right; margins: 18 } variant: "quiet"; icon: "x"; implicitHeight: 44; a11y: "Fechar painel"; onClicked: Ui.open = false }
+            Btn { anchors { top: parent.top; right: parent.right; margins: 18 } variant: "quiet"; icon: "x"; implicitHeight: 44; a11y: Tr.t("Close panel"); onClicked: Ui.open = false }
         }
     }
 }

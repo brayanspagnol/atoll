@@ -6,7 +6,7 @@ Thanks for helping. Issues and pull requests can be written in English or Portug
 
 | Path | What it holds |
 |---|---|
-| `shell/` | The Quickshell interface (QML), plus pure logic in `cal.js` and `parse.js` |
+| `shell/` | The Quickshell interface (QML), pure logic in `cal.js` and `parse.js`, and translations in `i18n/` |
 | `hypr/` | Hyprland configuration in Lua |
 | `scripts/` | Session helpers installed to `~/.local/share/atoll/scripts` |
 | `config/` | Lock screen and default idle configuration |
@@ -42,8 +42,15 @@ Quickshell's hot reload keeps the old type when a singleton is added or changed,
 
 ## Translations
 
-The interface is in Brazilian Portuguese, with strings written directly in the QML files. Translation support is
-open work: if you want to take it on, open an issue first so we can agree on the approach.
+English is the source language: in the QML files, text is written in English inside `Tr.t("...")`, and that text is
+the key. Each other language is a file in `shell/i18n/`, so a missing entry simply shows English.
+
+To add a language, copy an existing file to `shell/i18n/<code>.json`, translate the values and add the language to
+`languages` in `shell/Tr.qml`. Keep placeholders such as `%1`. Entries such as `dddd, MMMM d` are
+[Qt date formats](https://doc.qt.io/qt-6/qml-qtqml-qt.html#formatDateTime-method) for that language.
+
+`node tests/test.mjs` fails if a file is missing a string or changes a placeholder. Most current translations were
+not reviewed by native speakers, so corrections are very welcome.
 
 ## Pull requests
 

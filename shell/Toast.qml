@@ -45,7 +45,7 @@ Frost {
             RowLayout {
                 Layout.fillWidth: true; spacing: 6
                 Tx { text: c.modelData.appName; dim: true; size: 12; Layout.fillWidth: true }
-                Tx { text: c.critical ? "importante" : "agora"; size: 12; color: c.critical ? Theme.danger : Theme.muted; Layout.rightMargin: closeBtn.visible ? 26 : 0 }
+                Tx { text: c.critical ? Tr.t("important") : Tr.t("now"); size: 12; color: c.critical ? Theme.danger : Theme.muted; Layout.rightMargin: closeBtn.visible ? 26 : 0 }
             }
             Tx { text: c.modelData.summary; strong: true; Layout.fillWidth: true }
             Tx { text: c.modelData.body; visible: !!text; dim: true; wrapMode: Text.Wrap; maximumLineCount: 3; Layout.fillWidth: true }
@@ -63,7 +63,7 @@ Frost {
         anchors { top: parent.top; right: parent.right; margins: 8 }
         visible: hover.hovered || c.critical
         variant: "quiet"; icon: "x"; iconSize: 16; implicitWidth: 30; implicitHeight: 30
-        a11y: "Dispensar"
+        a11y: Tr.t("Dismiss")
         onClicked: c.modelData.dismiss()
     }
 }

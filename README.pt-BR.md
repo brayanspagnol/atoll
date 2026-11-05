@@ -21,6 +21,7 @@ Os prints estão no [README em inglês](README.md#screenshots).
 - **Cartão de música:** capa, cores tiradas do álbum, barra de tempo, repetir, aleatório, curtidas, volume e troca de saída.
 - **Avisos e volume:** cartões de vidro que descem de baixo da ilha.
 - **Busca:** aplicativos e telas do sistema no mesmo lugar. Digite "wifi" ou "volume".
+- **Idiomas:** English, Português (Brasil), Español, Français, Deutsch, Русский e 简体中文. Segue o idioma do sistema, ou escolha em Ajustes.
 - **Bloqueio e ociosidade:** tela de bloqueio, tempos separados para tomada e bateria, luz noturna e brilho do monitor.
 - **Resistente:** se o shell cair, ele volta sozinho. Suas janelas continuam abertas.
 
@@ -82,7 +83,7 @@ A lista completa está em [`hypr/binds.lua`](hypr/binds.lua).
 
 ## Configurar
 
-**Quase tudo** está na tela Ajustes: cor de destaque, papel de parede, brilho, luz noturna e tempos de ociosidade.
+**Quase tudo** está na tela Ajustes: idioma, cor de destaque, papel de parede, brilho, luz noturna e tempos de ociosidade.
 Seus papéis de parede vão em `~/Pictures/Wallpapers`.
 
 **Hyprland:** personalizações vão em `~/.config/atoll/user.lua`, que as atualizações nunca alteram. Por exemplo,
@@ -100,7 +101,8 @@ hl.bind("SUPER + Return", hl.dsp.exec_cmd("foot"))
 | Chave | Significado |
 |---|---|
 | `dock` | Apps fixados: `label`, `icon` (uma chave de [`Icons.qml`](shell/Icons.qml)), `ids` (app ids do Wayland em minúsculas) e `cmd` |
-| `holidays` | Mostrar feriados nacionais do Brasil no calendário |
+| `language` | `auto`, ou um código de idioma como `en`, `pt-BR`, `es`, `fr`, `de`, `ru` ou `zh-CN` |
+| `holidays` | Feriados do Brasil no calendário: `on`, `off`, ou `auto` para idioma do sistema brasileiro |
 | `accent` | `gelo`, `areia`, `hortela` ou `coral` |
 | `wallpaper` | Caminho da imagem, ou vazio para cor sólida |
 
@@ -129,7 +131,7 @@ git pull && ./install.sh   # atualiza; ajustes, eventos e curtidas ficam
 
 ## Contribuir
 
-Relatos de bugs, traduções e pull requests são bem-vindos: leia [CONTRIBUTING.md](CONTRIBUTING.md) e o
+Relatos de bugs, correções de tradução e pull requests são bem-vindos: leia [CONTRIBUTING.md](CONTRIBUTING.md) e o
 [Código de Conduta](CODE_OF_CONDUCT.md). Para problemas de segurança, veja [SECURITY.md](SECURITY.md). As versões
 seguem [Versionamento Semântico](https://semver.org), e as mudanças ficam no [changelog](CHANGELOG.md).
 

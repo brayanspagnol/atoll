@@ -99,18 +99,18 @@ Item {
         // Header
         Btn {
             x: 16; y: 12; variant: "quiet"; icon: card.view === "player" ? "menu" : "left"; implicitHeight: 44
-            a11y: card.view === "player" ? "Ver curtidas" : "Voltar para a música"
+            a11y: card.view === "player" ? Tr.t("See likes") : Tr.t("Back to the music")
             onClicked: card.view = card.view === "player" ? "likes" : "player"
         }
         Tx {
             y: 12; height: 44; width: parent.width; horizontalAlignment: Text.AlignHCenter
-            text: card.view === "player" ? "TOCANDO AGORA" : card.view === "sound" ? "SOM" : "CURTIDAS"
+            text: card.view === "player" ? Tr.t("NOW PLAYING") : card.view === "sound" ? Tr.t("SOUND") : Tr.t("LIKES")
             size: 14; strong: true; font.letterSpacing: 1.6
         }
         Btn {
             x: parent.width - 60; y: 12; variant: "quiet"; icon: "dots"; implicitHeight: 44
             visible: card.view === "player"
-            a11y: "Volume e saída de som"
+            a11y: Tr.t("Volume and sound output")
             onClicked: card.view = "sound"
         }
 
@@ -137,13 +137,13 @@ Item {
             Column {
                 x: 24; y: 380; width: parent.width - 48; spacing: 2
                 opacity: 1 - card.t
-                Tx { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: card.title || "Sem título"; size: 24 }
+                Tx { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: card.title || Tr.t("Untitled"); size: 24 }
                 Tx { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: card.artist; size: 16; dim: true }
             }
             Column {
                 x: 106; y: 74; width: parent.width - 130; spacing: 2
                 opacity: card.t
-                Tx { width: parent.width; text: card.title || "Sem título"; size: 18 }
+                Tx { width: parent.width; text: card.title || Tr.t("Untitled"); size: 18 }
                 Tx { width: parent.width; text: card.artist; dim: true }
             }
         }
@@ -164,7 +164,7 @@ Item {
                 spacing: 36
                 Btn {
                     variant: "quiet"; implicitHeight: 44; icon: Audio.icon
-                    a11y: Audio.sink?.audio?.muted ? "Ativar som" : "Silenciar"
+                    a11y: Audio.sink?.audio?.muted ? Tr.t("Unmute") : Tr.t("Mute")
                     onClicked: if (Audio.sink?.audio) Audio.sink.audio.muted = !Audio.sink.audio.muted
                 }
                 Btn {
@@ -173,12 +173,12 @@ Item {
                     readonly property bool on: native_ ? card.player.loopState !== MprisLoopState.None : Audio.repeatOne
                     readonly property bool one: native_ ? card.player.loopState === MprisLoopState.Track : Audio.repeatOne
                     variant: "quiet"; implicitHeight: 44; icon: one ? "repeat1" : "repeat"; iconColor: on ? card.accent : Theme.ink
-                    a11y: !on ? "Repetir" : one ? "Repetindo esta música" : "Repetindo a lista"
+                    a11y: !on ? Tr.t("Repeat") : one ? Tr.t("Repeating this song") : Tr.t("Repeating the list")
                     onClicked: {
                         if (native_) {
                             const s = card.player.loopState
                             card.player.loopState = s === MprisLoopState.None ? MprisLoopState.Playlist : s === MprisLoopState.Playlist ? MprisLoopState.Track : MprisLoopState.None
-                        } else if (!card.player?.canSeek) controls.say(card.player.identity + " não permite repetir por aqui.")
+                        } else if (!card.player?.canSeek) controls.say(Tr.t("%1 doesn't allow repeat from here.").arg(card.player.identity))
                         else Audio.repeatOne = !Audio.repeatOne
                     }
                 }
@@ -186,15 +186,15 @@ Item {
                     readonly property bool on: card.player?.shuffle ?? false
                     variant: "quiet"; implicitHeight: 44; icon: "shuffle"; iconColor: on ? card.accent : Theme.ink
                     opacity: card.player?.shuffleSupported ? 1 : 0.5
-                    a11y: on ? "Aleatório ligado" : "Aleatório"
+                    a11y: on ? Tr.t("Shuffle on") : Tr.t("Shuffle")
                     onClicked: {
                         if (card.player?.shuffleSupported) card.player.shuffle = !on
-                        else controls.say((card.player?.identity ?? "Este player") + " não permite aleatório por aqui. Use o botão do site.")
+                        else controls.say(Tr.t("%1 doesn't allow shuffle from here. Use the site's button.").arg(card.player?.identity ?? Tr.t("This player")))
                     }
                 }
                 Btn {
                     variant: "quiet"; implicitHeight: 44; icon: "heart"; iconFilled: card.liked; iconColor: card.liked ? card.accent : Theme.ink
-                    a11y: card.liked ? "Remover das curtidas" : "Curtir"
+                    a11y: card.liked ? Tr.t("Remove from likes") : Tr.t("Like")
                     onClicked: Likes.toggle(card.title, card.artist, card.art)
                 }
             }
@@ -209,7 +209,7 @@ Item {
             Sld {
                 id: seek
                 x: 24; y: 68; width: parent.width - 48
-                a11y: "Posição da música"
+                a11y: Tr.t("Song position")
                 fill: card.accent
                 enabled: card.player?.canSeek ?? false
                 to: Math.max(1, card.player?.length ?? 1)
@@ -225,7 +225,7 @@ Item {
                 spacing: 28
                 Btn {
                     variant: "quiet"; implicitWidth: 64; implicitHeight: 64; icon: "fprev"; iconFilled: true; iconSize: 34
-                    a11y: "Música anterior"; enabledB: card.player?.canGoPrevious ?? false
+                    a11y: Tr.t("Previous song"); enabledB: card.player?.canGoPrevious ?? false
                     onClicked: { card.dir = -1; card.player.previous() }
                 }
                 Rectangle {
@@ -233,13 +233,13 @@ Item {
                     color: pm.pressed ? Qt.darker(card.accent, 1.15) : pm.containsMouse ? Qt.lighter(card.accent, 1.08) : card.accent
                     Behavior on color { ColorAnimation { duration: 200 } }
                     Accessible.role: Accessible.Button
-                    Accessible.name: card.player?.isPlaying ? "Pausar" : "Tocar"
+                    Accessible.name: card.player?.isPlaying ? Tr.t("Pause") : Tr.t("Play")
                     Ic { anchors.centerIn: parent; name: card.player?.isPlaying ? "pauseFill" : "playFill"; filled: true; size: 32; color: card.accentInk }
                     MouseArea { id: pm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: card.player.togglePlaying() }
                 }
                 Btn {
                     variant: "quiet"; implicitWidth: 64; implicitHeight: 64; icon: "fnext"; iconFilled: true; iconSize: 34
-                    a11y: "Próxima música"; enabledB: card.player?.canGoNext ?? false
+                    a11y: Tr.t("Next song"); enabledB: card.player?.canGoNext ?? false
                     onClicked: { card.dir = 1; card.player.next() }
                 }
             }
@@ -252,22 +252,22 @@ Item {
             opacity: card.view === "sound" ? card.t : 0
             visible: card.view === "sound"
             spacing: 8
-            Sec { title: "Volume" }
+            Sec { title: Tr.t("Volume") }
             RowLayout {
                 Layout.fillWidth: true; Layout.minimumHeight: 44; spacing: 12
                 Btn {
                     variant: "quiet"; icon: Audio.icon; implicitHeight: 44
-                    a11y: Audio.sink?.audio?.muted ? "Ativar som" : "Silenciar"
+                    a11y: Audio.sink?.audio?.muted ? Tr.t("Unmute") : Tr.t("Mute")
                     onClicked: if (Audio.sink?.audio) Audio.sink.audio.muted = !Audio.sink.audio.muted
                 }
                 Sld {
-                    Layout.fillWidth: true; a11y: "Volume"; fill: card.accent; to: 1.5
+                    Layout.fillWidth: true; a11y: Tr.t("Volume"); fill: card.accent; to: 1.5
                     value: Audio.sink?.audio?.volume ?? 0
                     onMoved: Audio.sink.audio.volume = value
                 }
                 Tx { mono: true; text: Math.round((Audio.sink?.audio?.volume ?? 0) * 100) + "%"; Layout.preferredWidth: 50; horizontalAlignment: Text.AlignRight }
             }
-            Sec { title: "Saída de som" }
+            Sec { title: Tr.t("Sound output") }
             Repeater {
                 model: Audio.sinks
                 Rowi {
@@ -293,7 +293,7 @@ Item {
             Tx {
                 visible: Likes.items.length === 0
                 anchors.horizontalCenter: parent.horizontalCenter; y: 40
-                text: "Nenhuma curtida ainda. Toque no coração."; dim: true
+                text: Tr.t("No likes yet. Tap the heart."); dim: true
             }
             ListView {
                 anchors.fill: parent
@@ -317,7 +317,7 @@ Item {
                     }
                     Btn {
                         variant: "quiet"; icon: "heart"; iconFilled: true; iconColor: card.accent; implicitHeight: 44
-                        a11y: "Remover " + lk.modelData.title + " das curtidas"
+                        a11y: Tr.t("Remove %1 from likes").arg(lk.modelData.title)
                         onClicked: Likes.toggle(lk.modelData.title, lk.modelData.artist, "")
                     }
                 }

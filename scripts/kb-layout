@@ -5,4 +5,4 @@ hyprctl devices -j | jq -r '.keyboards[].name' | while read -r keyboard; do
     hyprctl switchxkblayout "$keyboard" next >/dev/null
 done
 layout="$(hyprctl devices -j | jq -r '(.keyboards | map(select(.main)) | first // {}).active_keymap // "?"')"
-notify-send -a Teclado -u low -t 1500 "Layout do teclado" "$layout" || true
+notify-send -a Keyboard -u low -t 1500 "Keyboard layout" "$layout" || true

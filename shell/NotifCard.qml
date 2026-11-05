@@ -39,6 +39,6 @@ Rectangle {
                 }
             }
         }
-        Btn { Layout.alignment: Qt.AlignTop; text: "Dispensar"; onClicked: c.modelData.dismiss() }
+        Btn { Layout.alignment: Qt.AlignTop; text: Tr.t("Dismiss"); onClicked: c.modelData.dismiss() }
     }
 }

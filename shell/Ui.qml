@@ -21,14 +21,14 @@ Singleton {
     // A dock raised by shortcut goes away on its own; hovering keeps it up.
     Timer { interval: 4000; running: ui.dockPeek; onTriggered: ui.dockPeek = false }
     readonly property var pages: [
-        { id: "som", key: "Alt+A", label: "Som", icon: "som", kw: "volume audio microfone" },
-        { id: "rede", key: "Alt+I", label: "Internet", icon: "rede", kw: "wifi rede cabo" },
-        { id: "bt", key: "Alt+B", label: "Bluetooth", icon: "bt", kw: "fone parear" },
-        { id: "perf", key: "Alt+D", label: "Desempenho", icon: "perf", kw: "cpu memoria processos temperatura bateria" },
-        { id: "cal", key: "Alt+C", label: "Calendário", icon: "cal", kw: "agenda evento data" },
-        { id: "avisos", key: "Alt+V", label: "Avisos", icon: "avisos", kw: "notificacoes nao perturbe" },
-        { id: "ajustes", key: "Alt+J", label: "Ajustes", icon: "ajustes", kw: "configuracoes tela brilho papel de parede cor" },
-        { id: "energia", key: "Alt+E", label: "Energia", icon: "energia", kw: "desligar suspender reiniciar bloquear sair" }
+        { id: "som", key: "Alt+A", label: Tr.t("Sound"), icon: "som", kw: "volume audio microphone " + Tr.t("volume audio microphone") },
+        { id: "rede", key: "Alt+I", label: Tr.t("Internet"), icon: "rede", kw: "wifi network cable " + Tr.t("wifi network cable") },
+        { id: "bt", key: "Alt+B", label: "Bluetooth", icon: "bt", kw: "headphones pair " + Tr.t("headphones pair") },
+        { id: "perf", key: "Alt+D", label: Tr.t("Performance"), icon: "perf", kw: "cpu memory processes temperature battery " + Tr.t("cpu memory processes temperature battery") },
+        { id: "cal", key: "Alt+C", label: Tr.t("Calendar"), icon: "cal", kw: "agenda event date " + Tr.t("agenda event date") },
+        { id: "avisos", key: "Alt+V", label: Tr.t("Notifications"), icon: "avisos", kw: "notifications do not disturb " + Tr.t("do not disturb") },
+        { id: "ajustes", key: "Alt+J", label: Tr.t("Settings"), icon: "ajustes", kw: "settings display brightness wallpaper color language " + Tr.t("display brightness wallpaper color language") },
+        { id: "energia", key: "Alt+E", label: Tr.t("Power"), icon: "energia", kw: "power shut down suspend restart lock log out " + Tr.t("shut down suspend restart lock log out") }
     ]
     readonly property var screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0] ?? null
 

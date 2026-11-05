@@ -6,26 +6,26 @@ import "parse.js" as P
 
 Page {
     id: pg
-    title: "Desempenho"
-    subtitle: "Últimos 5 minutos"
+    title: Tr.t("Performance")
+    subtitle: Tr.t("Last 5 minutes")
     Component.onCompleted: Sys.procsActive = true
     Component.onDestruction: Sys.procsActive = false
     readonly property var bat: UPower.displayDevice
-    readonly property var stateTxt: ({ [UPowerDeviceState.Charging]: "Carregando", [UPowerDeviceState.Discharging]: "Na bateria", [UPowerDeviceState.FullyCharged]: "Completa", [UPowerDeviceState.PendingCharge]: "Aguardando carga" })
+    readonly property var stateTxt: ({ [UPowerDeviceState.Charging]: Tr.t("Charging"), [UPowerDeviceState.Discharging]: Tr.t("On battery"), [UPowerDeviceState.FullyCharged]: Tr.t("Full"), [UPowerDeviceState.PendingCharge]: Tr.t("Pending charge") })
 
     function hhmm(s) { const m = Math.round(s / 60); return m >= 60 ? Math.floor(m / 60) + " h " + (m % 60) + " min" : m + " min" }
 
     GridLayout {
         Layout.fillWidth: true; Layout.topMargin: 8
         columns: 3; rowSpacing: 20; columnSpacing: 20
-        Spark { Layout.fillWidth: true; Layout.preferredWidth: 1; title: "Processador"; values: Sys.cpuHist; value: Math.round(Sys.cpu) + "%" }
-        Spark { Layout.fillWidth: true; Layout.preferredWidth: 1; title: "Memória"; values: Sys.memHist; value: P.bytes(Sys.memInfo.used) + " / " + P.bytes(Sys.memInfo.total) }
-        Spark { Layout.fillWidth: true; Layout.preferredWidth: 1; title: "Temperatura do processador"; values: Sys.tempHist; max: 100; fmt: v => Math.round(v) + " °C"; value: Math.round(Sys.temp) + " °C" }
-        Spark { Layout.fillWidth: true; Layout.preferredWidth: 1; title: "Recebendo"; values: Sys.rxHist; max: 1048576; fmt: v => P.bytes(v) + "/s"; value: P.bytes(Sys.rxRate) + "/s" }
-        Spark { Layout.fillWidth: true; Layout.preferredWidth: 1; title: "Enviando"; values: Sys.txHist; max: 1048576; fmt: v => P.bytes(v) + "/s"; value: P.bytes(Sys.txRate) + "/s" }
+        Spark { Layout.fillWidth: true; Layout.preferredWidth: 1; title: Tr.t("Processor"); values: Sys.cpuHist; value: Math.round(Sys.cpu) + "%" }
+        Spark { Layout.fillWidth: true; Layout.preferredWidth: 1; title: Tr.t("Memory"); values: Sys.memHist; value: P.bytes(Sys.memInfo.used) + " / " + P.bytes(Sys.memInfo.total) }
+        Spark { Layout.fillWidth: true; Layout.preferredWidth: 1; title: Tr.t("Processor temperature"); values: Sys.tempHist; max: 100; fmt: v => Math.round(v) + " °C"; value: Math.round(Sys.temp) + " °C" }
+        Spark { Layout.fillWidth: true; Layout.preferredWidth: 1; title: Tr.t("Receiving"); values: Sys.rxHist; max: 1048576; fmt: v => P.bytes(v) + "/s"; value: P.bytes(Sys.rxRate) + "/s" }
+        Spark { Layout.fillWidth: true; Layout.preferredWidth: 1; title: Tr.t("Sending"); values: Sys.txHist; max: 1048576; fmt: v => P.bytes(v) + "/s"; value: P.bytes(Sys.txRate) + "/s" }
         ColumnLayout {
             Layout.fillWidth: true; Layout.preferredWidth: 1; Layout.alignment: Qt.AlignTop; spacing: 8
-            Tx { text: "Disco do sistema"; dim: true; size: 13 }
+            Tx { text: Tr.t("System disk"); dim: true; size: 13 }
             Tx { text: P.bytes(Sys.disk.used) + " / " + P.bytes(Sys.disk.size); mono: true; size: 14; strong: true }
             Rectangle {
                 Layout.fillWidth: true; implicitHeight: 6; radius: 3; color: Theme.line
@@ -35,7 +35,7 @@ Page {
         }
     }
 
-    Sec { title: Sys.cores.length + " núcleos" }
+    Sec { title: Tr.t("%1 cores").arg(Sys.cores.length) }
     Item {
         Layout.fillWidth: true; implicitHeight: 56
         Row {
@@ -46,7 +46,7 @@ Page {
                     required property real modelData
                     required property int index
                     width: (parent.width - 4 * (Sys.cores.length - 1)) / Sys.cores.length; height: 56
-                    Accessible.role: Accessible.Indicator; Accessible.name: `Núcleo ${index}: ${Math.round(modelData)}%`
+                    Accessible.role: Accessible.Indicator; Accessible.name: Tr.t("Core %1: %2%").arg(index).arg(Math.round(modelData))
                     Rectangle { anchors { left: parent.left; right: parent.right; top: parent.top; bottom: lbl.top; bottomMargin: 4 } color: Theme.raised; radius: 3
                         Rectangle { anchors.bottom: parent.bottom; width: parent.width; radius: 3; height: Math.max(2, parent.height * parent.parent.modelData / 100); color: Theme.accent }
                     }
@@ -56,32 +56,32 @@ Page {
         }
     }
 
-    Sec { visible: pg.bat?.isLaptopBattery ?? false; title: "Bateria" }
+    Sec { visible: pg.bat?.isLaptopBattery ?? false; title: Tr.t("Battery") }
     RowLayout {
         visible: pg.bat?.isLaptopBattery ?? false
         Layout.fillWidth: true; spacing: 24
         Tx { text: Math.round((pg.bat?.percentage ?? 0) * 100) + "%"; mono: true; size: 22; strong: true }
         Tx { text: pg.stateTxt[pg.bat?.state] ?? "—" }
-        Tx { dim: true; text: pg.bat?.timeToEmpty > 0 ? "Restam " + pg.hhmm(pg.bat.timeToEmpty) : pg.bat?.timeToFull > 0 ? "Cheia em " + pg.hhmm(pg.bat.timeToFull) : "" }
+        Tx { dim: true; text: pg.bat?.timeToEmpty > 0 ? Tr.t("%1 left").arg(pg.hhmm(pg.bat.timeToEmpty)) : pg.bat?.timeToFull > 0 ? Tr.t("Full in %1").arg(pg.hhmm(pg.bat.timeToFull)) : "" }
         Tx { dim: true; mono: true; text: pg.bat?.changeRate ? pg.bat.changeRate.toFixed(1) + " W" : ""; Layout.fillWidth: true }
     }
 
     Sec {
-        title: "Processos"
+        title: Tr.t("Processes")
         Seg {
-            options: ["Por CPU", "Por memória"]; current: Sys.procSort === "cpu" ? 0 : 1
+            options: [Tr.t("By CPU"), Tr.t("By memory")]; current: Sys.procSort === "cpu" ? 0 : 1
             onPicked: i => Sys.procSort = i ? "mem" : "cpu"
         }
     }
     RowLayout {
         Layout.fillWidth: true; Layout.leftMargin: 12; Layout.rightMargin: 12; spacing: 12
-        Tx { text: "Nome"; dim: true; size: 13; Layout.fillWidth: true }
+        Tx { text: Tr.t("Name"); dim: true; size: 13; Layout.fillWidth: true }
         Tx { text: "PID"; dim: true; size: 13; Layout.preferredWidth: 64; horizontalAlignment: Text.AlignRight }
         Tx { text: "CPU"; dim: true; size: 13; Layout.preferredWidth: 56; horizontalAlignment: Text.AlignRight }
         Tx { text: "Mem"; dim: true; size: 13; Layout.preferredWidth: 56; horizontalAlignment: Text.AlignRight }
         Item { Layout.preferredWidth: 96 }
     }
-    Tx { visible: Sys.procs.length === 0; text: "Medindo…"; dim: true }
+    Tx { visible: Sys.procs.length === 0; text: Tr.t("Measuring…"); dim: true }
     Repeater {
         model: Sys.procs
         Rowi {
@@ -97,8 +97,8 @@ Page {
             Tx { text: pr.modelData.mem.toFixed(1); mono: true; size: 13; Layout.preferredWidth: 56; horizontalAlignment: Text.AlignRight }
             Btn {
                 Layout.preferredWidth: 96; implicitHeight: 34
-                variant: "danger"; text: pr.sure ? "Confirmar" : "Encerrar"
-                a11y: "Encerrar " + pr.modelData.name
+                variant: "danger"; text: pr.sure ? Tr.t("Confirm") : Tr.t("End process")
+                a11y: Tr.t("End %1").arg(pr.modelData.name)
                 onClicked: { if (pr.sure) { Quickshell.execDetached(["kill", String(pr.modelData.pid)]); pr.sure = false } else pr.sure = true }
             }
         }

@@ -30,7 +30,7 @@ Singleton {
                 const id = e.id + day
                 if (now >= at && now - at < 120000 && !store._fired[id]) {
                     store._fired[id] = true
-                    Quickshell.execDetached(["notify-send", "-a", "Calendário", "-i", "x-office-calendar", e.title, e.start + (e.remind ? ` · em ${e.remind} min` : " · agora")])
+                    Quickshell.execDetached(["notify-send", "-a", Tr.t("Calendar"), "-i", "x-office-calendar", e.title, e.remind ? Tr.t("%1, in %2 min").arg(e.start).arg(e.remind) : Tr.t("%1, now").arg(e.start)])
                 }
             }
         }

@@ -14,7 +14,7 @@ while :; do
     fails=$((fails + 1))
     echo "$(date -Is) qs exited with $code (failure $fails)" >>"$log/shell.log"
     if ((fails >= 5)); then
-        notify-send -u critical Atoll "O shell caiu 5 vezes. Veja $log/shell.log"
+        notify-send -u critical Atoll "The shell crashed 5 times. See $log/shell.log"
         exit 1
     fi
     sleep 1

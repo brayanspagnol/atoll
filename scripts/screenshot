@@ -15,4 +15,4 @@ case "$mode" in
     *) echo "usage: $0 region-file|region-clip|full-file" >&2; exit 2 ;;
 esac
 wl-copy --type image/png <"$file" || true
-notify-send -a Captura -u low "Captura salva" "$file" || true
+notify-send -a Screenshot -u low "Screenshot saved" "$file" || true

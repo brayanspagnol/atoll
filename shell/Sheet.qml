@@ -81,7 +81,7 @@ PanelWindow {
                         }
                     }
                     Tx {
-                        text: Osd.muted ? "Mudo" : Math.round(Osd.volume * 100) + "%"
+                        text: Osd.muted ? Tr.t("Muted") : Math.round(Osd.volume * 100) + "%"
                         strong: true; font.features: { "tnum": 1 }
                         horizontalAlignment: Text.AlignRight
                         Layout.preferredWidth: 46

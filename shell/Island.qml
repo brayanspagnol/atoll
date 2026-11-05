@@ -41,7 +41,7 @@ PanelWindow {
                         readonly property bool active: modelData.id === win.mon?.activeWorkspace?.id
                         implicitWidth: dot.width; implicitHeight: 44
                         Accessible.role: Accessible.Button
-                        Accessible.name: "Área de trabalho " + modelData.id
+                        Accessible.name: Tr.t("Workspace %1").arg(modelData.id)
                         Rectangle {
                             id: dot
                             anchors.verticalCenter: parent.verticalCenter
@@ -58,12 +58,12 @@ PanelWindow {
                 implicitWidth: clockRow.implicitWidth + 24; implicitHeight: 44; radius: Theme.radiusSmall
                 color: cm.containsMouse ? Theme.raised : "transparent"
                 Accessible.role: Accessible.Button
-                Accessible.name: "Calendário, " + timeT.text + ", " + dateT.text
+                Accessible.name: Tr.t("Calendar") + ", " + timeT.text + ", " + dateT.text
                 SystemClock { id: clk; precision: SystemClock.Seconds }
                 RowLayout {
                     id: clockRow; anchors.centerIn: parent; spacing: 10
                     Tx { id: timeT; text: Qt.formatTime(clk.date, "HH:mm"); size: 18; strong: true }
-                    Tx { id: dateT; text: Qt.locale("pt_BR").toString(clk.date, "ddd, dd 'de' MMM").replace(/\./g, ""); dim: true }
+                    Tx { id: dateT; text: Tr.date(clk.date, "ddd, MMM d").replace(/\./g, ""); dim: true }
                 }
                 MouseArea { id: cm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Ui.toggle("cal") }
             }
@@ -72,7 +72,7 @@ PanelWindow {
                 implicitWidth: mediaRow.implicitWidth + 24; implicitHeight: 44; radius: Theme.radiusSmall
                 color: Ui.mediaOpen || mm.containsMouse ? Theme.raised : "transparent"
                 Accessible.role: Accessible.Button
-                Accessible.name: "Música: " + (Audio.player?.trackTitle ?? "")
+                Accessible.name: Tr.t("Music: %1").arg(Audio.player?.trackTitle ?? "")
                 RowLayout {
                     id: mediaRow; anchors.centerIn: parent; spacing: 8
                     Ic { name: Audio.player?.isPlaying ? "pause" : "music"; size: 16; color: Theme.muted }
@@ -102,10 +102,10 @@ PanelWindow {
             RowLayout {
                 spacing: 0
                 Stat {
-                    icon: Audio.icon; a11y: "Som"; target: "som"
+                    icon: Audio.icon; a11y: Tr.t("Sound"); target: "som"
                     onWheel: d => { if (Audio.sink?.audio) Audio.sink.audio.volume = Math.max(0, Math.min(1.5, Audio.sink.audio.volume + d * 0.05)) }
                 }
-                Stat { icon: Net.icon; a11y: "Internet: " + Net.status; target: "rede" }
+                Stat { icon: Net.icon; a11y: Tr.t("Internet") + ": " + Net.status; target: "rede" }
                 Stat {
                     readonly property var ad: Bluetooth.defaultAdapter
                     visible: !!ad
@@ -115,9 +115,9 @@ PanelWindow {
                 Stat {
                     icon: Cfg.v.dnd ? "bellOff" : "avisos"
                     label: Notifs.all.length ? String(Notifs.all.length) : ""
-                    a11y: "Avisos"; target: "avisos"
+                    a11y: Tr.t("Notifications"); target: "avisos"
                 }
-                Stat { icon: "energia"; a11y: "Energia"; target: "energia" }
+                Stat { icon: "energia"; a11y: Tr.t("Power"); target: "energia" }
                 Stat {
                     readonly property var bat: UPower.displayDevice
                     readonly property bool plugged: bat?.state === UPowerDeviceState.Charging || bat?.state === UPowerDeviceState.FullyCharged
@@ -125,7 +125,7 @@ PanelWindow {
                     icon: plugged ? "charge" : (bat?.percentage ?? 1) < 0.15 ? "batLow" : "bat"
                     label: Math.round((bat?.percentage ?? 0) * 100) + ""
                     alert: !plugged && (bat?.percentage ?? 1) < 0.15
-                    a11y: "Bateria"; target: "perf"
+                    a11y: Tr.t("Battery"); target: "perf"
                 }
             }
         }

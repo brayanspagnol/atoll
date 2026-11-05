@@ -5,8 +5,8 @@ import Quickshell.Services.Pipewire
 import Quickshell.Widgets
 
 Page {
-    title: "Som"
-    subtitle: Audio.sink ? "Saída: " + Audio.label(Audio.sink) : "Nenhuma saída de áudio"
+    title: Tr.t("Sound")
+    subtitle: Audio.sink ? Tr.t("Output: %1").arg(Audio.label(Audio.sink)) : Tr.t("No audio output")
 
     component VolumeLine: RowLayout {
         id: line
@@ -21,20 +21,20 @@ Page {
         Tx { visible: !!line.name; text: line.name; Layout.preferredWidth: 110 }
         Sld {
             Layout.fillWidth: true
-            a11y: "Volume de " + line.name
+            a11y: Tr.t("Volume of %1").arg(line.name)
             to: 1.5
             value: line.node?.audio?.volume ?? 0
             onMoved: line.node.audio.volume = value
         }
         Tx { mono: true; text: Math.round((line.node?.audio?.volume ?? 0) * 100) + "%"; Layout.preferredWidth: 54; horizontalAlignment: Text.AlignRight }
-        Swt { a11y: "Ativar " + line.name; checked: !(line.node?.audio?.muted ?? false); onToggled: line.node.audio.muted = !checked }
+        Swt { a11y: Tr.t("Enable %1").arg(line.name); checked: !(line.node?.audio?.muted ?? false); onToggled: line.node.audio.muted = !checked }
     }
 
-    Sec { title: "Volume" }
-    VolumeLine { visible: !!Audio.sink; node: Audio.sink; name: "Saída" }
-    VolumeLine { visible: !!Audio.source; node: Audio.source; name: "Microfone"; onIcon: "mic"; offIcon: "micOff" }
+    Sec { title: Tr.t("Volume") }
+    VolumeLine { visible: !!Audio.sink; node: Audio.sink; name: Tr.t("Output") }
+    VolumeLine { visible: !!Audio.source; node: Audio.source; name: Tr.t("Microphone"); onIcon: "mic"; offIcon: "micOff" }
 
-    Sec { title: "Saída" }
+    Sec { title: Tr.t("Output") }
     Repeater {
         model: Audio.sinks
         Rowi {
@@ -49,7 +49,7 @@ Page {
         }
     }
 
-    Sec { title: "Entrada" }
+    Sec { title: Tr.t("Input") }
     Repeater {
         model: Audio.sources
         Rowi {
@@ -63,16 +63,16 @@ Page {
             Ic { visible: si.selected; name: "check"; color: Theme.accent }
         }
     }
-    Tx { visible: Audio.sources.length === 0; text: "Nenhum microfone encontrado"; dim: true }
+    Tx { visible: Audio.sources.length === 0; text: Tr.t("No microphone found"); dim: true }
 
-    Sec { title: "Volume por aplicativo" }
+    Sec { title: Tr.t("Volume per app") }
     Repeater {
         model: Audio.streams
         VolumeLine { required property var modelData; node: modelData; name: Audio.streamLabel(modelData) }
     }
-    Tx { visible: Audio.streams.length === 0; text: "Nenhum aplicativo com áudio agora."; dim: true }
+    Tx { visible: Audio.streams.length === 0; text: Tr.t("No app is playing audio."); dim: true }
 
-    Sec { visible: !!Audio.player; title: "Tocando agora" }
+    Sec { visible: !!Audio.player; title: Tr.t("Now playing") }
     RowLayout {
         visible: !!Audio.player
         Layout.fillWidth: true
@@ -83,11 +83,11 @@ Page {
         }
         ColumnLayout {
             Layout.fillWidth: true; spacing: 0
-            Tx { text: Audio.player?.trackTitle || "Sem título"; strong: true; Layout.fillWidth: true }
+            Tx { text: Audio.player?.trackTitle || Tr.t("Untitled"); strong: true; Layout.fillWidth: true }
             Tx { text: (Audio.player?.trackArtist ?? "") + " · " + (Audio.player?.identity ?? ""); dim: true; Layout.fillWidth: true }
         }
-        Btn { text: "Anterior"; enabledB: Audio.player?.canGoPrevious ?? false; onClicked: Audio.player.previous() }
-        Btn { text: Audio.player?.isPlaying ? "Pausar" : "Tocar"; variant: "solid"; onClicked: Audio.player.togglePlaying() }
-        Btn { text: "Próxima"; enabledB: Audio.player?.canGoNext ?? false; onClicked: Audio.player.next() }
+        Btn { text: Tr.t("Previous"); enabledB: Audio.player?.canGoPrevious ?? false; onClicked: Audio.player.previous() }
+        Btn { text: Audio.player?.isPlaying ? Tr.t("Pause") : Tr.t("Play"); variant: "solid"; onClicked: Audio.player.togglePlaying() }
+        Btn { text: Tr.t("Next track"); enabledB: Audio.player?.canGoNext ?? false; onClicked: Audio.player.next() }
     }
 }

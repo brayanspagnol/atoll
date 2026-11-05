@@ -16,13 +16,14 @@ Singleton {
             property string accent: "gelo"
             property string wallpaper: Quickshell.env("HOME") + "/.local/share/atoll/wallpapers/atoll-dusk.jpg"
             property bool dnd: false
-            property bool holidays: true // Brazilian national holidays in the calendar
+            property string language: "auto" // a code from Tr.languages, or "auto" for the system language
+            property string holidays: "auto" // Brazilian national holidays: "on", "off", or "auto" for Brazilian locales
             // Pinned apps. ids are lowercase Wayland app ids; icon is a key from Icons.qml.
             property var dock: [
                 { label: "Terminal", icon: "term", ids: ["kitty"], cmd: "kitty" },
-                { label: "Navegador", icon: "globe", ids: ["firefox", "brave-browser", "chromium", "google-chrome"], cmd: "xdg-open https://" },
-                { label: "Código", icon: "code", ids: ["code", "code-oss"], cmd: "code" },
-                { label: "Arquivos", icon: "folder", ids: ["org.gnome.nautilus", "thunar", "org.kde.dolphin"], cmd: "xdg-open ~" },
+                { label: "Browser", icon: "globe", ids: ["firefox", "brave-browser", "chromium", "google-chrome"], cmd: "xdg-open https://" },
+                { label: "Code", icon: "code", ids: ["code", "code-oss"], cmd: "code" },
+                { label: "Files", icon: "folder", ids: ["org.gnome.nautilus", "thunar", "org.kde.dolphin"], cmd: "xdg-open ~" },
                 { label: "Discord", icon: "chat", ids: ["discord", "vesktop"], cmd: "discord || vesktop" },
                 { label: "Spotify", icon: "music", ids: ["spotify", "spotify-qt"], cmd: "spotify || spotify-qt" }
             ]

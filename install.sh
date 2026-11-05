@@ -31,7 +31,7 @@ bin="$HOME/.local/bin"
 
 packages=(hyprland quickshell hyprlock hypridle hyprsunset xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
     polkit-gnome networkmanager bluez bluez-utils pipewire wireplumber libnotify cliphist wl-clipboard wofi
-    grim slurp jq brightnessctl ttf-jetbrains-mono-nerd papirus-icon-theme qt6-svg)
+    grim slurp jq brightnessctl ttf-jetbrains-mono-nerd papirus-icon-theme qt6-svg noto-fonts noto-fonts-cjk)
 commands=(Hyprland start-hyprland qs hyprlock hypridle hyprsunset nmcli bluetoothctl wpctl notify-send cliphist
     wl-paste wofi grim slurp jq brightnessctl)
 
@@ -54,14 +54,14 @@ echo "Installing to $config, $shell_dir and $data"
 mkdir -p "$config/hypr" "$shell_dir" "$data/scripts" "$data/wallpapers" "$bin"
 
 # Replace managed files only: settings.json, user.lua and likes stay.
-rm -f "$shell_dir"/*.qml "$shell_dir"/*.js
-cp "$repo"/shell/* "$shell_dir/"
+rm -rf "$shell_dir"/*.qml "$shell_dir"/*.js "$shell_dir/i18n"
+cp -r "$repo"/shell/* "$shell_dir/"
 cp "$repo"/hypr/*.lua "$config/hypr/"
 cp "$repo"/scripts/* "$data/scripts/"
 cp "$repo"/wallpapers/* "$data/wallpapers/"
 cp "$repo/VERSION" "$data/VERSION"
-cp "$repo/config/hyprlock.conf" "$config/hyprlock.conf"
-# The idle page in Ajustes rewrites this file, so keep the user's copy.
+# Settings rewrites the idle file, and people personalize the lock screen, so keep existing copies.
+[[ -f "$config/hyprlock.conf" ]] || cp "$repo/config/hyprlock.conf" "$config/hyprlock.conf"
 [[ -f "$config/hypridle.conf" ]] || cp "$repo/config/hypridle.conf" "$config/hypridle.conf"
 ln -sf "$data/scripts/atoll-session" "$bin/atoll-session"
 

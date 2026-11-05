@@ -4,10 +4,10 @@ import Quickshell
 
 Singleton {
     readonly property var accents: ({
-        gelo:   { name: "Gelo",    hex: "#8CC8F5" },
-        areia:  { name: "Areia",   hex: "#E8CFA6" },
-        hortela:{ name: "Hortelã", hex: "#8FD9B6" },
-        coral:  { name: "Coral",   hex: "#FF9F87" }
+        gelo:   { name: Tr.t("Ice"),    hex: "#8CC8F5" },
+        areia:  { name: Tr.t("Sand"),   hex: "#E8CFA6" },
+        hortela:{ name: Tr.t("Mint"), hex: "#8FD9B6" },
+        coral:  { name: Tr.t("Coral"),   hex: "#FF9F87" }
     })
     readonly property color accent: (accents[Cfg.v.accent] ?? accents.gelo).hex
     readonly property color accentInk: "#08131D"
