@@ -15,7 +15,7 @@ optdepends=('power-profiles-daemon: choose a power mode'
     'ddcutil: brightness of external monitors')
 install=atoll.install
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('93b320b1d961d0896ee818da89954d67861739edda02895ac0f8e22d46fafd90')
+sha256sums=('ae8b10e0b6ddc34883f4d1ee870f59bb4e0324856f95d290341dd088869980f8')
 
 package() {
     cd "$pkgname-$pkgver"
