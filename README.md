@@ -3,7 +3,6 @@
   <h1>Atoll</h1>
   <p><strong>A complete glass desktop shell for Hyprland, with everything one click away.</strong></p>
   <p>
-    <a href="https://github.com/brayanspagnol/atoll/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/brayanspagnol/atoll/actions/workflows/ci.yml/badge.svg"></a>
     <a href="https://github.com/brayanspagnol/atoll/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/brayanspagnol/atoll"></a>
     <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/github/license/brayanspagnol/atoll"></a>
   </p>
