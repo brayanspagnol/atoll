@@ -9,8 +9,32 @@ Page {
     title: Tr.t("Settings")
     Component.onCompleted: { Holidays.listCountries(); Profiles.keepWallpaper() }
     property bool creating: false
+    property bool addingLayout: false
     property bool armed: false
     Timer { running: pg.armed; interval: 5000; onTriggered: pg.armed = false }
+
+    // Deleting asks for a second click, like the other destructive buttons here.
+    property string armedImage: ""
+    Timer { running: pg.armedImage !== ""; interval: 5000; onTriggered: pg.armedImage = "" }
+    component Forget: Rectangle {
+        id: badge
+        property string kind: ""
+        property string path: ""
+        property bool hovered: false
+        readonly property bool sure: pg.armedImage === path
+        function tap() {
+            if (sure) { pg.armedImage = ""; Profiles.forget(kind, path) }
+            else pg.armedImage = path
+        }
+        visible: hovered || sure
+        width: 28; height: 28; radius: 14
+        color: sure ? Theme.danger : Qt.rgba(10 / 255, 16 / 255, 24 / 255, 0.85)
+        border.width: 1; border.color: Theme.lineStrong
+        Accessible.role: Accessible.Button
+        Accessible.name: sure ? Tr.t("Click again within 5 s to confirm") : Tr.t("Remove")
+        Ic { anchors.centerIn: parent; name: "x"; size: 15; color: badge.sure ? Theme.accentInk : Theme.ink }
+        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: badge.tap() }
+    }
 
     component Line: RowLayout {
         property string label: ""
@@ -96,6 +120,9 @@ Page {
                     Image { anchors.fill: parent; source: "file://" + choice.modelData; fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(160, 160); asynchronous: true }
                 }
                 MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Cfg.v.photo = choice.modelData }
+                HoverHandler { id: choiceHover }
+                Keys.onDeletePressed: forgetPhoto.tap()
+                Forget { id: forgetPhoto; anchors { right: parent.right; top: parent.top } kind: "photo"; path: choice.modelData; hovered: choiceHover.hovered || choice.activeFocus }
             }
         }
         Rectangle {
@@ -165,6 +192,9 @@ Page {
                 Keys.onSpacePressed: Cfg.v.wallpaper = modelData
                 Image { anchors.fill: parent; anchors.margins: 2; source: "file://" + parent.modelData; fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(416, 224); asynchronous: true }
                 MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Cfg.v.wallpaper = parent.modelData }
+                HoverHandler { id: wallHover }
+                Keys.onDeletePressed: forgetWall.tap()
+                Forget { id: forgetWall; anchors { right: parent.right; top: parent.top; margins: 6 } kind: "wallpaper"; path: parent.modelData; hovered: wallHover.hovered || parent.activeFocus }
             }
         }
         Rectangle {
@@ -199,6 +229,83 @@ Page {
         Sld { visible: Cfg.v.nightOn; Layout.preferredWidth: 180; a11y: Tr.t("Night light temperature"); from: 2500; to: 6000; stepSize: 100; value: Cfg.v.nightK; onMoved: { Cfg.v.nightK = value; Night.apply() } }
         Tx { visible: Cfg.v.nightOn; mono: true; text: Cfg.v.nightK + " K"; Layout.preferredWidth: 58; horizontalAlignment: Text.AlignRight }
         Swt { a11y: Tr.t("Night light"); checked: Cfg.v.nightOn; onToggled: { Cfg.v.nightOn = checked; Night.apply() } }
+    }
+
+    Sec { title: Tr.t("Keyboard and mouse") }
+    Tx { text: Tr.t("Keyboard layouts") }
+    Tx { text: Tr.t("Switch between them with %1").arg(Tr.t("Super + Space")); dim: true; size: 13 }
+    Flow {
+        Layout.fillWidth: true; spacing: 8
+        Repeater {
+            model: Input.layouts
+            Rectangle {
+                id: chip
+                required property var modelData
+                required property int index
+                width: chipRow.implicitWidth + 24; height: 36; radius: 18
+                color: Theme.raised
+                RowLayout {
+                    id: chipRow
+                    anchors.centerIn: parent; spacing: 8
+                    Tx { text: Input.nameOf(chip.modelData); size: 14 }
+                    Ic {
+                        visible: Input.layouts.length > 1
+                        name: "x"; size: 14; color: Theme.muted
+                        MouseArea { anchors.fill: parent; anchors.margins: -6; cursorShape: Qt.PointingHandCursor; onClicked: Input.removeLayout(chip.index) }
+                    }
+                }
+            }
+        }
+        Btn { text: Tr.t("Add layout"); onClicked: { pg.addingLayout = !pg.addingLayout; layoutSearch.text = "" } }
+    }
+    Fld {
+        id: layoutSearch
+        visible: pg.addingLayout
+        Layout.fillWidth: true
+        placeholderText: Tr.t("Search layouts")
+        Accessible.name: Tr.t("Search layouts")
+        onVisibleChanged: if (visible) forceActiveFocus()
+    }
+    Repeater {
+        model: pg.addingLayout ? Input.catalog.filter(c => c.name.toLowerCase().includes(layoutSearch.text.trim().toLowerCase())).slice(0, 6) : []
+        Rowi {
+            id: layoutRow
+            required property var modelData
+            implicitHeight: 40
+            a11y: modelData.name
+            onClicked: { Input.addLayout(modelData); pg.addingLayout = false }
+            Tx { text: layoutRow.modelData.name; Layout.fillWidth: true }
+        }
+    }
+    Line {
+        label: Tr.t("Pointer speed")
+        Sld { Layout.preferredWidth: 220; a11y: Tr.t("Pointer speed"); from: -1; to: 1; stepSize: 0.05; value: Input.speed; onMoved: { Input.speed = value; Input.save() } }
+    }
+    Line {
+        label: Tr.t("Natural scrolling")
+        hint: Tr.t("Content follows your fingers")
+        Swt { a11y: Tr.t("Natural scrolling"); checked: Input.natural; onToggled: { Input.natural = checked; Input.save() } }
+    }
+    Tx { visible: Input.hasTouchpad; text: Tr.t("Touchpad"); Layout.topMargin: 6; strong: true }
+    Line {
+        visible: Input.hasTouchpad
+        label: Tr.t("Natural scrolling")
+        Swt { a11y: Tr.t("Touchpad") + ": " + Tr.t("Natural scrolling"); checked: Input.padNatural; onToggled: { Input.padNatural = checked; Input.save() } }
+    }
+    Line {
+        visible: Input.hasTouchpad
+        label: Tr.t("Tap to click")
+        Swt { a11y: Tr.t("Tap to click"); checked: Input.padTap; onToggled: { Input.padTap = checked; Input.save() } }
+    }
+    Line {
+        visible: Input.hasTouchpad
+        label: Tr.t("Ignore while typing")
+        Swt { a11y: Tr.t("Ignore while typing"); checked: Input.padTyping; onToggled: { Input.padTyping = checked; Input.save() } }
+    }
+    Line {
+        visible: Input.hasTouchpad
+        label: Tr.t("Scroll speed")
+        Sld { Layout.preferredWidth: 220; a11y: Tr.t("Scroll speed"); from: 0.2; to: 3; stepSize: 0.1; value: Input.padScroll; onMoved: { Input.padScroll = value; Input.save() } }
     }
 
     Sec { title: Tr.t("Calendar") }

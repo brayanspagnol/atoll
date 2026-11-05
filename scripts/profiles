@@ -7,6 +7,7 @@
 #   profiles photo IMAGE           -> saves a copy of IMAGE, prints its path
 #   profiles wallpapers            -> paths of the saved wallpapers, newest first
 #   profiles wallpaper IMAGE       -> saves a copy of IMAGE, prints its path
+#   profiles forget photo|wallpaper PATH -> deletes a saved image; profiles using it go without one
 set -euo pipefail
 dir="$HOME/.config/atoll/profiles"
 faces="$HOME/.local/share/atoll/faces"
@@ -28,6 +29,20 @@ save_image() {
     [[ -e "$target" ]] || cp "$2" "$target"
     touch "$target"
     echo "$target"
+}
+
+forget_image() {
+    local kind="$1" folder="$2" path="$3" file part
+    # Only files of the gallery itself: this deletes what it is given.
+    [[ "$(dirname -- "$path")" == "$folder" && -f "$path" ]] || { echo "not in the gallery: $path" >&2; exit 1; }
+    rm -f -- "$path"
+    shopt -s nullglob
+    for file in "$dir"/*.json; do
+        jq -e --arg key "$kind" --arg path "$path" '.[$key] == $path' "$file" >/dev/null || continue
+        part="$(mktemp "$dir/.XXXXXX")"
+        jq --arg key "$kind" '.[$key] = ""' "$file" >"$part"
+        mv "$part" "$file"
+    done
 }
 
 case "${1:-}" in
@@ -54,8 +69,15 @@ case "${1:-}" in
     photo) save_image "$faces" "$2" ;;
     wallpapers) list_images "$walls" ;;
     wallpaper) save_image "$walls" "$2" ;;
+    forget)
+        case "${2:-}" in
+            photo) forget_image photo "$faces" "$3" ;;
+            wallpaper) forget_image wallpaper "$walls" "$3" ;;
+            *) echo "usage: profiles forget photo|wallpaper PATH" >&2; exit 2 ;;
+        esac
+        ;;
     *)
-        echo "usage: profiles list|create|delete|photos|photo|wallpapers|wallpaper" >&2
+        echo "usage: profiles list|create|delete|photos|photo|wallpapers|wallpaper|forget" >&2
         exit 2
         ;;
 esac

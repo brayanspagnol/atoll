@@ -46,3 +46,28 @@ function bytes(n) {
     while (n >= 1024 && i < 4) { n /= 1024; i++ }
     return n.toFixed(i && n < 100 ? 1 : 0) + " " + u[i]
 }
+
+// Hyprland keeps layouts and variants as two comma lists, matched by position.
+function zipLayouts(layouts, variants) {
+    const v = (variants || "").split(",")
+    return (layouts || "").split(",").filter(Boolean).map((layout, i) => ({ layout, variant: v[i] || "" }))
+}
+function joinLayouts(list) {
+    return { layout: list.map(l => l.layout).join(","), variant: list.map(l => l.variant).join(",") }
+}
+// Reads xkb's evdev.lst: "  br   Portuguese (Brazil)" under ! layout, "  nodeadkeys   br: Portuguese (Brazil, no dead keys)" under ! variant.
+function xkbCatalog(text) {
+    const out = []
+    let section = ""
+    for (const line of text.split("\n")) {
+        if (line.startsWith("!")) { section = line.slice(1).trim(); continue }
+        const m = line.match(/^\s+(\S+)\s+(.+)$/)
+        if (!m) continue
+        if (section === "layout") out.push({ layout: m[1], variant: "", name: m[2] })
+        else if (section === "variant") {
+            const v = m[2].match(/^(\S+): (.+)$/)
+            if (v) out.push({ layout: v[1], variant: m[1], name: v[2] })
+        }
+    }
+    return out.sort((a, b) => a.name.localeCompare(b.name))
+}

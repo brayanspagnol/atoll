@@ -2,7 +2,7 @@
 local home = os.getenv("HOME")
 local here = home .. "/.config/atoll/hypr/"
 
-for _, file in ipairs({ "env", "look", "rules", "binds", "monitors" }) do
+for _, file in ipairs({ "env", "look", "input", "rules", "binds", "monitors" }) do
     dofile(here .. file .. ".lua")
 end
 

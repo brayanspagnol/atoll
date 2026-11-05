@@ -35,6 +35,12 @@ Singleton {
         next[to] = list[index]
         Cfg.v.dock = next
     }
+    function moveTo(from, to) {
+        if (from === to) return
+        const next = list.slice()
+        next.splice(to, 0, next.splice(from, 1)[0])
+        Cfg.v.dock = next
+    }
     function hasFile(path) { return list.some(p => p.path === path) }
     function addFile(path) {
         if (hasFile(path)) return

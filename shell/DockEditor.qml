@@ -32,6 +32,10 @@ Scope {
 
             readonly property string query: search.text.trim()
             property int selected: -1
+            property int dragFrom: -1
+            property int dragTo: -1
+            property real dragX: 0
+            readonly property int slot: 80 // an icon plus the gap
             property var files: []
             property bool searching: false
             readonly property var apps: {
@@ -255,6 +259,15 @@ Scope {
                                 required property var modelData
                                 required property int index
                                 readonly property bool sel: win.selected === index
+                                readonly property bool held: win.dragFrom === index
+                                // Icons stay in place while dragging and only look moved: changing the list would rebuild them mid-drag.
+                                transform: Translate {
+                                    x: pinned.held ? win.dragX
+                                        : win.dragFrom >= 0 && pinned.index > win.dragFrom && pinned.index <= win.dragTo ? -win.slot
+                                        : win.dragFrom >= 0 && pinned.index < win.dragFrom && pinned.index >= win.dragTo ? win.slot : 0
+                                    Behavior on x { enabled: !pinned.held && win.dragFrom >= 0; NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+                                }
+                                z: held ? 1 : 0
                                 implicitWidth: 72; implicitHeight: 72; radius: 20
                                 color: sel ? Qt.rgba(140 / 255, 200 / 255, 245 / 255, 0.25) : pm.containsMouse ? Qt.rgba(1, 1, 1, 0.2) : Theme.raised
                                 border.width: sel || activeFocus ? 2 : 0
@@ -265,7 +278,36 @@ Scope {
                                 Keys.onSpacePressed: win.selected = sel ? -1 : index
                                 Keys.onReturnPressed: win.selected = sel ? -1 : index
                                 PinIcon { anchors.centerIn: parent; pin: pinned.modelData }
-                                MouseArea { id: pm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: win.selected = pinned.sel ? -1 : pinned.index }
+                                MouseArea {
+                                    id: pm
+                                    anchors.fill: parent; hoverEnabled: true; cursorShape: pinned.held ? Qt.ClosedHandCursor : Qt.PointingHandCursor
+                                    preventStealing: true
+                                    property real startX: 0
+                                    // Measured on the row, because this area moves with the icon.
+                                    function rowX(mouse) { return mapToItem(pinRow, mouse.x, 0).x }
+                                    onPressed: mouse => startX = rowX(mouse)
+                                    onPositionChanged: mouse => {
+                                        if (!pressed) return
+                                        const dx = rowX(mouse) - startX
+                                        if (!pinned.held && Math.abs(dx) < 8) return
+                                        win.selected = -1
+                                        win.dragFrom = pinned.index
+                                        win.dragX = dx
+                                        win.dragTo = Math.max(0, Math.min(Pins.list.length - 1, pinned.index + Math.round(dx / win.slot)))
+                                    }
+                                    onReleased: {
+                                        if (win.dragFrom < 0) return
+                                        const from = win.dragFrom, to = win.dragTo
+                                        win.dragFrom = -1; win.dragX = 0
+                                        justDragged = true
+                                        Pins.moveTo(from, to)
+                                    }
+                                    property bool justDragged: false
+                                    onClicked: {
+                                        if (justDragged) { justDragged = false; return }
+                                        win.selected = pinned.sel ? -1 : pinned.index
+                                    }
+                                }
                                 Rectangle {
                                     visible: pinned.sel
                                     anchors { bottom: parent.top; bottomMargin: 14; horizontalCenter: parent.horizontalCenter }

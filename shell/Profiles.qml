@@ -46,6 +46,10 @@ Singleton {
         picker.title = title
         picker.running = true
     }
+    function forget(kind, path) {
+        if (Cfg.v[kind] === path) Cfg.v[kind] = ""
+        run(["forget", kind, path])
+    }
     // A wallpaper chosen before the gallery existed joins it, so it stays there after picking another one.
     function keepWallpaper() {
         const dir = home + "/.local/share/atoll/backgrounds/"

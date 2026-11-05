@@ -6,7 +6,7 @@ const load = (file, names) => {
     return ctx.x
 }
 const C = load("cal.js", "key,addDays,monthGrid,weekOf,isoWeek,occurs,on,upcoming,validTime")
-const P = load("parse.js", "cpu,mem,net,top,bytes,shQuote,newerVersion")
+const P = load("parse.js", "cpu,mem,net,top,bytes,shQuote,newerVersion,zipLayouts,joinLayouts,xkbCatalog")
 const g = C.monthGrid(2026, 10); assert.equal(g.length, 42); assert.equal(g[0], "2026-11-01"); assert.equal(g[41], "2026-12-12")
 assert.equal(C.monthGrid(2026, 9)[0], "2026-09-27") // October 2026 starts on a Thursday
 assert.deepEqual([C.isoWeek("2026-01-01"), C.isoWeek("2026-11-05"), C.isoWeek("2027-01-03")], [1, 45, 53])
@@ -67,6 +67,12 @@ assert.equal(script("holidays", "BR", "20;26"), 2)
 assert.equal(script("profiles", "delete", "../settings"), 2)
 assert.equal(script("profiles", "create", "A B", "default", "x"), 2)
 
+const kb = P.zipLayouts("br,us", "abnt2,")
+assert.deepEqual(JSON.parse(JSON.stringify(kb)), [{ layout: "br", variant: "abnt2" }, { layout: "us", variant: "" }])
+assert.deepEqual(JSON.parse(JSON.stringify(P.joinLayouts(kb))), { layout: "br,us", variant: "abnt2," })
+assert.equal(P.zipLayouts("us", "").length, 1)
+const xkb = P.xkbCatalog("! model\n  pc105  Generic\n\n! layout\n  us   English (US)\n  br   Portuguese (Brazil)\n\n! variant\n  intl   us: English (US, intl.)\n\n! option\n  grp   Switching\n")
+assert.deepEqual(xkb.map(x => x.layout + ":" + x.variant).sort(), ["br:", "us:", "us:intl"])
 // Saving the same picture twice keeps one copy, and listing shows it.
 const home = fs.mkdtempSync("/tmp/atoll-test-")
 const profiles = (...args) => spawnSync(new URL("../scripts/profiles", import.meta.url).pathname, args, { env: { ...process.env, HOME: home }, encoding: "utf8" })
@@ -82,6 +88,15 @@ assert.equal(profiles("wallpaper", home + "/a.png").stdout.trim(), wall)
 assert.notEqual(wall, first)
 assert.deepEqual(profiles("wallpapers").stdout.trim().split("\n"), [wall])
 assert.equal(profiles("wallpaper", home + "/missing.png").status, 1)
+// Forgetting deletes only gallery files, and profiles using the image let go of it.
+fs.mkdirSync(home + "/.config/atoll/profiles", { recursive: true })
+fs.writeFileSync(home + "/.config/atoll/profiles/a.json", JSON.stringify({ wallpaper: wall, photo: first }))
+assert.equal(profiles("forget", "wallpaper", home + "/a.png").status, 1)
+assert.ok(fs.existsSync(home + "/a.png"))
+assert.equal(profiles("forget", "photo", wall).status, 1)
+assert.equal(profiles("forget", "wallpaper", wall).status, 0)
+assert.equal(profiles("wallpapers").stdout.trim(), "")
+assert.deepEqual(JSON.parse(fs.readFileSync(home + "/.config/atoll/profiles/a.json")), { wallpaper: "", photo: first })
 fs.rmSync(home, { recursive: true })
 
 // Every string the interface asks for must exist in every language, with the same placeholders.
