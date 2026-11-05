@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell
+import Quickshell.Io
 
 Singleton {
     readonly property var accents: ({
@@ -40,6 +41,17 @@ Singleton {
         Quickshell.execDetached(["sh", "-c", 'if [ -n "$1" ]; then ln -sfn "$1" "$2"; else rm -f "$2"; fi', "sh", wallpaper, Quickshell.env("HOME") + "/.local/share/atoll/current-wallpaper"])
     }
     onWallpaperChanged: linkWallpaper()
+    // Backgrounds for screens with their own wallpaper. hyprlock draws them over the main one, from a file its config includes.
+    readonly property var screenWallpapers: Cfg.v.wallpapers ?? ({})
+    onScreenWallpapersChanged: writeLockScreens()
+    function writeLockScreens() {
+        const blocks = Object.keys(screenWallpapers).map(name => {
+            const path = screenWallpapers[name]
+            return `background {\n    monitor = ${name}\n    path = ${path || ""}\n    color = rgb(13, 21, 31)\n    blur_passes = 0\n    brightness = 0.82\n}\n`
+        })
+        lockScreens.setText("# Written by Atoll from the wallpapers chosen per screen.\n" + blocks.join(""))
+    }
+    FileView { id: lockScreens; path: Quickshell.env("HOME") + "/.config/atoll/hyprlock-screens.conf"; atomicWrites: true; printErrors: false }
     // Same for the picture. Without one of its own, a profile uses the system-wide ~/.face.
     readonly property string photo: Cfg.v.photo
     function linkPhoto() {

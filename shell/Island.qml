@@ -113,6 +113,10 @@ PanelWindow {
                     a11y: "Bluetooth"; target: "bt"
                 }
                 Stat {
+                    icon: "clipboard"; a11y: Tr.t("Clipboard history")
+                    onActivated: Ui.openLauncher("clip")
+                }
+                Stat {
                     icon: Cfg.v.dnd ? "bellOff" : "avisos"
                     label: Notifs.all.length ? String(Notifs.all.length) : ""
                     a11y: Tr.t("Notifications"); target: "avisos"

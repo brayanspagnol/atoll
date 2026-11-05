@@ -21,27 +21,29 @@ function spread(list, screenW, screenH, areaW, areaH, gap) {
         const ox = (areaW - screenW * k) / 2, oy = (areaH - screenH * k) / 2
         return list.map(r => ({ x: ox + r.x * k, y: oy + r.y * k, w: r.w * k, h: r.h * k }))
     }
-    // The column count that leaves cells closest to the shape of the windows.
-    const shape = list.reduce((sum, r) => sum + r.w / r.h, 0) / list.length
-    let cols = 1, best = Infinity
-    for (let c = 1; c <= list.length; c++) {
-        const rows = Math.ceil(list.length / c)
-        const cell = ((areaW - gap * (c - 1)) / c) / ((areaH - gap * (rows - 1)) / rows)
-        const miss = Math.abs(Math.log(cell / shape))
-        if (miss < best) { best = miss; cols = c }
+    // Rows of the same height, as many as cover the most area, so no window ends up much smaller than its neighbors.
+    let best = null
+    for (let count = 1; count <= list.length; count++) {
+        const rows = []
+        for (let i = 0; i < count; i++) rows.push(list.slice(Math.floor(i * list.length / count), Math.floor((i + 1) * list.length / count)))
+        const limit = (areaH - gap * (count - 1)) / count
+        const heights = rows.map(row => Math.min(limit, (areaW - gap * (row.length - 1)) / row.reduce((sum, r) => sum + r.w / r.h, 0)))
+        const covered = rows.reduce((sum, row, i) => sum + row.reduce((inner, r) => inner + heights[i] * heights[i] * r.w / r.h, 0), 0)
+        if (!best || covered > best.covered) best = { covered, rows, heights }
     }
-    const rows = Math.ceil(list.length / cols)
-    const cellW = (areaW - gap * (cols - 1)) / cols, cellH = (areaH - gap * (rows - 1)) / rows
-    return list.map((r, i) => {
-        const row = Math.floor(i / cols), inRow = row === rows - 1 ? list.length - cols * (rows - 1) : cols
-        const k = Math.min(cellW / r.w, cellH / r.h)
-        // A shorter last row stays centered.
-        const startX = (areaW - inRow * cellW - (inRow - 1) * gap) / 2
-        const col = i - row * cols
-        return {
-            x: startX + col * (cellW + gap) + (cellW - r.w * k) / 2,
-            y: row * (cellH + gap) + (cellH - r.h * k) / 2,
-            w: r.w * k, h: r.h * k
+    const total = best.heights.reduce((sum, h) => sum + h, 0) + gap * (best.rows.length - 1)
+    const out = []
+    let y = (areaH - total) / 2
+    best.rows.forEach((row, i) => {
+        const h = best.heights[i]
+        const width = row.reduce((sum, r) => sum + h * r.w / r.h, 0) + gap * (row.length - 1)
+        let x = (areaW - width) / 2
+        for (const r of row) {
+            const w = h * r.w / r.h
+            out.push({ x, y, w, h })
+            x += w + gap
         }
+        y += h + gap
     })
+    return out
 }

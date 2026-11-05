@@ -73,6 +73,7 @@ if [[ -f "$config/hyprlock.conf" ]] && ! cmp -s "$repo/config/hyprlock.conf" "$c
     echo "Your previous lock screen was saved as $config/hyprlock.conf.bak"
 fi
 cp "$repo/config/hyprlock.conf" "$config/hyprlock.conf"
+[[ -e "$config/hyprlock-screens.conf" ]] || : >"$config/hyprlock-screens.conf"
 # The idle page in Settings rewrites this file, so keep the existing one.
 [[ -f "$config/hypridle.conf" ]] || cp "$repo/config/hypridle.conf" "$config/hypridle.conf"
 ln -sf "$data/scripts/atoll-session" "$bin/atoll-session"

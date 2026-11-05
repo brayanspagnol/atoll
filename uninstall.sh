@@ -9,7 +9,7 @@ case "${1:-}" in
     *) echo "Usage: ./uninstall.sh [--purge]" >&2; exit 2 ;;
 esac
 
-rm -rf "$HOME/.config/quickshell/atoll" "$HOME/.config/atoll/hypr" "$HOME/.config/atoll/hyprlock.conf"
+rm -rf "$HOME/.config/quickshell/atoll" "$HOME/.config/atoll/hypr" "$HOME/.config/atoll/hyprlock.conf" "$HOME/.config/atoll/hyprlock-screens.conf"
 rm -rf "$HOME/.local/share/atoll/scripts" "$HOME/.local/share/atoll/wallpapers" "$HOME/.local/share/atoll/VERSION" "$HOME/.local/share/atoll/current-wallpaper" "$HOME/.local/share/atoll/current-face"
 rm -f "$HOME/.local/bin/atoll-session"
 

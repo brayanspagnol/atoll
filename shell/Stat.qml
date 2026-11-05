@@ -9,6 +9,7 @@ Rectangle {
     property string target: ""
     property bool alert: false
     signal wheel(int delta)
+    signal activated() // for an icon with no screen to open
     implicitWidth: label ? r.implicitWidth + 20 : 44
     implicitHeight: 44
     radius: Theme.radiusSmall
@@ -22,7 +23,7 @@ Rectangle {
     }
     MouseArea {
         id: m; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-        onClicked: Ui.toggle(s.target)
+        onClicked: s.target ? Ui.toggle(s.target) : s.activated()
         onWheel: e => s.wheel(e.angleDelta.y > 0 ? 1 : -1)
     }
 }
