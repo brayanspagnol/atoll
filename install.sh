@@ -98,6 +98,9 @@ if ((want_session)); then
     sudo install -Dm644 "$entry" /usr/share/wayland-sessions/atoll.desktop
 fi
 
+# Files disappear for a moment above, which can make a running shell fail its automatic reload. This retries it.
+touch "$shell_dir/shell.qml"
+
 cat <<EOF
 
 Atoll $(cat "$repo/VERSION") installed.
@@ -105,5 +108,4 @@ Atoll $(cat "$repo/VERSION") installed.
 Start it from a TTY with:  atoll-session
 Make sure $bin is in your PATH, or pick "Atoll" in your display manager after ./install.sh --session.
 Personal Hyprland settings go in $config/user.lua.
-If Atoll is already running, press Super+Shift+R to restart the shell with this version.
 EOF
