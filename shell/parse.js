@@ -103,3 +103,28 @@ function nmcliRows(text) {
         return fields
     })
 }
+
+// For search: lowercase, no accents, and ligatures spelled out, since nobody types "cœur".
+function fold(text) {
+    return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
+        .replace(/œ/g, "oe").replace(/æ/g, "ae").replace(/ß/g, "ss")
+}
+// english: lines of "<glyph> <name>". localized: lines of "<glyph>\t<name>\t<folded keywords, | between them>".
+function emojiEntries(english, localized) {
+    const local = {}
+    for (const line of localized.split("\n")) local[line.split("\t")[0]] = line.split("\t")
+    return english.split("\n").filter(Boolean).map(line => {
+        const space = line.indexOf(" "), glyph = line.slice(0, space), en = line.slice(space + 1)
+        const row = local[glyph] || [], label = row[1] || en
+        return { glyph, label, name: fold(label), keys: row[2] || "", en: fold(en) }
+    })
+}
+// Names starting with the query, then names containing it, then keywords, then the English name.
+function emojiSearch(entries, query) {
+    const q = fold(query), tiers = [[], [], [], []]
+    for (const e of entries) {
+        const tier = e.name.startsWith(q) ? 0 : e.name.includes(q) ? 1 : e.keys.includes(q) ? 2 : e.en.includes(q) ? 3 : -1
+        if (tier >= 0) tiers[tier].push(e)
+    }
+    return tiers[0].concat(tiers[1], tiers[2], tiers[3])
+}

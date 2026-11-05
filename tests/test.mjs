@@ -145,4 +145,33 @@ for (const file of fs.readdirSync(new URL("i18n/", shell))) {
         assert(value.trim(), `${file}: empty translation: ${key}`)
     }
 }
+
+// Emoji search: localized names and keywords, accents ignored, ranked, English as the fallback.
+const E = load("parse.js", "fold,emojiEntries,emojiSearch")
+assert.equal(E.fold("Coração"), "coracao"); assert.equal(E.fold("CŒUR"), "coeur"); assert.equal(E.fold("Fuß"), "fuss"); assert.equal(E.fold("Ёлка"), "елка")
+const glyphs = (entries, q) => E.emojiSearch(entries, q).map(e => e.glyph).join(" ")
+const toy = E.emojiEntries("🅰 pie\n🅱 rocket\n🆎 crab\n🆑 plain\n🆒 fruit\n", "🅰\ttorta\tmaca|doce\n🅱\tfoguete\tespaco\n🆎\tcaranguejo maçã\t\n🆒\tMaçã verde\t\n")
+assert.equal(glyphs(toy, "MAÇA"), "🆒 🆎 🅰") // name start, then name, then keyword
+assert.equal(glyphs(toy, "rocket"), "🅱") // English still finds it...
+assert.equal(toy.find(e => e.glyph === "🅱").label, "foguete") // ...under the localized name
+assert.equal(toy.find(e => e.glyph === "🆑").label, "plain") // no annotation: the English name
+assert.equal(glyphs(toy, "plain"), "🆑"); assert.equal(glyphs(toy, "nada"), "")
+assert.equal(E.emojiEntries("🅰 pie\n", "").length, 1) // the language file failed to load
+const read = file => fs.readFileSync(new URL(file, shell), "utf8")
+const english = read("emoji.txt"), known = new Set(english.split("\n").map(l => l.split(" ")[0]))
+for (const lang of ["en", "pt", "es", "fr", "de", "ru", "zh"]) {
+    for (const row of read(`emoji/${lang}.txt`).split("\n").filter(Boolean)) {
+        const f = row.split("\t")
+        assert.equal(f.length, 3, `${lang}: ${row}`); assert(known.has(f[0]), `${lang}: not in emoji.txt: ${row}`)
+        assert.equal(E.fold(f[2]), f[2], `${lang}: keywords must be folded: ${row}`) // they are not folded when loaded
+    }
+}
+const real = lang => E.emojiEntries(english, read(`emoji/${lang}.txt`))
+const pt = real("pt"), best = (entries, q) => E.emojiSearch(entries, q)[0]
+assert.equal(best(pt, "foguete").glyph, "🚀"); assert.equal(best(pt, "foguete").label, "foguete")
+assert.equal(best(pt, "rocket").label, "foguete")
+assert(E.emojiSearch(pt, "coracao").some(e => e.label === "coração vermelho"))
+assert.equal(pt.find(e => e.glyph === "🌢").label, "black droplet") // CLDR has no annotation for it
+for (const [lang, q] of [["en", "rocket"], ["es", "cohete"], ["fr", "fusee"], ["de", "RAKETE"], ["ru", "ракета"], ["zh", "火箭"]]) assert.equal(best(real(lang), q).glyph, "🚀", `${lang}: ${q}`)
+
 console.log("ok")

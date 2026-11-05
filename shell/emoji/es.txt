@@ -1,0 +1,1309 @@
+🌀	ciclón	mareo|tifon|tornado
+🌁	bruma	niebla
+🌂	paraguas cerrado	accesorios|lluvia
+🌃	noche estrellada	estrellas
+🌄	amanecer sobre montañas	salida|sol
+🌅	amanecer	salida del sol
+🌆	ciudad al atardecer	edificios|paisaje
+🌇	puesta del sol	edificios
+🌈	arcoíris	colores|lluvia
+🌉	puente de noche	
+🌊	ola de mar	oceano
+🌋	volcán	erupcion volcanica
+🌌	Vía Láctea	espacio|galaxia
+🌍	globo terráqueo mostrando Europa y África	mundo|planeta|tierra
+🌎	globo terráqueo mostrando América	mundo|planeta|tierra
+🌏	globo terráqueo mostrando Asia y Australia	mundo|planeta|tierra
+🌐	globo terráqueo con meridianos	mundo|tierra
+🌑	luna nueva	oscuridad
+🌒	luna creciente	cuarto|espacio
+🌓	luna en cuarto creciente	espacio
+🌔	luna gibosa creciente	
+🌕	luna llena	plenilunio
+🌖	luna gibosa menguante	
+🌗	luna en cuarto menguante	
+🌘	luna menguante	
+🌙	luna	creciente|espacio
+🌚	luna nueva con cara	espacio
+🌛	luna de cuarto creciente con cara	espacio
+🌜	luna de cuarto menguante con cara	creciente|espacio
+🌝	luna llena con cara	
+🌞	sol con cara	brillante
+🌟	estrella brillante	resplandeciente
+🌠	estrella fugaz	lluvia
+🌡	termómetro	temperatura
+🌤	sol detrás de una nube pequeña	
+🌥	sol detrás de una nube grande	
+🌦	sol detrás de una nube con lluvia	
+🌧	nube con lluvia	
+🌨	nube con nieve	frio
+🌩	nube con rayo	
+🌪	tornado	nube|torbellino
+🌫	niebla	nube
+🌬	cara de viento	nube|soplar
+🌭	perrito caliente	salchicha
+🌮		comida|mexicano
+🌯		comida|mexicano|tex mex|wrap
+🌰	castaña	castano|fruto seco
+🌱	planta joven	planton
+🌲	árbol de hoja perenne	
+🌳	árbol de hoja caduca	caducifolio
+🌴	palmera	arbol de palma
+🌵		planta
+🌶	chile picante	planta
+🌷	tulipán	flor
+🌸	flor de cerezo	
+🌹	rosa	flor
+🌺	flor de hibisco	
+🌻	girasol	flor
+🌼	flor	
+🌽	espiga de maíz	mazorca|mijo
+🌾	espiga de arroz	planta
+🌿	hierba	hoja|verde
+🍀	trébol de cuatro hojas	suerte
+🍁	hoja de arce	
+🍂	hojas caídas	
+🍃	hojas revoloteando al viento	revolotear|soplar
+🍄	champiñón	hongo|seta
+🍅	tomate	ensalada|fruta|verdura
+🍆	berenjena	fruto|verdura
+🍇	uvas	agracejo|fruta|racimo
+🍈	melón	fruta
+🍉	sandía	fruta
+🍊	mandarina	fruta|naranja
+🍋	limón	citrico|citron|fruta
+🍌	plátano	banana|fruta
+🍍	piña	ananas|fruta
+🍎	manzana roja	fruta|poma
+🍏	manzana verde	fruta|poma
+🍐	pera	fruta|perilla
+🍑	melocotón	durazno|fruta
+🍒	cerezas	fruta|guindas
+🍓	fresa	freson|fruta
+🍔	hamburguesa	burger
+🍕	pizza	porcion|restaurante
+🍖	carne con hueso	restaurante
+🍗	muslo de pollo	restaurante
+🍘	galleta de arroz	
+🍙	bola de arroz	japones|onigiri|restaurante
+🍚	arroz cocido	restaurante
+🍛	arroz con curry	restaurante
+🍜	tazón de fideos	fideos chinos|fideos ramen
+🍝	espagueti	pasta|restaurante
+🍞	pan de molde	rebanada|tostada
+🍟	patatas fritas	papas fritas|restaurante
+🍠	patata asada	papa asada|restaurante
+🍡		japones|pincho|postre
+🍢	brocheta	japones|marisco|oden|pincho
+🍣		restaurante
+🍤	gamba frita	frito|restaurante
+🍥	pastel de pescado japonés	comida japonesa
+🍦	cucurucho de helado	dulce|restaurante
+🍧	granizado hawaiano	helado|hielo|postre|raspado
+🍨	helado	postre|sorbete
+🍩	dónut	berlina|pastel|rosquilla
+🍪	galleta	dulce|pasta|postre
+🍫	tableta de chocolate	barra|restaurante
+🍬	caramelo	chucheria|dulce|golosina
+🍭	piruleta	chucheria|dulce|golosina
+🍮	flan	dulce|postre|pudding
+🍯	tarro de miel	dulce
+🍰	trozo de tarta	pedazo de tarta|restaurante
+🍱	caja de bento	comida|restaurante
+🍲	olla de comida	puchero|restaurante
+🍳	cocinar	freir|huevo|sarten
+🍴	tenedor y cuchillo	restaurante
+🍵	tazón de té	bebida|taza
+🍶	sake	bar|bebida|botella|tazon
+🍷	copa de vino	bar|bebida|vaso
+🍸	copa de cóctel	bar|restaurante
+🍹	bebida tropical	bar|restaurante
+🍺	jarra de cerveza	bar|restaurante
+🍻	jarras de cerveza brindando	bar|restaurante
+🍼	biberón	bebe|bibi|botella|leche
+🍽	cuchillo y tenedor con un plato	restaurante
+🍾	botella descorchada	bar|beber|cava|corcho
+🍿	palomitas	maiz
+🎀	lazo	celebracion
+🎁	regalo	celebracion|envoltorio|presente
+🎂	tarta de cumpleaños	celebracion
+🎃	calabaza de Halloween	celebracion|linterna
+🎄	árbol de Navidad	abeto de navidad|celebracion
+🎅	Papá Noel	claus|cuento|feliz|padre|santa
+🎆	fuegos artificiales	celebracion
+🎇	bengala	celebracion|fuegos artificiales
+🎈	globo	celebracion
+🎉	cañón de confeti	celebracion|fiesta
+🎊	bola de confeti	celebracion
+🎋	árbol de tanabata	celebracion|festividad
+🎌	banderas cruzadas	celebracion|japon
+🎍	decoración de pino	bambu|celebracion|kadomatsu
+🎎	muñecas japonesas	celebracion|festival
+🎏	banderín de carpas	celebracion|koinobori
+🎐	campanilla de viento	furin
+🎑	ceremonia de contemplación de la luna	celebracion|tsukimi
+🎒	mochila escolar	colegio
+🎓	birrete	celebracion|gorro|graduacion
+🎖	medalla militar	celebracion
+🎗	lazo conmemorativo	
+🎙	micrófono de estudio	musica
+🎚	control de volumen	fader
+🎛	ruedas de control	diales|musica|potenciometros
+🎞	fotograma de película	cine
+🎟	entradas	acceso|admision|evento
+🎠	caballo de tiovivo	entretenimiento
+🎡	noria de feria	atracciones|entretenimiento
+🎢	montaña rusa	atracciones|feria|parque
+🎣	caña de pescar	esparcimiento|pez
+🎤	micrófono	entretenimiento|karaoke
+🎥	cámara de cine	entretenimiento|pelicula
+🎦	cine	entretenimiento|pelicula
+🎧	auricular	cascos
+🎨	paleta de pintor	arte|artista|pintura
+🎩	sombrero de copa	chistera|ropa
+🎪	carpa de circo	entretenimiento
+🎫	tique	acceso|admision
+🎬	claqueta	entretenimiento|pelicula
+🎭	máscaras de teatro	actuacion|artes escenicas
+🎮	mando de videoconsola	videojuego
+🎯	diana	en el blanco|juego
+🎰	máquina tragaperras	juego
+🎱	bola negra de billar	8|bola ocho|juego
+🎲	dado	juego
+🎳	bolos	bola de bolos|juego
+🎴	cartas de flores	hanafuda|naipe japones
+🎵	nota musical	
+🎶	notas musicales	
+🎷	saxofón	instrumento musical
+🎸	guitarra	instrumento musical
+🎹	teclado musical	instrumento musical|piano
+🎺	trompeta	instrumento musical
+🎻	violín	instrumento musical
+🎼	pentagrama	musica|partitura
+🎽	camiseta sin mangas	camiseta con banda|deporte
+🎾	pelota de tenis	deporte
+🎿	esquís	esquies|nieve
+🏀	balón de baloncesto	canasta|deporte
+🏁	bandera de cuadros	carreras|deporte|motor
+🏂	practicante de snowboard	nieve
+🏃	persona corriendo	carrera|deporte|maraton
+🏄	persona haciendo surf	surfear
+🏅	medalla deportiva	premio
+🏆	trofeo	premio
+🏇	carrera de caballos	caballo de carreras|jinete
+🏈	balón de fútbol americano	deporte
+🏉	balón de rugby	deporte
+🏊	persona nadando	nadar|natacion
+🏋	persona levantando pesas	halterofilia|levantador|peso
+🏌	persona jugando al golf	golfista|pelota
+🏍	moto	carreras|motocicleta|vehiculo
+🏎	coche de carreras	
+🏏	críquet	juego|pelota
+🏐	pelota de voleibol	balon|juego
+🏑	hockey sobre hierba	juego|palo|pelota
+🏒	hockey sobre hielo	disco|palo
+🏓	tenis de mesa	juego|pelota|ping pong
+🏔	montaña con nieve	frio
+🏕		acampada|campamento|vacaciones
+🏖	playa y sombrilla	
+🏗	construcción	edificio|obra
+🏘	casas	edificio|urbanizacion
+🏙	paisaje urbano	ciudad|edificio
+🏚	casa abandonada	deshabitada|inhabitada|vacia
+🏛	edificio clásico	
+🏜	desierto	arena
+🏝	isla desierta	
+🏞	parque nacional	
+🏟	estadio	
+🏠	casa	vivienda
+🏡	casa con jardín	construccion|vivienda
+🏢	edificio de oficinas	construccion
+🏣	oficina de correos japonesa	edificio
+🏤	oficina de correos europea	edificio|europa
+🏥		doctor|edificio|medicina|medico
+🏦	banco	banca|edificio
+🏧	señal de cajero automático	atm|banco
+🏨		alojamiento|edificio|turismo
+🏩	hotel del amor	edificio
+🏪	tienda 24 horas	edificio|establecimiento
+🏫	colegio	edificio|escuela
+🏬	grandes almacenes	comercio
+🏭	fábrica	edificio|industria
+🏮	lámpara japonesa	lampara roja|restaurante
+🏯	castillo japonés	construccion
+🏰	castillo europeo	construccion
+🏳	bandera blanca	ondear
+🏴	bandera negra	ondear
+🏵	roseta	flor|planta
+🏷	etiqueta	
+🏸	bádminton	pluma|raqueta|volante
+🏹	arco y flecha	arquero|sagitario|zodiaco
+🏺	ánfora	acuario|beber|jarra|zodiaco
+🏻	tono de piel claro	tipo 1|tipo 2
+🏼	tono de piel claro medio	tipo 3
+🏽	tono de piel medio	tipo 4
+🏾	tono de piel oscuro medio	tipo 5
+🏿	tono de piel oscuro	tipo 6
+🐀	rata	roedor
+🐁	ratón	roedor
+🐂	buey	cabestro|tauro|zodiaco
+🐃	búfalo de agua	
+🐄	vaca	bovino|res
+🐅	tigre	felino
+🐆	leopardo	felino
+🐇	conejo	conejito|gazapo
+🐈	gato	gatete|minino
+🐉	dragón	cuento|fantasia
+🐊	cocodrilo	caiman
+🐋	ballena	cachalote|cetaceo
+🐌	caracol	caracola|molusco
+🐍	serpiente	culebra|reptil|vibora
+🐎	caballo	caballo de carreras|ecuestre
+🐏	carnero	aries|morueco|zodiaco
+🐐	cabra	caprino|chivo|zodiaco
+🐑	oveja	borrego|cordero|ovino
+🐒	mono	macaco|simio
+🐓	gallo	ave|gallinacea|pollo
+🐔	gallina	ave|gallinacea|pollo
+🐕	perro	cachorro|perrete|perrito
+🐖	cerdo	cochino|gorrino|puerco
+🐗	jabalí	cerdo salvaje
+🐘	elefante	paquidermo
+🐙	pulpo	cefalopodo|octopodo
+🐚	caracola	concha|espiral
+🐛	bicho	gusano|insecto
+🐜	hormiga	antenas|insecto
+🐝	abeja	insecto|miel
+🐞	mariquita	cochinilla|insecto
+🐟	pez	pescado|piscis|zodiaco
+🐠	pez tropical	
+🐡	pez globo	
+🐢	tortuga	galapago
+🐣	pollito rompiendo el cascarón	ave|huevo|pollo
+🐤	pollito	ave|pollo|polluelo
+🐥	pollito de frente	ave|pollo
+🐦	pájaro	ave|pajarillo
+🐧	pingüino	ave
+🐨		cara|marsupial
+🐩	caniche	perrito|perro
+🐪	dromedario	camello|desierto|joroba
+🐫	camello	bactriano|desierto|jorobas
+🐬	delfín	cetaceo
+🐭	cara de ratón	
+🐮	cara de vaca	
+🐯	cara de tigre	
+🐰	cara de conejo	mascota
+🐱	cara de gato	mascota
+🐲	cara de dragón	cuento|fantasia
+🐳	ballena soltando un chorro	chorro de agua
+🐴	cara de caballo	
+🐵	cara de mono	
+🐶	cara de perro	mascota
+🐷	cara de cerdo	gorrino
+🐸	rana	cara
+🐹	hámster	cara|mascota
+🐺	lobo	cara
+🐻	oso	cara
+🐼	panda	cara|oso panda
+🐽	nariz de cerdo	cara|morro
+🐾	huellas de pezuñas	
+🐿	ardilla	
+👀	ojos	cara
+👁	ojo	cuerpo
+👂	oreja	cuerpo
+👃	nariz	cuerpo
+👄	boca	labios
+👅	lengua	cuerpo
+👆	dorso de mano con índice hacia arriba	apuntar|dedo
+👇	dorso de mano con índice hacia abajo	apuntar|dedo
+👈	dorso de mano con índice a la izquierda	dedo
+👉	dorso de mano con índice a la derecha	dedo
+👊	puño cerrado	punetazo
+👋	mano saludando	agitar|saludar|saludo
+👌	señal de aprobación con la mano	ok
+👍	pulgar hacia arriba	mano|senal
+👎	pulgar hacia abajo	mano|senal
+👏	manos aplaudiendo	aplaudir|palmas|senal
+👐	manos abiertas	
+👑	corona	accesorios|reina|rey
+👒	sombrero de mujer	accesorio|ropa
+👓	gafas	accesorios|ojo|ropa
+👔	corbata	accesorio|ropa
+👕	camiseta	ropa
+👖	vaqueros	pantalones|ropa
+👗	vestido	mujer|ropa
+👘		japones|ropa
+👙		bano|playa|ropa
+👚	ropa de mujer	blusa|camisa|femenina
+👛	monedero	accesorios|cartera|complementos
+👜	bolso	accesorios|complementos
+👝	bolso de mano	accesorios|cartera|complementos
+👞	zapato de hombre	calzado|ropa
+👟	zapatilla deportiva	calzado|correr|ropa|tenis
+👠	zapato de tacón	mujer
+👡	sandalia de mujer	calzado|ropa
+👢	bota de mujer	calzado|ropa
+👣	huellas de pies	
+👤	silueta de busto	
+👥	dos siluetas de bustos	
+👦	niño	joven
+👧	niña	chica|joven
+👨	hombre	adulto
+👩	mujer	adulta
+👪	familia	
+👫	mujer y hombre de la mano	novios|pareja
+👬	hombres de la mano	gays|novios|pareja
+👭	mujeres de la mano	lesbianas|novias|pareja
+👮	agente de policía	personas
+👯	personas con orejas de conejo	bailar|fiesta
+👰	persona con velo	boda|novia
+👱	persona adulta rubia	rubias|rubios
+👲	persona con gorro chino	gua pi mao
+👳	persona con turbante	
+👴	anciano	hombre|mayor
+👵	anciana	mayor|mujer
+👶	bebé	joven|nino
+👷	profesional de la construcción	casco|obrero|trabajador
+👸	princesa	cuento|fantasia|hadas
+👹	demonio japonés oni	cara|cuento|cuernos|sonrisa
+👺	demonio japonés tengu	cara|cuento|fantasia|monstruo
+👻	fantasma	cara|criatura|cuento|monstruo
+👼	bebé ángel	cara|cuento
+👽	alienígena	cara|criatura|ovni
+👾	monstruo alienígena	cara|criatura|ovni
+👿	cara enfadada con cuernos	demonio|diablo
+💀	calavera	cara|cuento|monstruo|muerte
+💁	persona de mostrador de información	mano
+💂	guardia	guardia real britanica
+💃	mujer bailando	bailar
+💄	pintalabios	barra|cosmetica|maquillaje
+💅	pintarse las uñas	cosmetica|esmalte|manicura
+💆	persona recibiendo masaje	cara|facial|salon
+💇	persona cortándose el pelo	belleza|corte|peluquero
+💈	poste de barbero	barberia|peluquero
+💉	jeringuilla	aguja|jeringa|medicina|medico
+💊	píldora	medicina|medico|pastilla
+💋	marca de beso	labios|romance
+💌	carta de amor	corazon|correo
+💍	anillo	diamante
+💎	piedra preciosa	diamante|gema|joya
+💏	beso	personas|romance
+💐	ramo de flores	bouquet
+💑	pareja enamorada	personas enamoradas
+💒	iglesia celebrando boda	romance
+💓	corazón latiendo	amor|emocion|latido
+💔	corazón roto	emocion|partido
+💕	dos corazones	amantes|amor
+💖	corazón brillante	amor|emocion
+💗	corazón creciente	emocionado|latido|nervioso
+💘	corazón con flecha	amor|emocion
+💙	corazón azul	emocion
+💚	corazón verde	emocion
+💛	corazón amarillo	emocion
+💜	corazón morado	emocion
+💝	corazón con lazo	emocion|san valentin
+💞	corazones giratorios	
+💟	adorno de corazón	
+💠	rombo con pétalo	flor|geometria
+💡	bombilla	comic|electricidad|idea|luz
+💢	símbolo de enfado	comic|enfadado
+💣	bomba	comic|emocion
+💤	símbolo de sueño	comic|dormir|zzz
+💥	colisión	comic
+💦	gotas de sudor	comic|emocion
+💧	gota	agua|comic|sudor
+💨	salir corriendo	carrera|comic|correr|humo
+💩	caca con ojos	comic|mierda|mojon
+💪	bíceps flexionado	comic|fuerte|musculo
+💫	símbolo de mareo	comic|emocion|estrella
+💬	bocadillo de diálogo	comic|conversacion
+💭	bocadillo de pensamiento	burbuja|comic
+💮	flor blanca	
+💯	cien puntos	100|pleno
+💰	bolsa de dinero	bolsa de dolares
+💱	cambio de divisas	dinero|moneda
+💲	símbolo de dólar	dinero
+💳	tarjeta de crédito	
+💴	billete de yen	billete de banco|dinero
+💵	billete de dólar	billete de banco|dinero
+💶	billete de euro	billete de banco|dinero
+💷	billete de libra	billete de banco|dinero
+💸	billete con alas	dinero con alas
+💹	mercado al alza	mercado alcista|tabla
+💺	asiento de transporte	plaza|silla
+💻	ordenador portátil	pc|personal
+💼	maletín	cartera|documentos
+💽		disco|md
+💾	disquete	disco de 3 1/2
+💿	disco óptico	cd
+📀	disco DVD	
+📁	carpeta de archivos	
+📂	carpeta de archivos abierta	
+📃	página doblada	documento
+📄	página hacia arriba	anverso|documento
+📅	calendario	fecha
+📆	calendario recortable	fecha
+📇	organizador de fichas	cartera|tarjetas
+📈	gráfica de evolución ascendente	grafico|tendencia ascendente
+📉	gráfica de evolución descendente	grafico|tendencia descendente
+📊	gráfico de barras	
+📋	portapapeles	pinza|tabla
+📌	chincheta	tachuela
+📍	chincheta redonda	
+📎	clip	
+📏	regla	
+📐	escuadra	regla triangular|triangulo
+📑	marcadores	pestanas
+📒	libro de contabilidad	cuaderno
+📓	cuaderno	libreta
+📔	cuaderno con tapa decorativa	decoracion
+📕	libro cerrado	
+📖	libro abierto	
+📗	libro verde	
+📘	libro azul	
+📙	libro naranja	
+📚	libros	
+📛	etiqueta identificativa	nombre
+📜	pergamino	pergamino de papel
+📝	cuaderno de notas	comunicacion
+📞	auricular de teléfono	comunicacion
+📟	busca	comunicacion|localizador
+📠	máquina de fax	comunicacion
+📡	antena de satélite	comunicacion
+📢	altavoz de mano	comunicacion
+📣	megáfono	comunicacion
+📤	bandeja de salida	comunicacion|correo|enviado
+📥	bandeja de entrada	comunicacion|correo|recibido
+📦	paquete	caja
+📧	correo electrónico	comunicacion|sobre
+📨	sobre entrante	carta|comunicacion
+📩	sobre con flecha	carta|comunicacion
+📪	buzón cerrado con la bandera bajada	vacio
+📫	buzón cerrado con la bandera levantada	con contenido
+📬	buzón abierto con la bandera levantada	con contenido
+📭	buzón abierto con la bandera bajada	vacio
+📮	buzón	cartas|correo
+📯	corneta de posta	
+📰	periódico	diario
+📱	teléfono móvil	celular
+📲	móvil con una flecha	llamada|recibir|telefono
+📳	modo vibración	movil|telefono celular
+📴	teléfono móvil apagado	telefono celular
+📵	prohibido el uso de móviles	no hacer llamadas|telefono
+📶	barras de cobertura	antena|celular|movil|senal
+📷	cámara de fotos	
+📸	cámara con flash	
+📹	videocámara	
+📺	televisión	tv
+📻		
+📼	cinta de vídeo	
+📽	proyector de cine	pelicula
+📿	rosario	collar|cuentas|religion
+🔀	reproducción aleatoria	cruzado|flechas entrecruzadas
+🔁	repetir	flechas|repeticion
+🔂	repetir una vez	flechas|repeticion|uno
+🔃	flechas verticales en sentido horario	senal de recarga
+🔄	flechas en sentido antihorario	direccion|senal de recarga
+🔅	brillo bajo	senal de brillo bajo|tenue
+🔆	brillo alto	brillante|senal de brillo alto
+🔇	altavoz silenciado	mute|silencio
+🔈	altavoz a volumen bajo	
+🔉	altavoz a volumen medio	altavoz con volumen medio
+🔊	altavoz a volumen alto	
+🔋	pila	bateria
+🔌	enchufe eléctrico	corriente|electricidad
+🔍	lupa orientada hacia la izquierda	buscar
+🔎	lupa orientada hacia la derecha	buscar
+🔏	candado con pluma estilográfica	cerrado|privacidad
+🔐	candado cerrado y llave	seguro
+🔑	llave	contrasena
+🔒	candado cerrado	cerrar
+🔓	candado abierto	abrir
+🔔	campana	
+🔕	campana con signo de cancelación	ruido
+🔖	marcapáginas	marcador
+🔗	eslabón	
+🔘	botón de opción	
+🔙	flecha BACK	flecha a la izquierda
+🔚	flecha END	flecha a la izquierda
+🔛	flecha ON!	senal
+🔜	flecha SOON	soon con flecha a la derecha
+🔝	flecha TOP	top con flecha hacia arriba
+🔞	prohibido para menos de 18 años	no apto para menores
+🔠	letras latinas mayúsculas	abcd
+🔡	letras latinas minúsculas	abcd
+🔢	números	1234|digitos
+🔣	símbolos	〒♪&%
+🔤	alfabeto latino	abc
+🔥	fuego	llama
+🔦	linterna	luz
+🔧	llave inglesa	herramienta
+🔨	martillo	herramienta
+🔩	tornillo y tuerca	herramienta
+🔪	cuchillo de cocina	arma|cocinar
+🔫	pistola de agua	juguete|verano
+🔬	microscopio	instrumento|laboratorio
+🔭	telescopio	astronomia|instrumento
+🔮	bola de cristal	adivinacion|buena fortuna
+🔯	estrella de seis puntas	adivinacion|buena fortuna
+🔰	símbolo japonés para principiante	amarillo|verde
+🔱	emblema de tridente	ancla
+🔲	botón cuadrado con borde negro	
+🔳	botón cuadrado con borde blanco	
+🔴	círculo rojo	geometria
+🔵	círculo azul	geometria
+🔶	rombo naranja grande	geometria
+🔷	rombo azul grande	geometria
+🔸	rombo naranja pequeño	geometria
+🔹	rombo azul pequeño	geometria
+🔺	triángulo rojo hacia arriba	geometria
+🔻	triángulo rojo hacia abajo	geometria
+🔼	triángulo hacia arriba	boton triangulo hacia arriba
+🔽	triángulo hacia abajo	boton triangulo hacia abajo
+🕉	om	hindu|religion
+🕊	paloma	ave|pajaro|paz
+🕋	Kaaba	hach|islam|musulman|umrah
+🕌	mezquita	islam|religion
+🕍	sinagoga	judaismo|religion
+🕎	menorá	candelabro|religion
+🕐	1 en punto	1:00|reloj|una
+🕑	2 en punto	2:00|dos|reloj
+🕒	3 en punto	3:00|reloj|tres
+🕓	4 en punto	4:00|cuatro|reloj
+🕔	5 en punto	5:00|cinco|reloj
+🕕	6 en punto	6:00|reloj|seis
+🕖	7 en punto	7:00|reloj|siete
+🕗	8 en punto	8:00|ocho|reloj
+🕘	9 en punto	9:00|nueve|reloj
+🕙	10 en punto	10:00|diez|reloj
+🕚	11 en punto	11:00|once|reloj
+🕛	12 en punto	12:00|doce|reloj
+🕜	una y media	1:30|reloj
+🕝	dos y media	2:30|reloj
+🕞	tres y media	3:30|reloj
+🕟	cuatro y media	4:30|reloj
+🕠	cinco y media	5:30|reloj
+🕡	seis y media	6:30|reloj
+🕢	siete y media	7:30|reloj
+🕣	ocho y media	8:30|reloj
+🕤	nueve y media	9:30|reloj
+🕥	diez y media	10:30|reloj
+🕦	once y media	11:30|reloj
+🕧	doce y media	12:30|reloj
+🕯	vela	luz
+🕰	reloj de sobremesa	
+🕳	agujero	orificio
+🕴	persona trajeada levitando	levitar|negocios
+🕵	detective	cara|espia
+🕶	gafas de sol	ojo|oscuras
+🕷	araña	insecto
+🕸	tela de araña	telarana
+🕹		mando|palanca|videojuego
+🕺	hombre bailando	bailar
+🖇	clips unidos	union
+🖊	bolígrafo	escribir
+🖋	estilográfica	boligrafo|escribir|pluma|tinta
+🖌	pincel	pintar
+🖍	lápiz de cera	
+🖐	mano abierta	dedo
+🖕	dedo corazón hacia arriba	mano|peineta
+🖖	saludo vulcano	mano|spock
+🖤	corazón negro	
+🖥	ordenador de sobremesa	
+🖨	impresora	ordenador
+🖱	ratón de ordenador	
+🖲	bola de desplazamiento	ordenador|trackball
+🖼	cuadro enmarcado	marco|museo
+🗂	separador de fichas	fichero
+🗃	archivador de tarjetas	archivo|caja
+🗄	archivador	archivos|oficina|organizador
+🗑	papelera	basura|cubo
+🗒	bloc de notas de espiral	cuaderno
+🗓	calendario de espiral	
+🗜	tornillo de banco	herramienta
+🗝	llave antigua	
+🗞	periódico enrollado	noticias|papel
+🗡	puñal	arma|cuchillo|daga
+🗣	cabeza parlante	cara|hablar|silueta
+🗨	bocadillo de diálogo por la izquierda	burbuja|conversacion
+🗯	bocadillo de enfado por la derecha	cabreo|rabia
+🗳	urna con papeleta	voto
+🗺	mapa mundial	mapamundi|mundo
+🗻	monte Fuji	montana|naturaleza
+🗼	Torre de Tokio	
+🗽	Estatua de la Libertad	nueva|nyc|york
+🗾	mapa de Japón	
+🗿	estatua moái	pascua
+😀	cara sonriendo	divertido|feliz|sonrisa
+😁	cara radiante con ojos sonrientes	sonrisa
+😂	cara llorando de risa	felicidad|lagrima
+😃	cara sonriendo con ojos grandes	divertido|risa
+😄	cara sonriendo con ojos sonrientes	abierta|sonrisa
+😅	cara sonriendo con sudor frío	risa
+😆	cara sonriendo con los ojos cerrados	abierta|boca|risa
+😇	cara sonriendo con aureola	angel|halo|sonrisa
+😈	cara sonriendo con cuernos	demonio|sonrisa
+😉	cara guiñando el ojo	guino
+😊	cara feliz con ojos sonrientes	rubor|sonrisa
+😋	cara saboreando comida	delicioso|hambre|rico
+😌	cara de alivio	aliviado
+😍	cara sonriendo con ojos de corazón	amor|sonrisa
+😎	cara sonriendo con gafas de sol	guay
+😏	cara sonriendo con superioridad	listillo
+😐	cara neutral	inexpresivo
+😑	cara sin expresión	inexpresion|inexpresiva
+😒	cara de desaprobación	insatisfaccion|rechazo
+😓	cara con sudor frío	
+😔	cara desanimada	alicaido|desanimado|pensativo
+😕	cara de confusión	confuso
+😖	cara de frustración	frustrado
+😗	cara besando	beso
+😘	cara lanzando un beso	
+😙	cara besando con ojos sonrientes	beso|sonrisa
+😚	cara besando con los ojos cerrados	beso
+😛	cara sacando la lengua	
+😜	cara sacando la lengua y guiñando un ojo	guino
+😝	cara con ojos cerrados y lengua fuera	sabor
+😞	cara decepcionada	decepcionado
+😟	cara preocupada	preocupacion|preocupado
+😠	cara enfadada	enfadado|histerico
+😡	cara cabreada	cabreo|enfadado|furia
+😢	cara llorando	lagrima|llorar|triste
+😣	cara desesperada	desesperacion|frustracion
+😤	cara resoplando	cabreo|enfado
+😥	cara triste pero aliviada	aliviado|decepcionado|menos mal
+😦	cara con el ceño fruncido y la boca abierta	ceno fruncido con boca abierta
+😧	cara angustiada	angustiado
+😨	cara asustada	asustado|miedoso
+😩	cara agotada	agotado|cansado
+😪	cara de sueño	dormir
+😫	cara cansada	cansado
+😬	cara haciendo una mueca	
+😭	cara llorando fuerte	lagrima|llorar|triste
+😮	cara con la boca abierta	
+😯	cara estupefacta	alucinado|estupefacto
+😰	cara con ansiedad y sudor	frio
+😱	cara gritando de miedo	asustado|panico
+😲	cara asombrada	alucinado|asombrado|pasmado
+😳	cara sonrojada	colorado|sonrojado
+😴	cara durmiendo	dormido|sueno|zzz
+😵	cara mareada	mareo
+😶	cara sin boca	callado|silencio
+😷	cara con mascarilla médica	enfermo|malo|mascara
+😸	gato sonriendo con ojos sonrientes	cara|sonrisa
+😹	gato llorando de risa	cara|lagrima
+😺	gato sonriendo	cara|gato feliz|sonrisa
+😻	gato sonriendo con ojos de corazón	cara|enamorado
+😼	gato haciendo una mueca	cara|ironico|sonrisa
+😽	gato besando	beso|cara|carinoso
+😾	gato enfadado	cara
+😿	gato llorando	cara|lagrima|pena|triste
+🙀	gato asustado	cara|panico|sorpresa
+🙁	cara con el ceño ligeramente fruncido	
+🙂	cara sonriendo ligeramente	sonrisa
+🙃	cara al revés	
+🙄	cara con ojos en blanco	frustracion|vueltos
+🙅	persona haciendo el gesto de "no"	mano|prohibido
+🙆	persona haciendo el gesto de "de acuerdo"	mano|ok|vale
+🙇	persona haciendo una reverencia	disculpa|gesto|perdon
+🙈	mono con los ojos tapados	cara|mal|prohibido
+🙉	mono con los oídos tapados	cara|mal|prohibido
+🙊	mono con la boca tapada	cara|mal|prohibido
+🙋	persona con la mano levantada	feliz|gesto|levantar
+🙌	manos levantadas celebrando	celebracion|gesto|hurra
+🙍	persona frunciendo el ceño	fruncido|gesto
+🙎	persona haciendo pucheros	gesto
+🙏	manos en oración	gracias|orar|por favor|rezar
+🚀	cohete	espacio|vehiculo
+🚁	helicóptero	aspas|rotores|vehiculo|volar
+🚂	locomotora de vapor	tren|vehiculo
+🚃	vagón	ferrocarril|tranvia|vehiculo
+🚄	tren de alta velocidad	ave|ferrocarril|rapido
+🚅	tren bala	shinkansen|vehiculo|velocidad
+🚆	tren	ferrocarril|vehiculo
+🚇		suburbano|transporte
+🚈	tren ligero	ferrocarril|transporte
+🚉	estación de tren	
+🚊	tranvía	transporte|trolebus
+🚋	vagón de tranvía	vehiculo
+🚌	autobús	transporte
+🚍	autobús próximo	vehiculo
+🚎	trolebús	transporte|tranvia
+🚏	parada de autobús	
+🚐	minibús	autobus|transporte
+🚑	ambulancia	transporte|vehiculo
+🚒	coche de bomberos	fuego|vehiculo
+🚓	coche de policía	coche patrulla|vehiculo
+🚔	coche de policía próximo	coche patrulla|vehiculo
+🚕		coche|vehiculo
+🚖	taxi próximo	vehiculo
+🚗	coche	automovil|vehiculo
+🚘	coche próximo	automovil|vehiculo
+🚙	vehículo deportivo utilitario	camping|caravana|furgoneta
+🚚	camión de reparto	mercancias|transporte|vehiculo
+🚛	camión articulado	trailer|vehiculo
+🚜		agricultura|vehiculo
+🚝	monorraíl	monocarril|transporte|tren
+🚞	ferrocarril de montaña	vehiculo
+🚟	ferrocarril de suspensión	vehiculo
+🚠	teleférico de montaña	cable|funicular|vehiculo
+🚡	teleférico	aereo|tranvia|vehiculo
+🚢	barco	vehiculo
+🚣	persona remando en un bote	barca|remo
+🚤	lancha motora	barco|vehiculo
+🚥	semáforo horizontal	luz|senales de trafico
+🚦	semáforo	luz|semaforo vertical
+🚧	obras	construccion|senal de obras
+🚨	luces de policía	coche de policia
+🚩	bandera triangular	
+🚪	puerta	
+🚫	prohibido	entrar|no|pasar|prohibicion
+🚬	cigarrillo	cigarro|fumar
+🚭	prohibido fumar	no|senal
+🚮	señal de usar papelera	tirar la basura en la papelera
+🚯	prohibido tirar basura	senal de no tirar basura
+🚰	agua potable	
+🚱	agua no potable	
+🚲	bicicleta	vehiculo
+🚳	bicicletas prohibidas	prohibido|vehiculo
+🚴	persona en bicicleta	ciclismo|ciclista
+🚵	persona en bicicleta de montaña	ciclista|mountain bike
+🚶	persona caminando	andar|caminar
+🚷	prohibido el paso de peatones	senal
+🚸	niños cruzando	senal
+🚹	aseo para hombres	bano|servicio
+🚺	señal de aseo para mujeres	aseo de senoras|bano|servicio
+🚻	señal de aseos	servicios|wc
+🚼	señal de bebé	cambiar|lactancia
+🚽	inodoro	bano|vater|wc
+🚾	aseos	lavabo|servicios|wc
+🚿	ducha	agua|bano
+🛀	persona en la bañera	bano
+🛁	bañera	bano
+🛂	control de pasaportes	
+🛃	aduana	
+🛄	recogida de equipajes	maleta
+🛅	consigna	
+🛋	sofá y lámpara	hotel
+🛌	persona en la cama	dormir|hotel
+🛍	bolsas de compras	
+🛎	timbre de hotel	botones|campanilla
+🛏	cama	dormir|hotel
+🛐	lugar de culto	religion
+🛑	señal de stop	octagono|parada
+🛒	carrito de la compra	carro|supermercado
+🛕	templo hindú	
+🛖	cabaña	casa|yurta
+🛗	ascensor	elevador|montacargas
+🛜	wifi	conexion|internet|red|wi-fi
+🛝	tobogán	jugar|parque de atracciones
+🛞	rueda	circulo|girar|neumatico|rodar
+🛟	salvavidas	flotador|rescate|seguridad
+🛠	martillo y llave inglesa	herramienta
+🛡	escudo	defensa
+🛢	barril de petróleo	bidon
+🛣	autopista	carretera
+🛤	vía de tren	
+🛥	barco a motor	vehiculo
+🛩	avioneta	
+🛫	avión despegando	aeroplano|salida
+🛬	avión aterrizando	aeroplano|llegada
+🛰	satélite	espacio|vehiculo
+🛳	barco de pasajeros	vehiculo
+🛴	patinete	
+🛵	scooter	escuter|moto
+🛶	canoa	barca|barco|piragua
+🛷	trineo	
+🛸	platillo volante	ovni
+🛹	monopatín	skateboard|tabla
+🛺	mototaxi	rickshaw|tuk tuk
+🛻	camioneta	pickup|ranchera
+🛼	patines	patin de 4 ruedas
+🟠	círculo naranja	
+🟡	círculo amarillo	
+🟢	círculo verde	
+🟣	círculo morado	lila|purpura
+🟤	círculo marrón	
+🟥	cuadrado rojo	
+🟦	cuadrado azul	
+🟧	cuadrado naranja	
+🟨	cuadrado amarillo	
+🟩	cuadrado verde	
+🟪	cuadrado morado	lila|purpura
+🟫	cuadrado marrón	
+🤌	dedos juntos apuntando hacia arriba	gesto|italiano|mano|sarcasmo
+🤍	corazón blanco	emocion
+🤎	corazón marrón	emocion
+🤏	mano pellizcando	pellizco|poco|poquito
+🤐	cara con la boca cerrada con cremallera	
+🤑	cara con lengua de dinero	boca
+🤒	cara con termómetro	enfermo|malo
+🤓	cara de empollón	friki|friqui
+🤔	cara pensativa	duda|pensando
+🤕	cara con la cabeza vendada	dolor|herida
+🤖	robot	cara|monstruo
+🤗	cara con manos abrazando	abrazo|sonrisa
+🤘	mano haciendo el signo de cuernos	dedo|rock
+🤙	mano haciendo el gesto de llamar	menique|pulgar
+🤚	dorso de la mano	levantado
+🤛	puño hacia la izquierda	
+🤜	puño hacia la derecha	
+🤝	apretón de manos	acuerdo
+🤞	dedos cruzados	cruzar|mano|suerte
+🤟	gesto de te quiero	mano
+🤠	cara con sombrero de vaquero	vaquera
+🤡	cara de payaso	
+🤢	cara de náuseas	vomitar
+🤣	cara revolviéndose de la risa	carcajada|ojos cerrados
+🤤	cara babeando	baba
+🤥	cara de mentiroso	nariz|pinocho
+🤦	persona con la mano en la frente	facepalm|incredulidad
+🤧	cara estornudando	estornudar|estornudo|panuelo
+🤨	cara con ceja alzada	desconfiado|esceptico
+🤩	cara sonriendo con estrellas	sonrisa
+🤪	cara de loco	grande|ojo|pequeno
+🤫	cara pidiendo silencio	callado
+🤬	cara con símbolos en la boca	maldecir|palabrota
+🤭	cara con mano sobre la boca	ostras|uy|vaya
+🤮	cara vomitando	enfermo|malo|vomitar
+🤯	cabeza explotando	explosion
+🤰	mujer embarazada	
+🤱	lactancia materna	amamantar|bebe|dar pecho
+🤲	palmas hacia arriba juntas	oracion
+🤳	selfi	autofoto|camara|selfie|telefono
+🤴	príncipe	corona
+🤵	persona con esmoquin	novio
+🤶	Mamá Noel	claus|cuento|feliz|madre|santa
+🤷	persona encogida de hombros	duda|encogerse|indiferencia
+🤸	persona haciendo voltereta lateral	gimnasia|pirueta|rueda
+🤹	persona haciendo malabares	equilibrio|malabarismo
+🤺	persona haciendo esgrima	esgrimista|espada
+🤼	personas luchando	luchador
+🤽	persona jugando al waterpolo	waterpolista
+🤾	persona jugando al balonmano	balonmanista
+🤿	máscara de buceo	bucear|buzo|esnorquel|tubo
+🥀	flor marchita	marchitada|marchitarse
+🥁	tambor	baquetas|musica
+🥂	copas brindando	bebida|brindar|brindis
+🥃	vaso de whisky	chupito|copa|licor
+🥄	cuchara	cubiertos|cucharilla
+🥅	portería	deporte|red
+🥇	medalla de oro	primero
+🥈	medalla de plata	segundo
+🥉	medalla de bronce	tercero
+🥊	guante de boxeo	deporte
+🥋	uniforme de artes marciales	judo|karate|taekwondo
+🥌	piedra de curling	juego|roca
+🥍	lacrosse	bola|palo|pelota|raqueta
+🥎	pelota de softball	bola
+🥏	disco volador	frisbee
+🥐	cruasán	bollo|comida|croissant|frances
+🥑	aguacate	comida|fruta
+🥒	pepino	comida|pepinillo|verdura
+🥓	beicon	bacon|carne|comida|panceta
+🥔	patata	comida|papa|verdura
+🥕	zanahoria	comida|verdura
+🥖	baguete	barra|comida|frances|pan
+🥗	ensalada	bol|comida|verde
+🥘	paella	arroz|comida
+🥙	pan relleno	comida|durum|falafel|kebab
+🥚	huevo	comida
+🥛	vaso de leche	bebida
+🥜	cacahuetes	comida|fruto seco|verdura
+🥝	kiwi	comida|fruta
+🥞	tortitas	comida|dulce|pancakes|postre
+🥟		comida|gyoza|jiaozi|masa
+🥠	galleta de la fortuna	adivinacion|profecia
+🥡	caja para llevar	restaurante
+🥢	palillos	cubiertos|hashi
+🥣	cuenco con cuchara	cereal|desayuno
+🥤	vaso con pajita	refresco|zumo
+🥥	coco	palmera|pina colada
+🥦	brócoli	repollo
+🥧	pastel	masa|relleno
+🥨	bretzel	galleta salada|pretzel
+🥩	corte de carne	chuleta|filete
+🥪	sándwich	bocadillo|bocata|emparedado
+🥫	comida enlatada	conserva
+🥬	verdura de hoja verde	bok choy|col|kale|lechuga
+🥭		fruta|tropical
+🥮	pastel de luna	festival|otono|yuebing
+🥯		bocadillo|panaderia
+🥰	cara sonriendo con corazones	adorar|enamorada|enamorado
+🥱	cara de bostezo	aburrido|cansado|dormido|sueno
+🥲	cara sonriente con lágrima	aliviado|orgulloso|sonrisa
+🥳	cara de fiesta	capirote|celebracion|gorro
+🥴	cara de grogui	atontado|entonado|mareado
+🥵	cara con calor	cara roja|fiebre|sudor
+🥶	cara con frío	cara congelada|congelado|helado
+🥷		furtivo|guerrero|oculto|sigilo
+🥸	cara disfrazada	careta|disimulo|gafas|nariz
+🥹	cara aguantándose las lágrimas	llorar|resistir|triste
+🥺	cara suplicante	implorar|piedad|por favor
+🥻		prenda|ropa|vestido
+🥼	bata de laboratorio	cientifico|doctor|medico
+🥽	gafas de protección	nadar|proteccion ocular|soldar
+🥾	bota de senderismo	camping|mochilero
+🥿	bailarina	calzado|zapato
+🦀	cangrejo	animal|cancer|zodiaco
+🦁	león	cara|zodiaco
+🦂	escorpión	zodiaco
+🦃	pavo	ave
+🦄	unicornio	cara
+🦅	águila	ave
+🦆	pato	ave
+🦇	murciélago	vampiro
+🦈	tiburón	pez
+🦉	búho	ave|lechuza|pajaro
+🦊	zorro	cara
+🦋	mariposa	bonito|insecto
+🦌	ciervo	bambi|cervatillo
+🦍	gorila	primate|simio
+🦎	lagarto	lagartija|reptil
+🦏	rinoceronte	paquidermo
+🦐	gamba	camaron|comida|marisco
+🦑	calamar	comida|molusco
+🦒	jirafa	manchas
+🦓	cebra	raya
+🦔	erizo	espinas|puas
+🦕	saurópodo	brontosaurio|diplodocus
+🦖		tiranosaurio rex
+🦗	grillo	saltamontes
+🦘	canguro	marsupial|saltar|salto
+🦙		alpaca|guanaco|lana|vicuna
+🦚	pavo real	ave|orgulloso|plumas
+🦛	hipopótamo	paquidermo
+🦜	loro	ave|hablar|papagayo|pirata
+🦝	mapache	astuto|curioso|ladino|ojeras
+🦞	bogavante	langosta|marisco|pinzas
+🦟		fiebre|insecto|malaria|virus
+🦠	microbio	ameba|bacteria|germen|virus
+🦡	tejón	ratel|tejon melero
+🦢	cisne	ave|patito feo
+🦣	mamut	colmillo|extinguido|lanudo
+🦤		ave|dronte|mauricio|pajaro
+🦥	perezoso	gandul|lento|vago
+🦦	nutria	bromista|jugueton|pesca
+🦧	orangután	mono|primate|simio
+🦨	mofeta	apestar|hedor|peste|tufo
+🦩	flamenco	ostentoso|tropical
+🦪	ostra	buceo|perla
+🦫	castor	roedor
+🦬	bisonte	bufalo|cibolo
+🦭	foca	leon marino
+🦮	perro guía	ciego|invidente|lazarillo
+🦯	bastón	ceguera|ciega|ciego|invidente
+🦰	pelo pelirrojo	rojizo
+🦱	pelo rizado	afro|bucle|rizo|tirabuzon
+🦲	sin pelo	afeitado|calvo|quimioterapia
+🦳	pelo blanco	cana|gris|viejo
+🦴	hueso	esqueleto
+🦵	pierna	extremidad|patada
+🦶	pie	patada|pisoton
+🦷	diente	dentista|molar|muela
+🦸	personaje de superhéroe	bien|superheroina|superpoder
+🦹	personaje de supervillano	mal|superpoder|supervillana
+🦺	chaleco de seguridad	emergencia
+🦻	oreja con audífono	accesibilidad|sordo
+🦼	silla de ruedas eléctrica	accesibilidad
+🦽	silla de ruedas manual	accesibilidad
+🦾	brazo mecánico	ortopedia|protesis
+🦿	pierna mecánica	ortopedia|protesis
+🧀	cuña de queso	trozo
+🧁	magdalena	cupcake|dulce|reposteria
+🧂	sal	condimento|salero
+🧃	tetrabrik	brick|carton|envase|zumo
+🧄	ajo	condimento|vampiro
+🧅	cebolla	condimento|llorar
+🧆		albondiga|garbanzo
+🧇	gofre	waffle
+🧈	mantequilla	lacteo
+🧉	mate	bebida|infusion
+🧊	cubito de hielo	frio|iceberg
+🧋	té de burbujas	boba|bubble tea|leche|perla
+🧌	trol	fantasia|monstruo
+🧍	persona de pie	levantada|levantado|levantarse
+🧎	persona de rodillas	arrodillada|arrodillado
+🧏	persona sorda	escuchar|oido|oir|sordera
+🧐	cara con monóculo	aristocratico|estirado
+🧑	persona adulta	genero|neutro
+🧒	infante	crio|genero|joven|neutro
+🧓	persona mayor	adulto|genero neutro|maduro
+🧔	persona con barba	barbas|barbudo
+🧕	mujer con hiyab	panuelo
+🧖	persona en una sauna	vapor
+🧗	persona escalando	alpinista|escalador
+🧘	persona en posición de loto	meditacion|yoga
+🧙	persona maga	bruja|brujo|hechicera|hechicero
+🧚	hada	campanilla|oberon|puck|titania
+🧛	vampiro	dracula|no muerto
+🧜	persona sirena	triton
+🧝	elfo	magico
+🧞	genio	lampara
+🧟	zombi	muerto viviente|no muerto
+🧠	cerebro	inteligente
+🧡	corazón naranja	emocion
+🧢	gorra con visera	beisbol
+🧣	bufanda	abrigo|cuello
+🧤	guantes	mano
+🧥	abrigo	chaqueton
+🧦	calcetines	pies|ropa
+🧧	sobre rojo	hongbao|lai see|regalo
+🧨	petardo	dinamita|explosivo
+🧩	pieza de puzle	conectar|pista|rompecabezas
+🧪	tubo de ensayo	ciencia|quimica|quimico
+🧫	placa de petri	biologia|biologo|cultivo
+🧬	adn	biologo|evolucion|genetica|vida
+🧭	brújula	compas|magnetico|navegacion
+🧮	ábaco	calculo|contar|matematicas
+🧯	extintor	apagar|extinguir|incendio
+🧰	caja de herramientas	armario|mecanico
+🧱	ladrillo	arcilla|cemento|muro|pared
+🧲	imán	atraccion|herradura|magnetico
+🧳	equipaje	maleta|viajar
+🧴	bote de crema	champu|hidratante
+🧵	hilo	aguja|carrete|coser|costura
+🧶	ovillo	bola|croche|punto|tejer
+🧷	imperdible	panal|punk rock
+🧸	osito de peluche	juguete|oso
+🧹	escoba	barrer|bruja|fregar
+🧺	cesta	colada|cosecha|picnic
+🧻	rollo de papel	papel higienico
+🧼	jabón	banarse|jabonera|lavarse
+🧽	esponja	absorbente|limpiar|poroso
+🧾	recibo	contabilidad|prueba|testimonio
+🧿	ojo turco	amuleto|nazar|talisman
+🩰	zapatillas de ballet	bailar|bale|danza
+🩱	traje de baño de una pieza	banador
+🩲	ropa interior	banador|bragas|braguitas|slip
+🩳	pantalones cortos	banador|bermudas|shorts
+🩴	chancla	chancleta|chinela|sandalia
+🩵	corazón azul claro	celeste|cian
+🩶	corazón gris	pizarra|plata
+🩷	corazón rosa	amor|bonito|gustar
+🩸	gota de sangre	donar sangre|herida|medicina
+🩹	tirita	aposito
+🩺	estetoscopio	corazon|doctor|latido|medico
+🩻	radiografía	doctora|huesos|medico|rayos
+🩼	muleta	baston|discapacidad|lesion|palo
+🪀	yoyó	dieta|efecto|fluctuar|juguete
+🪁	cometa	juguete|planear|viento|volar
+🪂	paracaídas	ala delta|paravela|volar
+🪃	bumerán	boomerang|rebotar
+🪄	varita mágica	bruja|hechicero|magia|mago
+🪅	piñata	caballito|celebracion|fiesta
+🪆	muñeca rusa	babushka|mamushka|rusia
+🪇		agitar|brasil|musica|percusion
+🪈	flauta	flautin|musica
+🪉	arpa	amor|cupido|harpa|musica
+🪏	pala	hoyo|huerto|nieve|planta
+🪐	planeta con anillos	saturnino|saturno
+🪑	silla	asiento|sentarse
+🪒	cuchilla de afeitar	afeitado|afilado|barbero|navaja
+🪓	hacha	cortar|dividir|madera|talar
+🪔	lámpara de aceite	diya
+🪕		banyo|cuerda|instrumento|musica
+🪖	casco militar	ejercito|guerra|soldado
+🪗	acordeón	concertina
+🪘	tamboril	conga|ritmo
+🪙	moneda	dinero|metal|plata|tesoro
+🪚	sierra de carpintería	carpintero|herramienta|talar
+🪛	destornillador	herramienta|tornillo
+🪜	escalera	escalar|escalon|peldano
+🪝	gancho	agarrar|anzuelo|atrapar|garfio
+🪞	espejo	especulo|reflector|reflejo
+🪟	ventana	abertura|cristal|marco|vista
+🪠	desatascador	retrete|servicio|succion
+🪡	aguja de coser	bordado|hilar|punto|tejer
+🪢	nudo	anudar|atar|enredar|trenzar
+🪣	cubo	balde|barreno|cuba|cubeta
+🪤	trampa de ratones	cebo|cepo|enganar|ratonera
+🪥	cepillo de dientes	dental|higiene|limpio|servicio
+🪦	lápida	estela|sepulcro|tumba
+🪧	letrero	anuncio|aviso|cartel|poste
+🪨	piedra	pedrusco|penasco|roca
+🪩	bola de espejos	bailar|brillar|discoteca|fiesta
+🪪	carné de identidad	credenciales|permiso|seguridad
+🪫	batería baja	carga baja|electronico|pila
+🪬		fatima|jamsa|mano|maria|miriam
+🪭	abanico abierto	airear|bailar|calor|feria
+🪮	peineta	afro|pelo
+🪯		religion|sijismo|sikh
+🪰	mosca	basura|bicho|mal olor|podrido
+🪱	gusano	lombriz|oruga|parasito
+🪲	escarabajo	bicho|insecto
+🪳	cucaracha	alimana|bicho|insecto|plaga
+🪴	planta de maceta	crecer|tiesto
+🪵	madera	lena|madero|palos|tronco
+🪶	pluma	ave|ligero|pajaro|plumaje
+🪷	loto	budismo|flor|hinduismo|pureza
+🪸		arrecife|oceano
+🪹	nido vacío	anidacion|anidamiento|anidar
+🪺	nido con huevos	anidacion|anidamiento|anidar
+🪻	campanilla	flor|jacinto|lila|lupino
+🪼	medusa	marino|picadura|picar
+🪽	ala	angelical|ave|pajaro|volar
+🪾	árbol sin hojas	madera|muerto|ramas|sequia
+🪿	oca	ave|ganso|graznar|pajaro
+🫀	corazón humano	anatomia|latido|organo|pulso
+🫁	pulmones	exhalar|inhalar|organo|respirar
+🫂	personas abrazándose	abrazo|adios|gracias|saludo
+🫃	hombre embarazado	barriga|hinchado|inflado|lleno
+🫄	persona embarazada	barriga|embarazo|gestacion
+🫅	persona con corona	majestad|monarca|noble|realeza
+🫆	huella dactilar	delito|forense|misterio|rastro
+🫎	alce	animal|asta|cuernos|uapiti
+🫏	burro	animal|asno|borrico|mula|terco
+🫐	arándanos	azul|baya|mirtilo
+🫑	pimiento	aji|chile|morron|rojo|verdura
+🫒	aceituna	aperitivo|comida|oliva
+🫓	pan sin levadura	arepa|naan|pita|tortilla
+🫔	tamal	mejicano|mexicano|wrap
+🫕		chocolate|olla|queso|suizo
+🫖	tetera	bebida|infusion
+🫗	líquido derramándose	bebida|vacio|vaso|verter
+🫘	alubias	comida|judias|legumbre
+🫙	tarro	almacenar|frasco|salsa|vacio
+🫚	raíz de jengibre	cerveza|especia|garganta
+🫛	vaina	edamame|judias|soja|verdura
+🫜	túberculo comestible	comida|huerto|nabo|rabano|raiz
+🫟	salpicadura	gotear|liquido|manchar|tinta
+🫠	cara derritiéndose	calor|fundirse|liquido
+🫡	cara saludando	orden|saludo|si|sol|vale
+🫢	cara con ojos abiertos y boca tapada	alucinar|asombro|sorpresa
+🫣	cara tapada con ojo espiando	espiar|fascinado|mirar|vistazo
+🫤	cara con boca diagonal	esceptico|inseguro|jo|vaya
+🫥	cara con línea de puntos	depresivo|deprimido|invisible
+🫦	labio mordido	ansioso|incomodo|ligar|miedo
+🫧	burbujas	eructar|jabon|limpiar
+🫨	cara temblorosa	shock|temblar|terremoto|vibrar
+🫩	cara con ojeras	agotado|cansado|ojos|sueno
+🫰	mano con dedo índice y pulgar cruzados	amor|caro|corazon|dinero
+🫱	mano hacia la derecha	
+🫲	mano hacia la izquierda	
+🫳	mano con la palma hacia abajo	bajar|fuera|quita|rechazar
+🫴	mano con la palma hacia arriba	acercate|dame|ofrecer|trae|ven
+🫵	dedo índice apuntándote a ti	apuntar|tu
+🫶	manos formando un corazón	amor
+🫷	mano empujando hacia la izquierda	detener|empujar|rechazar|stop
+🫸	mano empujando hacia la derecha	detener|empujar|rechazar|stop
+☀	sol	espacio|rayos|soleado
+☁	nube	tiempo
+☂	paraguas	lluvia|paraguas abierto
+☃	muñeco de nieve con nieve	
+☄	cometa espacial	espacio|meteorito
+☎	teléfono	
+☑	casilla con marca de verificación	✓|seleccion
+☔	paraguas con gotas de lluvia	
+☕	bebida caliente	cafe
+☘	trébol	planta
+☝	dedo índice hacia arriba	apuntar|mano
+☠	calavera y huesos cruzados	cara|muerte
+☢	radiactivo	radiactividad|radioactivo|senal
+☣	riesgo biológico	peligro|senal
+☦	cruz ortodoxa	religion
+☪	media luna y estrella	islam|religion
+☮	símbolo de la paz	
+☯		religion|taoismo
+☸	rueda del dharma	budismo|religion
+☹	cara con el ceño fruncido	
+☺	cara sonriente	contorno|relajado|sonrisa
+♀	signo femenino	mujer|simbolo
+♂	signo masculino	hombre|simbolo
+♈	Aries	carnero|horoscopo|zodiaco
+♉	Tauro	buey|horoscopo|toro|zodiaco
+♊	Géminis	gemelos|horoscopo|zodiaco
+♋	Cáncer	cangrejo|horoscopo|zodiaco
+♌	Leo	horoscopo|leon|zodiaco
+♍	Virgo	horoscopo|zodiaco
+♎	Libra	balanza|escala|justicia|zodiaco
+♏	Escorpio	escorpion|horoscopo|zodiaco
+♐	Sagitario	arquero|horoscopo|zodiaco
+♑	Capricornio	cabra|horoscopo|zodiaco
+♒	Acuario	agua|horoscopo|zodiaco
+♓	Piscis	horoscopo|pescado|pez|zodiaco
+♟	peón de ajedrez	
+♠	palo de picas	carta|juego
+♣	palo de tréboles	carta|juego
+♥	palo de corazones	carta|juego
+♦	palo de diamantes	carta|juego
+♨	aguas termales	termas|vapor
+♪	corchea	musica|nota
+♭	bemol	musica|nota
+♯	sostenido	diesis|musica|nota
+♻	símbolo de reciclaje	reciclar|senal
+♾	infinito	ilimitado|siempre|universal
+♿	símbolo de silla de ruedas	acceso|senal
+⚒	martillo y pico	herramienta
+⚓	ancla	barco|gancho
+⚔	espadas cruzadas	arma
+⚕	símbolo de medicina	asclepio|esculapio|serpiente
+⚖	balanza	justicia|libra|peso|zodiaco
+⚗	alambique	herramienta|quimica
+⚙	engranaje	herramienta
+⚛	símbolo de átomo	
+⚜	flor de lis	
+⚠	advertencia	cuidado|senal
+⚡	alto voltaje	electricidad
+⚧	símbolo de transgénero	
+⚪	círculo blanco	geometria
+⚫	círculo negro	geometria
+⚰	ataúd	muerte
+⚱	urna funeraria	muerte
+⚽	balón de fútbol	
+⚾	béisbol	balon|baseball|pelota
+⛄	muñeco de nieve	muneco de nieve sin nieve
+⛅	sol detrás de una nube	sol con nubes
+⛈	nube con rayo y lluvia	trueno
+⛎	Ofiuco	horoscopo|portador|zodiaco
+⛏	pico	herramienta|mina
+⛑	casco con una cruz blanca	ayuda|cara
+⛓	cadenas	
+⛔	dirección prohibida	no|prohibido
+⛩	santuario sintoísta	japon|religion|sintoismo
+⛪	iglesia	cruz|edificio|religion
+⛰	montaña	monte
+⛱	sombrilla en la arena	sol
+⛲	fuente	
+⛳	banderín en hoyo	golf
+⛴	ferri	barco|ferry
+⛵	velero	barco de vela|yate
+⛷	persona esquiando	esquiador|nieve
+⛸	patín de hielo	
+⛹	persona botando un balón	botar|pelota
+⛺	tienda de campaña	camping|vacaciones
+⛽	surtidor de gasolina	bomba de gasolina|combustible
+✂	tijeras	cortar|herramienta
+✅	botón de marca de verificación	✓|seleccion
+✈	avión	aeroplano
+✉	sobre	carta|correo
+✊	puño en alto	cerrado|mano|punetazo
+✋	mano levantada	choca esos cinco
+✌	mano con señal de victoria	
+✍	mano escribiendo	escribir|lapiz
+✏	lápiz	escolar|escribir|lapicero
+✒	pluma negra	boligrafo|escribir|tinta
+✔	marca de verificación	✓|seleccion
+✖	multiplicación	×|cancelar|marca|prohibido|x
+✨	chispas	*|bengala|estrellas
+✳	asterisco de ocho puntas	*
+✴	estrella de ocho puntas	*
+❄	copo de nieve	frio
+❇	chispa	*
+❌	marca de cruz	×|cancelar|tachar|x
+❎	botón con marca de cruz	×|casilla|x
+❓	interrogación roja	?|pregunta|puntuacion
+❔	interrogación blanca	?|pregunta|puntuacion
+❕	exclamación blanca	!|puntuacion
+❗	exclamación roja	!|puntuacion
+❣	exclamación de corazón	puntuacion
+❤	corazón rojo	emocion
+➕	más	+|signo|suma
+➖	menos	-|−|resta|signo
+➗	división	÷|signo de division
+➡	flecha hacia la derecha	direccion|este
+⬅	flecha hacia la izquierda	oeste
+⬆	flecha hacia arriba	direccion|flecha arriba|norte
+⬇	flecha hacia abajo	direccion|sur
+⭐	estrella	estelar
+⭕	círculo rojo hueco	aro

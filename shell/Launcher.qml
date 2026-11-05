@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Widgets
+import "parse.js" as P
 
 // Apps and system screens in one search. Super+R.
 LazyLoader {
@@ -19,7 +20,9 @@ LazyLoader {
         color: "transparent"
         property int sel: 0
         property var clips: []
-        property var emojis: []
+        property string emojiText: ""
+        property string emojiLocalText: ""
+        readonly property var emojis: emojiText ? P.emojiEntries(emojiText, emojiLocalText) : []
         property var recent: []
         // Runs a capture after this window is gone, so it isn't in the picture.
         function shoot(mode) {
@@ -45,10 +48,13 @@ LazyLoader {
         FileView {
             path: Ui.launcherMode === "emoji" ? Quickshell.shellPath("emoji.txt") : ""
             printErrors: false
-            onLoaded: win.emojis = text().split("\n").filter(Boolean).map(line => {
-                const space = line.indexOf(" ")
-                return { glyph: line.slice(0, space), label: line.slice(space + 1) }
-            })
+            onLoaded: win.emojiText = text()
+        }
+        FileView {
+            path: Ui.launcherMode === "emoji" ? Quickshell.shellPath("emoji/" + Tr.code.split("-")[0] + ".txt") : ""
+            printErrors: false
+            onLoaded: win.emojiLocalText = text()
+            onLoadFailed: win.emojiLocalText = ""
         }
         FileView {
             id: recentFile
@@ -68,7 +74,7 @@ LazyLoader {
                 }))
             }
             if (Ui.launcherMode === "emoji") {
-                const found = q ? emojis.filter(e => e.label.includes(q))
+                const found = q ? P.emojiSearch(emojis, q)
                     : recent.map(r => emojis.find(e => e.glyph === r)).filter(Boolean).concat(emojis.filter(e => !recent.includes(e.glyph)))
                 return found.slice(0, 60).map(e => ({ name: e.glyph + "  " + e.label, kind: "", run: () => win.copyEmoji(e.glyph) }))
             }
