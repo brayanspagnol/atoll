@@ -183,14 +183,15 @@ Item {
                     }
                 }
                 Btn {
+                    id: shuffleBtn
                     readonly property bool on: card.player?.shuffle ?? false
+                    readonly property string why: Tr.t("%1 doesn't allow shuffle from here. Use the site's button.").arg(card.player?.identity ?? Tr.t("This player"))
                     variant: "quiet"; implicitHeight: 44; icon: "shuffle"; iconColor: on ? card.accent : Theme.ink
-                    opacity: card.player?.shuffleSupported ? 1 : 0.5
-                    a11y: on ? Tr.t("Shuffle on") : Tr.t("Shuffle")
-                    onClicked: {
-                        if (card.player?.shuffleSupported) card.player.shuffle = !on
-                        else controls.say(Tr.t("%1 doesn't allow shuffle from here. Use the site's button.").arg(card.player?.identity ?? Tr.t("This player")))
-                    }
+                    enabledB: card.player?.shuffleSupported ?? false
+                    a11y: !enabledB ? why : on ? Tr.t("Shuffle on") : Tr.t("Shuffle")
+                    onClicked: card.player.shuffle = !on
+                    // Over the button's own mouse area when disabled: no hover highlight, but a click still says why.
+                    MouseArea { anchors.fill: parent; visible: !shuffleBtn.enabledB; hoverEnabled: true; onClicked: controls.say(shuffleBtn.why) }
                 }
                 Btn {
                     variant: "quiet"; implicitHeight: 44; icon: "heart"; iconFilled: card.liked; iconColor: card.liked ? card.accent : Theme.ink
