@@ -6,17 +6,35 @@ import Quickshell.Io
 Singleton {
     property alias v: adapter
     FileView {
+        id: file
         path: Profiles.path
         watchChanges: true
         onFileChanged: reload()
-        onAdapterUpdated: writeAdapter()
+        onAdapterUpdated: if (!completing) writeAdapter()
         // The adapter keeps its old value for a key the file lacks, which would leak one profile into another.
-        // So the first load of each profile writes back a complete file.
+        // So the first load of each profile gives those keys their defaults and writes back a complete file.
         property string completed: ""
-        onLoaded: if (completed !== path.toString()) { completed = path.toString(); writeAdapter() }
-        onLoadFailed: err => { if (err === FileViewError.FileNotFound) writeAdapter() }
+        property string defaults: ""
+        property bool completing: false
+        function complete(saved) {
+            completed = path.toString()
+            completing = true
+            const fresh = JSON.parse(defaults)
+            for (const key in fresh) if (saved?.[key] === undefined) adapter[key] = fresh[key]
+            completing = false
+            writeAdapter()
+        }
+        onLoaded: {
+            if (completed === path.toString()) return
+            let saved = null
+            try { saved = JSON.parse(text()) } catch (e) {} // unreadable counts as empty
+            complete(saved)
+        }
+        onLoadFailed: err => { if (err === FileViewError.FileNotFound) complete(null) }
         JsonAdapter {
             id: adapter
+            // Files load in the background, so this always runs before the first one replaces a value.
+            Component.onCompleted: file.defaults = JSON.stringify(adapter)
             property string accent: "gelo"
             property string wallpaper: ""
             property var wallpapers: ({}) // per screen, by output name; the others use wallpaper

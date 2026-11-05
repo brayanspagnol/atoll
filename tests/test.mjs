@@ -137,6 +137,47 @@ const runQml = (dir, shellQml, files = {}) => {
     return Object.fromEntries([...(run.stdout + run.stderr).matchAll(/RESULT (\w+) (.*)/g)].map(m => [m[1], JSON.parse(m[2])]))
 }
 if (haveQs) {
+    // A key the file lacks gets its default, not the previous profile's value, and what the file has is kept.
+    const dir = fs.mkdtempSync("/tmp/atoll-test-")
+    fs.cpSync(new URL("../shell/Cfg.qml", import.meta.url), dir + "/Cfg.qml")
+    fs.writeFileSync(dir + "/a.json", JSON.stringify({ accent: "rosa", lockAc: 9, dnd: true, dock: [{ label: "X" }] }))
+    fs.writeFileSync(dir + "/b.json", JSON.stringify({ accent: "verde", wallpapers: { "DP-1": "/w" }, dnd: false }))
+    fs.writeFileSync(dir + "/d.json", "{oops")
+    const out = runQml(dir, `import QtQuick
+import Quickshell
+import Quickshell.Io
+ShellRoot {
+    property int step: 0
+    property int writes: 0
+    property var early: Cfg.v // singletons start when first used
+    FileView { path: "${dir}/b.json"; watchChanges: true; onFileChanged: { writes++; reload() } }
+    function show(tag) { console.log("RESULT " + tag + " " + JSON.stringify({ accent: Cfg.v.accent, lockAc: Cfg.v.lockAc, dnd: Cfg.v.dnd, docks: Cfg.v.dock.length, wallpapers: Cfg.v.wallpapers })) }
+    Timer {
+        running: true; repeat: true; interval: 400
+        onTriggered: {
+            step++
+            if (step === 1) { show("a"); Profiles.path = "${dir}/b.json" }
+            if (step === 2) { show("b"); Profiles.path = "${dir}/c.json" }
+            if (step === 3) { show("c"); Profiles.path = "${dir}/d.json" }
+            if (step === 4) { show("d"); Profiles.path = "${dir}/b.json" }
+            if (step === 5) { show("back"); Cfg.v.nightK = 3000 }
+            if (step === 7) { console.log("RESULT writes " + writes); Qt.quit() }
+        }
+    }
+}
+`, { "Profiles.qml": `pragma Singleton\nimport Quickshell\nSingleton { property string path: "${dir}/a.json" }\n` })
+    const file = name => JSON.parse(fs.readFileSync(`${dir}/${name}.json`))
+    assert.deepEqual(out.a, { accent: "rosa", lockAc: 9, dnd: true, docks: 1, wallpapers: {} })
+    assert.deepEqual(out.b, { accent: "verde", lockAc: 5, dnd: false, docks: 6, wallpapers: { "DP-1": "/w" } })
+    assert.deepEqual(out.c, { accent: "gelo", lockAc: 5, dnd: false, docks: 6, wallpapers: {} }) // no file at all
+    assert.deepEqual(out.d, out.c) // a broken file
+    assert.deepEqual(out.back, out.b)
+    assert.equal(file("a").lockAc, 9)
+    assert.equal(file("b").lockAc, 5); assert.equal(file("b").dock.length, 6); assert.equal(file("b").accent, "verde")
+    assert.equal(file("b").nightK, 3000); assert.equal(file("c").accent, "gelo")
+    assert(out.writes <= 4, `settings file written ${out.writes} times`) // no loop between the write and the reload it causes
+    fs.rmSync(dir, { recursive: true })
+
     // "Open app" appears only on restored cards with an app to open, and old history files still load.
     const root = fs.mkdtempSync("/tmp/atoll-test-")
     fs.cpSync(new URL("../shell/", import.meta.url), root, { recursive: true })
