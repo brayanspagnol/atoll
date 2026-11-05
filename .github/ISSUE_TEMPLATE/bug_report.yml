@@ -1,0 +1,43 @@
+name: Bug report
+description: Something doesn't work as it should
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected and what you got.
+    validations:
+      required: true
+  - type: input
+    id: atoll
+    attributes:
+      label: Atoll version
+      description: Settings > Sobre, or the VERSION file.
+    validations:
+      required: true
+  - type: input
+    id: hyprland
+    attributes:
+      label: Hyprland version
+      description: Output of `hyprctl version | head -1`.
+    validations:
+      required: true
+  - type: input
+    id: quickshell
+    attributes:
+      label: Quickshell version
+      description: Output of `qs --version`.
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Distribution and GPU
+      placeholder: Arch Linux, Intel UHD
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: From `~/.local/state/atoll/shell.log`. Remove personal data first, such as network names.
+      render: text

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Prints a file holding the CPU temperature in millidegrees, trying the most accurate sources first.
+shopt -s nullglob
+for zone in /sys/class/thermal/thermal_zone*; do
+    [[ "$(cat "$zone/type")" == x86_pkg_temp ]] && { echo "$zone/temp"; exit 0; }
+done
+for mon in /sys/class/hwmon/hwmon*; do
+    case "$(cat "$mon/name")" in
+        coretemp | k10temp | zenpower) [[ -f "$mon/temp1_input" ]] && { echo "$mon/temp1_input"; exit 0; } ;;
+    esac
+done
+for zone in /sys/class/thermal/thermal_zone*; do
+    echo "$zone/temp"
+    exit 0
+done
+exit 1

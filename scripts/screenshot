@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Screenshot: region-file | region-clip | full-file. Saved files also go to the clipboard.
+set -euo pipefail
+dir="${XDG_PICTURES_DIR:-$HOME/Pictures}"
+mkdir -p "$dir"
+file="$dir/screenshot-$(date +%Y%m%d-%H%M%S).png"
+mode="${1:-region-file}"
+case "$mode" in
+    region-file | region-clip)
+        geometry="$(slurp -d)" || exit 0
+        [[ "$mode" == region-clip ]] && { grim -g "$geometry" - | wl-copy --type image/png; exit 0; }
+        grim -g "$geometry" "$file"
+        ;;
+    full-file) grim "$file" ;;
+    *) echo "usage: $0 region-file|region-clip|full-file" >&2; exit 2 ;;
+esac
+wl-copy --type image/png <"$file" || true
+notify-send -a Captura -u low "Captura salva" "$file" || true

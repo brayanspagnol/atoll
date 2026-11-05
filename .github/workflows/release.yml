@@ -1,0 +1,29 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check that the tag matches VERSION
+        run: test "${GITHUB_REF_NAME#v}" = "$(cat VERSION)"
+      - name: Extract release notes
+        run: |
+          version="$(cat VERSION)"
+          awk -v v="[$version]" '
+            /^## \[/ { if (found) exit; if (index($0, "## " v)) { found = 1; next } }
+            /^\[[^]]+\]: / { if (found) exit }
+            found
+          ' CHANGELOG.md > notes.md
+          test -s notes.md
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --title "Atoll $GITHUB_REF_NAME" --notes-file notes.md

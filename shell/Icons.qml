@@ -1,0 +1,59 @@
+pragma Singleton
+import Quickshell
+
+// Stroke icons on a 24 px grid (Lucide-style, ISC license), drawn as vector paths so they take any color.
+Singleton {
+    readonly property var p: {
+        const c = (x, y, r) => `M${x - r} ${y}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`
+        const dot = c(12, 20, 1)
+        const a1 = "M8.5 16a5 5 0 0 1 7 0", a2 = "M5 12.5a10 10 0 0 1 14 0", a3 = "M2 8.8a15 15 0 0 1 20 0"
+        const spk = "M11 5 6 9H2v6h4l5 4Z"
+        const bell = "M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a2 2 0 0 0 3.4 0"
+        const batt = "M4 7h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2ZM22 11v2"
+        return {
+            som: spk + "M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14",
+            volMid: spk + "M15.5 8.5a5 5 0 0 1 0 7",
+            volLow: spk + "M15.5 10a3 3 0 0 1 0 4",
+            volMute: spk + "M22 9l-6 6M16 9l6 6",
+            rede: a3 + a2 + a1 + dot, wifi4: a3 + a2 + a1 + dot, wifi3: a2 + a1 + dot, wifi2: a1 + dot, wifi1: dot, wifi0: dot,
+            wifiOff: "M3 3l18 18" + a1 + dot + "M5 12.5a10 10 0 0 1 3-2M2 8.8a15 15 0 0 1 3.5-2.3M19 12.5a10 10 0 0 0-3-2M22 8.8a15 15 0 0 0-10-3.8",
+            bt: "M7 7l10 10-5 5V2l5 5L7 17", btOn: "M7 7l10 10-5 5V2l5 5L7 17M19 10v4", btOff: "M3 3l18 18M12 12v10l5-5-2.5-2.5M12 8V2l5 5-2 2M7 7l3 3M7 17l3-3",
+            perf: "M12 14l4-4M3.3 19a10 10 0 1 1 17.4 0",
+            cal: "M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2ZM16 2v4M8 2v4M3 10h18",
+            avisos: bell, bellOff: bell + "M3 3l18 18",
+            ajustes: "M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6",
+            energia: "M12 2v10M18.4 6.6a9 9 0 1 1-12.8 0",
+            mic: "M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3ZM19 10a7 7 0 0 1-14 0M12 17v5",
+            micOff: "M3 3l18 18M15 9V5a3 3 0 0 0-6 0v1M9 9v2a3 3 0 0 0 5 2M19 10a7 7 0 0 1-1 4M5 10a7 7 0 0 0 11 6M12 17v5",
+            lock: "M6 11h12a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2ZM8 11V7a4 4 0 0 1 8 0v4",
+            moon: "M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9",
+            exit: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9",
+            redo: "M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5",
+            term: "M4 17l6-5-6-5M12 19h8",
+            globe: c(12, 12, 10) + "M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20",
+            code: "M16 18l6-6-6-6M8 6l-6 6 6 6",
+            folder: "M4 20a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4l2 3h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2Z",
+            chat: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z",
+            music: "M9 18V5l12-2v13" + c(6, 18, 3) + c(18, 16, 3),
+            search: c(11, 11, 8) + "M21 21l-4.3-4.3",
+            bat: batt + "M6 11v2M10 11v2M14 11v2", batLow: batt + "M6 11v2", charge: batt + "M11 9l-3 3h5l-3 3",
+            x: "M18 6 6 18M6 6l12 12", left: "M15 18l-6-6 6-6", right: "M9 18l6-6-6-6",
+            play: "M6 3l14 9-14 9Z", pause: "M8 4v16M16 4v16", next: "M5 4l10 8-10 8ZM19 5v14", prev: "M19 20L9 12l10-8ZM5 19V5",
+            menu: "M3 6h18M3 12h18M3 18h18",
+            dots: c(5, 12, 1) + c(12, 12, 1) + c(19, 12, 1),
+            heart: "M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.3l7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.8Z",
+            shuffle: "M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5",
+            repeat1: "M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3M11 10l1.5-1v6",
+            fprev: "M11 19 2 12l9-7ZM22 19l-9-7 9-7Z",
+            fnext: "M13 19l9-7-9-7ZM2 19l9-7-9-7Z",
+            playFill: "M7 4l14 8-14 8Z", pauseFill: "M7 5h3v14H7ZM14 5h3v14h-3Z",
+            check: "M20 6 9 17l-5-5", plus: "M12 5v14M5 12h14", repeat: "M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3",
+            head: "M3 18v-6a9 9 0 0 1 18 0v6M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3ZM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3Z",
+            speaker: "M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z" + c(12, 14, 4) + "M12 6h.01",
+            eth: "M9 2h6v5H9ZM3 17h6v5H3ZM15 17h6v5h-6ZM12 7v5M6 17v-5h12v5",
+            mouse: "M12 2a7 7 0 0 1 7 7v6a7 7 0 0 1-14 0V9a7 7 0 0 1 7-7ZM12 6v4",
+            keyboard: "M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2ZM6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M9 15h6",
+            phone: "M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2ZM12 18h.01"
+        }
+    }
+}
