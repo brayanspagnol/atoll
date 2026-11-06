@@ -40,15 +40,17 @@ Page {
         Layout.fillWidth: true; implicitHeight: 56
         Row {
             anchors.fill: parent; spacing: 4
+            // By count, so a new reading every cycle updates the bars instead of rebuilding them.
             Repeater {
-                model: Sys.cores
+                model: Sys.cores.length
                 Item {
-                    required property real modelData
+                    id: core
                     required property int index
+                    readonly property real load: Sys.cores[index] ?? 0
                     width: (parent.width - 4 * (Sys.cores.length - 1)) / Sys.cores.length; height: 56
-                    Accessible.role: Accessible.Indicator; Accessible.name: Tr.t("Core %1: %2%").arg(index).arg(Math.round(modelData))
+                    Accessible.role: Accessible.Indicator; Accessible.name: Tr.t("Core %1: %2%").arg(index).arg(Math.round(load))
                     Rectangle { anchors { left: parent.left; right: parent.right; top: parent.top; bottom: lbl.top; bottomMargin: 4 } color: Theme.raised; radius: 3
-                        Rectangle { anchors.bottom: parent.bottom; width: parent.width; radius: 3; height: Math.max(2, parent.height * parent.parent.modelData / 100); color: Theme.accent }
+                        Rectangle { anchors.bottom: parent.bottom; width: parent.width; radius: 3; height: Math.max(2, parent.height * core.load / 100); color: Theme.accent }
                     }
                     Tx { id: lbl; anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter; text: parent.index; mono: true; size: 10; dim: true }
                 }
@@ -82,24 +84,27 @@ Page {
         Item { Layout.preferredWidth: 96 }
     }
     Tx { visible: Sys.procs.length === 0; text: Tr.t("Measuring…"); dim: true }
+    // Keyed by pid: a row outlives the refresh, and with it a pending "Confirm".
     Repeater {
-        model: Sys.procs
+        model: ScriptModel { values: Sys.procs; objectProp: "pid" }
         Rowi {
             id: pr
             required property var modelData
+            // ScriptModel leaves a moved row's modelData stale, so the fresh reading comes from its pid.
+            readonly property var proc: Sys.procs.find(p => p.pid === modelData.pid) ?? modelData
             clickable: false
             implicitHeight: 44
             property bool sure: false
             Timer { running: pr.sure; interval: 4000; onTriggered: pr.sure = false }
-            Tx { text: pr.modelData.name; Layout.fillWidth: true }
-            Tx { text: pr.modelData.pid; mono: true; dim: true; size: 13; Layout.preferredWidth: 64; horizontalAlignment: Text.AlignRight }
-            Tx { text: pr.modelData.cpu.toFixed(1); mono: true; size: 13; Layout.preferredWidth: 56; horizontalAlignment: Text.AlignRight }
-            Tx { text: pr.modelData.mem.toFixed(1); mono: true; size: 13; Layout.preferredWidth: 56; horizontalAlignment: Text.AlignRight }
+            Tx { text: pr.proc.name; Layout.fillWidth: true }
+            Tx { text: pr.proc.pid; mono: true; dim: true; size: 13; Layout.preferredWidth: 64; horizontalAlignment: Text.AlignRight }
+            Tx { text: pr.proc.cpu.toFixed(1); mono: true; size: 13; Layout.preferredWidth: 56; horizontalAlignment: Text.AlignRight }
+            Tx { text: pr.proc.mem.toFixed(1); mono: true; size: 13; Layout.preferredWidth: 56; horizontalAlignment: Text.AlignRight }
             Btn {
                 Layout.preferredWidth: 96; implicitHeight: 34
                 variant: "danger"; text: pr.sure ? Tr.t("Confirm") : Tr.t("End process")
-                a11y: Tr.t("End %1").arg(pr.modelData.name)
-                onClicked: { if (pr.sure) { Quickshell.execDetached(["kill", String(pr.modelData.pid)]); pr.sure = false } else pr.sure = true }
+                a11y: Tr.t("End %1").arg(pr.proc.name)
+                onClicked: { if (pr.sure) { Quickshell.execDetached(["kill", String(pr.proc.pid)]); pr.sure = false } else pr.sure = true }
             }
         }
     }

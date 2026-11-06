@@ -406,6 +406,43 @@ ShellRoot {
     assert.deepEqual(fs.readFileSync(proot + "/order", "utf8").trim().split("\n"), ["start one", "start two", "start three x", "start four"])
     fs.rmSync(proot, { recursive: true })
 
+    // Performance rows survive a new reading, so "End process" stays armed long enough to confirm.
+    const perf = fs.mkdtempSync("/tmp/atoll-test-")
+    fs.cpSync(new URL("../shell/", import.meta.url), perf, { recursive: true })
+    const procsAt = cpu => [{ pid: 10, name: "a", cpu, mem: 1 }, { pid: 20, name: "b", cpu: 5, mem: 2 }]
+    const resorted = [{ pid: 20, name: "b", cpu: 60, mem: 2 }, { pid: 10, name: "a", cpu: 1, mem: 1 }] // b climbs to the top
+    const rows = runQml(perf, `import QtQuick
+import Quickshell
+ShellRoot {
+    FloatingWindow { implicitWidth: 1000; implicitHeight: 1400; PgPerf { id: pg; anchors.fill: parent } }
+    function all(item, test, out) { for (const c of item.children) { if (test(c)) out.push(c); all(c, test, out) } return out }
+    function procRows() { return all(pg, c => c.sure !== undefined && c.modelData !== undefined, []) }
+    function coreBars() { return all(pg, c => c.load !== undefined, []) }
+    property var before: ({})
+    property int step: 0
+    Timer {
+        running: true; repeat: true; interval: 400
+        onTriggered: {
+            step++
+            if (step === 1) {
+                const b = procRows().find(r => r.modelData.pid === 20)
+                b.sure = true
+                before = { b, core: coreBars()[1] }
+                Sys.procs = ${JSON.stringify(resorted)}
+                Sys.cores = [7, 8, 9]
+            }
+            if (step === 2) {
+                const b = procRows().find(r => r.modelData.pid === 20), a = procRows().find(r => r.modelData.pid === 10)
+                console.log("RESULT rows " + JSON.stringify({ same: b === before.b, sure: b.sure, cpu: [a.proc.cpu, b.proc.cpu], first: procRows()[0].proc.name, cores: coreBars().map(c => c.load), sameCore: coreBars()[1] === before.core }))
+                Qt.quit()
+            }
+        }
+    }
+}
+`, { "Sys.qml": `pragma Singleton\nimport Quickshell\nSingleton { property real cpu: 0; property var cores: [1, 2, 3]; property var cpuHist: []; property var memInfo: ({ total: 1, used: 0, swapTotal: 0, swapUsed: 0 }); property var memHist: []; property real rxRate: 0; property real txRate: 0; property var rxHist: []; property var txHist: []; property real temp: 0; property var tempHist: []; property var disk: ({ used: 0, size: 1 }); property var procs: ${JSON.stringify(procsAt(50))}; property string procSort: "cpu"; property bool procsActive: false }\n` })
+    assert.deepEqual(rows.rows, { same: true, sure: true, cpu: [1, 60], first: "b", cores: [7, 8, 9], sameCore: true })
+    fs.rmSync(perf, { recursive: true })
+
     // Clipboard panel, against a throwaway cliphist database: the default one is the user's real history.
     const realCliphist = spawnSync("sh", ["-c", "command -v cliphist"], { encoding: "utf8" }).stdout.trim()
     if (realCliphist) {
