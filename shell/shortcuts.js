@@ -106,7 +106,7 @@ function parseLive(text) {
     const bits = [[64, "SUPER"], [4, "CTRL"], [8, "ALT"], [1, "SHIFT"]]
     return list.filter(b => !b.mouse && (!b.submap || b.submap === "global") && (b.key || b.keycode))
         .map(b => ({ keys: combo(bits.filter(([bit]) => b.modmask & bit).map(([, m]) => m), b.key || "code:" + b.keycode), desc: String(b.description ?? ""), what: [b.dispatcher, b.arg].filter(Boolean).join(" ") }))
-        .filter(b => !/^xf86/i.test(split(b.keys).key))
+        .filter(b => !/^(xf86|mouse)/i.test(split(b.keys).key)) // mouse wheel and media keys stay out, like the buttons
 }
 
 // Every shortcut with what it does now. state: default, changed, custom, off (no keys), gone (user.lua removed it), user (from user.lua).
