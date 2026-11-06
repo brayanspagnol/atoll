@@ -159,13 +159,13 @@ Atoll ships no wallpapers and starts on a solid color. Add yours with the **+** 
 
 **The lock screen** is `~/.config/atoll/hyprlock.conf`. Updates replace it and save your version as `hyprlock.conf.bak`.
 
-**Hyprland** overrides go in `~/.config/atoll/user.lua`, which updates never touch. For example, a keyboard
+**Hyprland** overrides go in `~/.config/atoll/user.lua`, which updates never touch. Give your binds a `description`: the Shortcuts screen shows it. For example, a keyboard
 layout and another terminal:
 
 ```lua
 hl.config({ input = { kb_layout = "br,us", kb_variant = "abnt2," } })
 hl.unbind("SUPER + Return") -- without this, both commands would run
-hl.bind("SUPER + Return", hl.dsp.exec_cmd("foot"))
+hl.bind("SUPER + Return", hl.dsp.exec_cmd("foot"), { description = "Terminal (foot)" })
 ```
 
 **Shell** options are in `~/.config/atoll/profiles/<profile>.json`, one file per profile, applied as you save it:

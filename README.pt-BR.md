@@ -114,13 +114,13 @@ O Atoll não traz papéis de parede e começa com uma cor sólida. Adicione os s
 
 **Tela de bloqueio:** é o arquivo `~/.config/atoll/hyprlock.conf`. Atualizações o substituem e guardam sua versão como `hyprlock.conf.bak`.
 
-**Hyprland:** personalizações vão em `~/.config/atoll/user.lua`, que as atualizações nunca alteram. Por exemplo,
+**Hyprland:** personalizações vão em `~/.config/atoll/user.lua`, que as atualizações nunca alteram. Dê uma `description` aos seus atalhos: a tela Atalhos mostra esse nome. Por exemplo,
 teclado ABNT2 e outro terminal:
 
 ```lua
 hl.config({ input = { kb_layout = "br,us", kb_variant = "abnt2," } })
 hl.unbind("SUPER + Return") -- sem isso, os dois comandos rodam
-hl.bind("SUPER + Return", hl.dsp.exec_cmd("foot"))
+hl.bind("SUPER + Return", hl.dsp.exec_cmd("foot"), { description = "Terminal (foot)" })
 ```
 
 **Shell:** as opções ficam em `~/.config/atoll/profiles/<perfil>.json`, um arquivo por perfil, aplicado ao salvar:
