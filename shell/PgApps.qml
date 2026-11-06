@@ -9,7 +9,7 @@ import "apps.js" as A
 Page {
     id: pg
     title: Tr.t("Default apps")
-    subtitle: Tr.t("Choose an app for each role. The choice applies to Atoll's shortcuts and to the files and links you open from any app.")
+    subtitle: Tr.t("One app for each role.")
     readonly property string script: Quickshell.env("HOME") + "/.local/share/atoll/scripts/open-app"
     property var st: null // A.parseState of open-app --state
     property string openRole: ""
@@ -28,23 +28,13 @@ Page {
         text: Tr.t("Text files (.txt)"), images: Tr.t("PNG, JPEG, WebP and GIF"), video: Tr.t("MP4, MKV and WebM"),
         music: Tr.t("MP3, FLAC and OGG"), email: Tr.t("Email links (mailto)")
     })
-    function atollLine(id, name) {
-        const keyed = { browser: Tr.t("Super + B opens %1"), terminal: Tr.t("Super + Return opens %1"), files: Tr.t("Super + E opens %1") }
-        return (keyed[id] ?? Tr.t("Atoll saves %1 as its choice")).arg(name)
-    }
-    function systemLine(id, name) {
-        const lines = {
-            browser: Tr.t("Links and web pages open in %1"), files: Tr.t("Folders open in %1"), text: Tr.t("Text files open in %1"),
-            images: Tr.t("Images open in %1"), video: Tr.t("Videos open in %1"), music: Tr.t("Music files open in %1"), email: Tr.t("Email links open in %1")
-        }
-        return lines[id]?.arg(name) ?? Tr.t("Nothing: terminals have no system default")
-    }
     function toggle(role, current) {
         failed = ""
         if (openRole === role.id) { openRole = ""; return }
         openRole = role.id
         pick = current
     }
+    function choose(role, id) { pick = id; apply(role) }
     function apply(role) {
         failed = ""
         setter.role = role.id
@@ -81,7 +71,6 @@ Page {
         IconImage { id: img; anchors.fill: parent; source: parent.icon ? Quickshell.iconPath(parent.icon, true) : ""; visible: status === Image.Ready }
         Ic { anchors.centerIn: parent; visible: !img.visible; name: "grid"; size: parent.size * 0.7; color: Theme.muted }
     }
-    component Caps: Tx { size: 12; strong: true; dim: true; font.letterSpacing: 0.8; font.capitalization: Font.AllUppercase; Layout.fillWidth: true }
 
     ColumnLayout {
         Layout.fillWidth: true; Layout.topMargin: 8
@@ -128,132 +117,64 @@ Page {
                                 AppIcon { icon: pg.entry(row.cur)?.icon ?? "" }
                                 Tx { text: pg.nameOf(row.cur); size: 14; strong: true; Layout.maximumWidth: 220 }
                             }
-                            RowLayout {
+                            Ic {
                                 visible: !!row.off
-                                Layout.alignment: Qt.AlignRight; spacing: 6
-                                Ic { name: "alert"; size: 14; color: Theme.warn }
-                                Tx {
-                                    size: 12; color: Theme.warn; Layout.maximumWidth: 320
-                                    text: !row.off ? "" : (row.off.all ? Tr.t("The system opens these in %1") : Tr.t("The system opens some of these in %1")).arg(pg.nameOf(row.off.app))
-                                }
+                                Layout.alignment: Qt.AlignRight
+                                name: "alert"; size: 14; color: Theme.warn
+                                Accessible.role: Accessible.StaticText
+                                Accessible.name: row.off ? Tr.t("The system uses %1").arg(pg.nameOf(row.off.app)) : ""
                             }
                         }
                         Filled {
                             icon: row.isOpen ? "up" : ""
-                            text: row.isOpen ? "" : row.off ? Tr.t("Resolve") : Tr.t("Change")
+                            text: row.isOpen ? "" : Tr.t("Change")
                             a11y: row.isOpen ? Tr.t("Close") : "%1: %2".arg(text).arg(pg.labels[row.role.id])
                             onClicked: pg.toggle(row.role, row.cur)
                         }
                     }
 
+                    // The apps, right under the role: one click uses it, for Atoll and the system together.
                     ColumnLayout {
                         visible: row.isOpen
-                        Layout.fillWidth: true; Layout.leftMargin: 14; Layout.rightMargin: 14
-                        spacing: 8
-                        Caps { text: Tr.t("Installed apps") }
-                        GridLayout {
-                            id: grid
-                            Layout.fillWidth: true
-                            columns: Math.max(1, Math.floor((pg.bodyWidth - 28) / 220))
-                            columnSpacing: 8; rowSpacing: 8
-                            // From the page width, not the grid's own, which the cards would feed back into.
-                            readonly property real cell: (pg.bodyWidth - 28 - columnSpacing * (columns - 1)) / columns
-                            Repeater {
-                                id: cands
-                                model: row.isOpen ? A.candidates(row.role, pg.entries, pg.st.mimes, [row.cur, row.off?.app ?? ""]) : []
-                                Rectangle {
-                                    id: card
-                                    required property var modelData
-                                    readonly property bool chosen: pg.pick === modelData.id
-                                    Layout.preferredWidth: grid.cell
-                                    implicitHeight: 66; radius: Theme.radiusSmall
-                                    color: chosen ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.2) : cm.containsMouse ? Theme.raised : Theme.hover
-                                    border.width: activeFocus ? 2 : 1
-                                    border.color: activeFocus ? Theme.ink : chosen ? Theme.accent : Theme.line
-                                    activeFocusOnTab: true
-                                    Accessible.role: Accessible.RadioButton
-                                    Accessible.name: modelData.name
-                                    Accessible.checked: chosen
-                                    Accessible.onPressAction: pg.pick = modelData.id
-                                    Keys.onSpacePressed: pg.pick = modelData.id
-                                    Keys.onReturnPressed: pg.pick = modelData.id
-                                    MouseArea { id: cm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: pg.pick = card.modelData.id }
-                                    RowLayout {
-                                        anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
-                                        spacing: 10
-                                        Rectangle {
-                                            implicitWidth: 16; implicitHeight: 16; radius: 8
-                                            color: "transparent"; border.width: 2; border.color: card.chosen ? Theme.accent : Theme.lineStrong
-                                            Rectangle { anchors.centerIn: parent; width: 8; height: 8; radius: 4; color: Theme.accent; visible: card.chosen }
-                                        }
-                                        AppIcon { icon: card.modelData.icon; size: 32 }
-                                        ColumnLayout {
-                                            Layout.fillWidth: true; spacing: 2
-                                            RowLayout {
-                                                Layout.fillWidth: true; spacing: 6
-                                                Tx { text: card.modelData.name; size: 14; strong: true; Layout.fillWidth: true; Layout.maximumWidth: Math.ceil(implicitWidth) } // a fraction short of it elides
-                                                Rectangle {
-                                                    visible: card.modelData.id === row.cur
-                                                    implicitWidth: badge.implicitWidth + 16; implicitHeight: 20; radius: 10; color: Theme.raised
-                                                    Tx { id: badge; anchors.centerIn: parent; text: Tr.t("Current"); size: 12; strong: true }
-                                                }
-                                            }
-                                            Tx { text: card.modelData.generic ?? ""; visible: !!text; size: 12; dim: true; Layout.fillWidth: true }
-                                        }
+                        Layout.fillWidth: true; Layout.leftMargin: 58; Layout.rightMargin: 12
+                        spacing: 2
+                        Repeater {
+                            id: cands
+                            model: row.isOpen ? A.candidates(row.role, pg.entries, pg.st.mimes, [row.cur, row.off?.app ?? ""]) : []
+                            Rectangle {
+                                id: opt
+                                required property var modelData
+                                readonly property bool chosen: modelData.id === row.cur && !row.off
+                                readonly property bool system: row.role.types.length > 0 && modelData.id === (row.off ? row.off.app : row.cur)
+                                Layout.fillWidth: true
+                                implicitHeight: 52; radius: 12
+                                color: chosen ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.18) : om.containsMouse ? Theme.raised : "transparent"
+                                border.width: activeFocus ? 2 : chosen ? 1 : 0
+                                border.color: activeFocus ? Theme.ink : Theme.accent
+                                activeFocusOnTab: true
+                                Accessible.role: Accessible.RadioButton
+                                Accessible.name: modelData.name + (system ? ", " + Tr.t("System default") : "")
+                                Accessible.checked: chosen
+                                Accessible.onPressAction: pg.choose(row.role, modelData.id)
+                                Keys.onSpacePressed: pg.choose(row.role, modelData.id)
+                                Keys.onReturnPressed: pg.choose(row.role, modelData.id)
+                                MouseArea { id: om; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; enabled: !setter.running; onClicked: pg.choose(row.role, opt.modelData.id) }
+                                RowLayout {
+                                    anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
+                                    spacing: 12
+                                    AppIcon { icon: opt.modelData.icon; size: 32 }
+                                    Tx { text: opt.modelData.name; size: 14; strong: true; Layout.fillWidth: true }
+                                    Rectangle {
+                                        visible: opt.system
+                                        implicitWidth: sysTag.implicitWidth + 16; implicitHeight: 22; radius: 11; color: Theme.raised
+                                        Tx { id: sysTag; anchors.centerIn: parent; text: Tr.t("System default"); size: 12; dim: true }
                                     }
+                                    Ic { name: "check"; size: 20; color: Theme.accent; opacity: opt.chosen ? 1 : 0 }
                                 }
                             }
                         }
                         Tx { visible: cands.count === 0; text: Tr.t("No installed app can do this."); dim: true; Layout.fillWidth: true }
-
-                        Caps { visible: !!pg.pick; text: Tr.t("What changes with %1").arg(row.pickName); Layout.topMargin: 6 }
-                        GridLayout {
-                            visible: !!pg.pick
-                            Layout.fillWidth: true
-                            columns: pg.bodyWidth > 640 ? 2 : 1
-                            columnSpacing: 8; rowSpacing: 8
-                            Repeater {
-                                model: [
-                                    { title: Tr.t("In Atoll"), icon: "grid", line: pg.atollLine(row.role.id, row.pickName) },
-                                    { title: Tr.t("In the system, for every app"), icon: "monitor", line: pg.systemLine(row.role.id, row.pickName) }
-                                ]
-                                Rectangle {
-                                    required property var modelData
-                                    Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredWidth: 1
-                                    implicitHeight: box.implicitHeight + 22
-                                    radius: 12; color: Theme.field
-                                    border.width: 1; border.color: Theme.line
-                                    ColumnLayout {
-                                        id: box
-                                        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 11; leftMargin: 14; rightMargin: 14 }
-                                        spacing: 7
-                                        RowLayout {
-                                            spacing: 8
-                                            Ic { name: modelData.icon; size: 16; color: Theme.muted }
-                                            Tx { text: modelData.title; size: 13; strong: true }
-                                        }
-                                        RowLayout {
-                                            Layout.fillWidth: true; spacing: 8
-                                            Ic { name: "check"; size: 14; color: Theme.good; Layout.alignment: Qt.AlignTop; Layout.topMargin: 2 }
-                                            Tx { text: modelData.line; size: 13; wrapMode: Text.Wrap; elide: Text.ElideNone; Layout.fillWidth: true }
-                                        }
-                                    }
-                                }
-                            }
-                        }
                         Tx { visible: pg.failed === row.role.id; text: Tr.t("Could not save the change."); color: Theme.danger; Layout.fillWidth: true }
-                        RowLayout {
-                            Layout.fillWidth: true; Layout.topMargin: 4; spacing: 8
-                            Item { Layout.fillWidth: true }
-                            Filled { text: Tr.t("Cancel"); onClicked: pg.openRole = "" }
-                            Btn {
-                                variant: "solid"
-                                text: Tr.t("Use %1").arg(row.pickName)
-                                // The same app again still fixes a disagreement with the system.
-                                enabledB: !!pg.pick && (pg.pick !== row.cur || !!row.off || !pg.st.atoll[row.role.id]) && !setter.running
-                                onClicked: pg.apply(row.role)
-                            }
-                        }
                     }
                 }
             }

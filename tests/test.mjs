@@ -536,7 +536,7 @@ if (haveXdgMime) {
 } else console.log("skipped the open-app checks that need xdg-mime")
 fs.rmSync(oa, { recursive: true })
 
-// The Default apps page: a disagreement shows Resolve, and resolving fixes both sides.
+// The Default apps page: a disagreement shows a warning, and picking an app fixes both sides in one click.
 if (haveQs && haveXdgMime) {
     const root = fs.mkdtempSync("/tmp/atoll-test-")
     fs.cpSync(new URL("../shell/", import.meta.url), root, { recursive: true })
@@ -550,6 +550,7 @@ if (haveQs && haveXdgMime) {
     spawnSync("xdg-mime", ["default", "web-b.desktop", "x-scheme-handler/https"], { env: fake })
     const page = runQml(root, `import QtQuick
 import Quickshell
+import "apps.js" as A
 ShellRoot {
     property int step: 0
     FloatingWindow { implicitWidth: 1000; implicitHeight: 900; PgApps { id: pg; anchors.fill: parent } }
@@ -568,16 +569,15 @@ ShellRoot {
         onTriggered: {
             step++
             if (step === 4) {
-                say("before", { resolve: !!find(pg.contentItem, c => c.text === "Resolve"), changes: all(pg.contentItem, c => c.text === "Change" && c.a11y !== undefined, []).length })
-                find(pg.contentItem, c => c.text === "Resolve").clicked()
+                say("before", { warn: all(pg.contentItem, c => c.name === "alert" && c.visible, []).length, changes: all(pg.contentItem, c => c.text === "Change" && c.a11y !== undefined, []).length })
+                all(pg.contentItem, c => c.text === "Change" && c.a11y !== undefined, [])[0].clicked()
             }
             if (step === 5) {
-                say("cards", all(pg.contentItem, c => c.chosen !== undefined && c.modelData, []).map(c => c.modelData.id + (c.chosen ? "*" : "")))
-                say("box", all(pg.contentItem, c => typeof c.text === "string" && c.text.indexOf("open in") >= 0 || c.text === "Super + B opens web-a", []).map(c => c.text))
-                find(pg.contentItem, c => c.text === "Use web-a").clicked()
+                say("cards", all(pg.contentItem, c => c.chosen !== undefined && c.modelData, []).map(c => c.modelData.id + (c.chosen ? "*" : "") + (c.system ? "+" : "")))
+                pg.choose(A.roles.find(r => r.id === "browser"), "web-a")
             }
             if (step === 9) {
-                say("after", { resolve: !!find(pg.contentItem, c => c.text === "Resolve"), open: pg.openRole })
+                say("after", { warn: all(pg.contentItem, c => c.name === "alert" && c.visible, []).length, open: pg.openRole })
                 const term = all(pg.contentItem, c => c.text === "Change" && c.a11y !== undefined, [])[1]
                 term.clicked()
             }
@@ -586,10 +586,9 @@ ShellRoot {
     }
 }
 `, { "Ui.qml": `pragma Singleton\nimport Quickshell\nSingleton { property bool open: true; property var screen }\n` })
-    assert.deepEqual(page.before, { resolve: true, changes: 7 })
-    assert.deepEqual(page.cards, ["web-a*", "web-b"])
-    assert.deepEqual(page.box, ["Super + B opens web-a", "Links and web pages open in web-a"])
-    assert.deepEqual(page.after, { resolve: false, open: "" })
+    assert.deepEqual(page.before, { warn: 1, changes: 8 })
+    assert.deepEqual(page.cards, ["web-a", "web-b+"]) // Atoll says web-a, the system web-b: neither is checked until they agree
+    assert.deepEqual(page.after, { warn: 0, open: "" })
     assert.deepEqual(page.terms, ["term-a"]) // the second Change, after the browser's, is the terminal's; hidden apps stay out
     assert.equal(spawnSync("xdg-mime", ["query", "default", "x-scheme-handler/https"], { env: fake, encoding: "utf8" }).stdout.trim(), "web-a.desktop")
     assert.deepEqual(JSON.parse(fs.readFileSync(root + "/home/.config/atoll/apps.json")), { browser: "web-a" })
