@@ -482,22 +482,4 @@ Page {
         currentIndex: choices.indexOf(minutes)
         onActivated: i => Cfg.v[key] = choices[i]
     }
-
-    Sec { title: Tr.t("Shortcuts") }
-    GridLayout {
-        Layout.fillWidth: true; columns: 2; columnSpacing: 28; rowSpacing: 6
-        Repeater {
-            model: [["Super + R", Tr.t("Apps and commands")], ["Super + Z", Tr.t("Show the bottom bar")],
-                    ["Super + Alt + A", Tr.t("Sound")], ["Super + Alt + I", "Internet"], ["Super + Alt + B", "Bluetooth"], ["Super + Alt + D", Tr.t("Performance")],
-                    ["Super + Alt + C", Tr.t("Calendar")], ["Super + Alt + V", Tr.t("Notifications")], ["Super + Alt + J", Tr.t("Settings")], ["Super + Alt + M", Tr.t("Monitor")], ["Super + Alt + K", Tr.t("Shortcuts")], ["Super + Alt + N", Tr.t("Default apps")], ["Super + Alt + R", Tr.t("Window rules")], ["Super + Alt + U", Tr.t("Backup")], ["Super + Alt + O", Tr.t("About")], ["Super + Alt + E", Tr.t("Power")],
-                    ["Super + L", Tr.t("Lock")], ["Super + Enter", Tr.t("Terminal")], ["Super + B", Tr.t("Browser")], ["Super + E", Tr.t("Files")],
-                    ["Super + C", Tr.t("Close window")], ["Super + Shift + V", Tr.t("Clipboard history")], ["Super + .", Tr.t("Emoji")], ["Super + O", Tr.t("Workspace overview")], ["Print", Tr.t("Area screenshot")], [Tr.t("Super + Space"), Tr.t("Switch keyboard layout")]]
-            RowLayout {
-                required property var modelData
-                Layout.fillWidth: true; Layout.preferredWidth: 1; spacing: 8
-                Tx { text: parent.modelData[1]; dim: true; Layout.fillWidth: true }
-                Tx { text: parent.modelData[0]; mono: true; size: 13 }
-            }
-        }
-    }
 }

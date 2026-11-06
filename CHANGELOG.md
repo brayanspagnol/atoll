@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.14.1] - 2026-11-06
+
+### Fixed
+
+- Control center cards grow with their content, so the status line is no longer cut off.
+
+### Removed
+
+- The shortcut list in Settings, now that the Shortcuts screen shows them all.
+
 ## [1.14.0] - 2026-11-06
 
 ### Added
@@ -233,7 +243,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.14.0...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.14.1...HEAD
+[1.14.1]: https://github.com/brayanspagnol/atoll/compare/v1.14.0...v1.14.1
 [1.14.0]: https://github.com/brayanspagnol/atoll/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/brayanspagnol/atoll/compare/v1.12.1...v1.13.0
 [1.12.1]: https://github.com/brayanspagnol/atoll/compare/v1.12.0...v1.12.1

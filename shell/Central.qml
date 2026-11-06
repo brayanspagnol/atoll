@@ -79,7 +79,8 @@ Scope {
                                 readonly property bool sel: Ui.page === modelData.id
                                 readonly property color fg: sel ? Theme.accentInk : Theme.ink
                                 Layout.fillWidth: true; Layout.preferredWidth: 1
-                                implicitHeight: 92; radius: 16
+                                // As tall as its content: a fixed height clipped the status line.
+                                implicitHeight: tileContent.implicitHeight + 24; radius: 16
                                 color: sel ? Theme.accent : tm.containsMouse ? Theme.raisedHover : Theme.raised
                                 border.width: activeFocus ? 2 : 0; border.color: Theme.ink
                                 activeFocusOnTab: true
@@ -89,7 +90,8 @@ Scope {
                                 Keys.onReturnPressed: Ui.page = modelData.id
                                 Behavior on color { ColorAnimation { duration: Theme.fast } }
                                 ColumnLayout {
-                                    anchors.fill: parent; anchors.margins: 16; spacing: 6
+                                    id: tileContent
+                                    anchors.fill: parent; anchors.margins: 12; anchors.leftMargin: 16; anchors.rightMargin: 16; spacing: 4
                                     RowLayout {
                                         Ic { name: tile.modelData.icon; size: 24; color: tile.fg }
                                         Item { Layout.fillWidth: true }
