@@ -6,9 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-11-06
+
 ### Added
 
 - Weather: the current temperature in the island, and a card with the next hours and 7 days from Open-Meteo. A new Weather screen (`Super+Alt+W`) picks the city by search or, if you turn it on, by IP, the unit (°C or °F) and whether the island shows it.
+- Focus mode: a timer button in the island opens a card to start 25 or 50 minutes, an hour, or until you stop, with an optional Pomodoro cycle (25 minutes, then a 5 minute break). While it runs, the island shows the time left, and music and notification popups stay hidden except for the apps you let through; notifications still reach the history. At the end you can take a break or add 25 minutes. The launcher search can start or stop it.
 
 ## [1.16.3] - 2026-11-06
 
@@ -305,7 +308,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.16.3...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.17.0...HEAD
+[1.17.0]: https://github.com/brayanspagnol/atoll/compare/v1.16.3...v1.17.0
 [1.16.3]: https://github.com/brayanspagnol/atoll/compare/v1.16.2...v1.16.3
 [1.16.2]: https://github.com/brayanspagnol/atoll/compare/v1.16.1...v1.16.2
 [1.16.1]: https://github.com/brayanspagnol/atoll/compare/v1.16.0...v1.16.1

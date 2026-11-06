@@ -55,6 +55,10 @@ Screenshots use demo data.
 |---|---|---|
 | ![Now playing card](docs/screenshots/music.webp) | ![Volume and output switching](docs/screenshots/music-sound.webp) | ![Liked songs](docs/screenshots/music-likes.webp) |
 
+| Weather | Focus |
+|---|---|
+| ![Weather card under the island](docs/screenshots/weather.webp) | ![Focus timer](docs/screenshots/focus.webp) |
+
 | Calendar | Performance |
 |---|---|
 | ![Calendar](docs/screenshots/cal.webp) | ![Performance](docs/screenshots/perf.webp) |
