@@ -767,6 +767,20 @@ ShellRoot {
     }
     fs.rmSync(root, { recursive: true })
 }
+// A field's placeholder can carry outside text (a nearby Wi-Fi name): it shows as plain text, never styled.
+if (haveQs) {
+    const root = fs.mkdtempSync("/tmp/atoll-test-")
+    fs.cpSync(new URL("../shell/", import.meta.url), root, { recursive: true })
+    const out = runQml(root, `import QtQuick
+import Quickshell
+ShellRoot {
+    FloatingWindow { implicitWidth: 400; implicitHeight: 100; Fld { id: f; width: 300; placeholderText: "<font size=7 color=red>FREE" } }
+    Timer { running: true; interval: 300; onTriggered: { const p = f.children.filter(c => c.textFormat !== undefined); console.log("RESULT field " + JSON.stringify(p.map(c => [c.text, c.textFormat === Text.PlainText]))); Qt.quit() } }
+}
+`)
+    assert.deepEqual(out.field, [["<font size=7 color=red>FREE", true]])
+    fs.rmSync(root, { recursive: true })
+}
 // The Backup page on the real QML: pick a file, review it, replace. user.lua waits for its own yes.
 if (haveQs) {
     const root = fs.mkdtempSync("/tmp/atoll-test-"), home = root + "/home", other = root + "/other", file = root + "/alex.tar.gz"
