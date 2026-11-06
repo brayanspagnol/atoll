@@ -39,6 +39,7 @@ Scope {
         readonly property int shown: mon?.activeWorkspace?.id ?? 1
         readonly property string wallpaper: (Cfg.v.wallpapers ?? {})[screen?.name] ?? Cfg.v.wallpaper
         property var clients: []
+        readonly property var byAddress: clients.reduce((m, c) => { m[c.address] = c; return m }, {}) // no Object.fromEntries in QML
         property int dropId: -1 // the workspace under a dragged window
 
         // Workspaces of this screen, plus the free numbers up to 8, without those another screen holds.
@@ -79,22 +80,27 @@ Scope {
             stdout: StdioCollector { onStreamFinished: { try { win.clients = JSON.parse(text) } catch (e) { win.clients = [] } } }
         }
         Timer { id: refresh; interval: 120; onTriggered: { clientList.running = false; clientList.running = true } }
-        Connections { target: Hyprland; function onRawEvent() { refresh.restart() } }
+        // Titles change all the time (and the focused window's also sends activewindow), but nothing drawn here moves.
+        readonly property var titleEvents: ["windowtitle", "windowtitlev2", "activewindow", "activewindowv2"]
+        // Not restart(): a steady stream of events would keep pushing the refresh back.
+        Connections { target: Hyprland; function onRawEvent(event) { if (!win.titleEvents.includes(event.name) && !refresh.running) refresh.start() } }
         Component.onCompleted: { Hyprland.refreshToplevels(); p = Qt.binding(() => Ui.overview ? 1 : 0) }
 
         // One window, in the same place it has on the screen. k scales screen pixels to this view.
         component Mini: ClippingRectangle {
             id: mini
             required property var modelData
+            // ScriptModel leaves a moved entry's modelData stale, so the fresh one comes from its address.
+            readonly property var c: win.byAddress[modelData.address] ?? modelData
             property real k: 1
             property bool live: false
-            x: (modelData.at[0] - (win.mon?.x ?? 0)) * k
-            y: (modelData.at[1] - (win.mon?.y ?? 0)) * k
-            width: modelData.size[0] * k
-            height: modelData.size[1] * k
+            x: (c.at[0] - (win.mon?.x ?? 0)) * k
+            y: (c.at[1] - (win.mon?.y ?? 0)) * k
+            width: c.size[0] * k
+            height: c.size[1] * k
             radius: Math.max(4, 16 * k)
             color: Theme.raised
-            readonly property var entry: DesktopEntries.heuristicLookup(modelData.class)
+            readonly property var entry: DesktopEntries.heuristicLookup(c.class)
             IconImage {
                 anchors.centerIn: parent
                 implicitSize: Math.min(parent.width, parent.height) * 0.45
@@ -102,7 +108,7 @@ Scope {
             }
             ScreencopyView {
                 anchors.fill: parent
-                captureSource: win.toplevelOf(mini.modelData)
+                captureSource: win.toplevelOf(mini.c)
                 live: mini.live
                 opacity: hasContent ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: 180 } }
@@ -184,7 +190,7 @@ Scope {
                         Keys.onSpacePressed: win.goTo(modelData)
                         Keys.onReturnPressed: { win.goTo(modelData); Ui.overview = false }
                         Repeater {
-                            model: thumb.windows
+                            model: ScriptModel { values: thumb.windows; objectProp: "address" }
                             Mini { k: thumb.width / win.monW }
                         }
                         Tx { visible: thumb.windows.length === 0; anchors.centerIn: parent; text: Tr.t("Empty"); dim: true; size: 13 }
@@ -205,26 +211,28 @@ Scope {
                 readonly property var windows: win.windowsOf(win.shown)
                 readonly property var rects: O.spread(windows.map(c => ({ x: c.at[0] - (win.mon?.x ?? 0), y: c.at[1] - (win.mon?.y ?? 0), w: c.size[0], h: c.size[1] })), win.monW, win.monH, width, height, 24)
                 Tx { visible: area.windows.length === 0; opacity: win.p; anchors.centerIn: parent; text: Tr.t("No windows on this workspace"); dim: true; size: 18 }
+                // Keyed by address: a refresh updates the windows that stay, instead of rebuilding them mid-drag.
                 Repeater {
-                    model: area.windows
+                    model: ScriptModel { values: area.windows; objectProp: "address" }
                     Item {
                         id: spread
                         required property var modelData
                         required property int index
-                        readonly property var rect: area.rects[index] ?? { x: 0, y: 0, w: modelData.size[0], h: modelData.size[1] }
-                        readonly property real zoom: 1 + (rect.w / modelData.size[0] - 1) * win.p
-                        readonly property real realX: modelData.at[0] - (win.mon?.x ?? 0)
-                        readonly property real realY: modelData.at[1] - (win.mon?.y ?? 0)
+                        readonly property var c: win.byAddress[modelData.address] ?? modelData
+                        readonly property var rect: area.rects[index] ?? { x: 0, y: 0, w: c.size[0], h: c.size[1] }
+                        readonly property real zoom: 1 + (rect.w / c.size[0] - 1) * win.p
+                        readonly property real realX: c.at[0] - (win.mon?.x ?? 0)
+                        readonly property real realY: c.at[1] - (win.mon?.y ?? 0)
                         x: (realX - area.x) * (1 - win.p) + rect.x * win.p
                         y: (realY - area.y) * (1 - win.p) + rect.y * win.p
-                        width: modelData.size[0] * zoom
-                        height: modelData.size[1] * zoom
+                        width: c.size[0] * zoom
+                        height: c.size[1] * zoom
                         activeFocusOnTab: true
                         Accessible.role: Accessible.Button
-                        Accessible.name: modelData.title
-                        Keys.onReturnPressed: win.focusWindow(modelData)
-                        Keys.onSpacePressed: win.focusWindow(modelData)
-                        Mini { modelData: spread.modelData; k: spread.zoom; x: 0; y: 0; live: true }
+                        Accessible.name: c.title
+                        Keys.onReturnPressed: win.focusWindow(c)
+                        Keys.onSpacePressed: win.focusWindow(c)
+                        Mini { modelData: spread.c; k: spread.zoom; x: 0; y: 0; live: true }
                         Rectangle {
                             anchors.fill: parent
                             radius: Math.max(4, 16 * spread.zoom)
@@ -238,7 +246,7 @@ Scope {
                             implicitHeight: 34; radius: 12
                             opacity: win.p
                             color: Theme.glassStrong
-                            Tx { anchors.fill: parent; anchors.leftMargin: 12; anchors.rightMargin: 12; text: spread.modelData.title || spread.modelData.class; size: 14 }
+                            Tx { anchors.fill: parent; anchors.leftMargin: 12; anchors.rightMargin: 12; text: spread.c.title || spread.c.class; size: 14 }
                         }
                         MouseArea {
                             id: pick
@@ -257,7 +265,7 @@ Scope {
                                 if (!pressed) return
                                 const p = inStage(mouse)
                                 if (!ghost.visible && Math.hypot(p.x - start.x, p.y - start.y) < 10) return
-                                ghost.title = spread.modelData.title || spread.modelData.class
+                                ghost.title = spread.c.title || spread.c.class
                                 ghost.x = p.x - ghost.width / 2
                                 ghost.y = p.y - ghost.height / 2
                                 ghost.visible = true
@@ -267,8 +275,8 @@ Scope {
                                 const wasDrag = ghost.visible, to = win.dropId
                                 ghost.visible = false
                                 win.dropId = -1
-                                if (!wasDrag) win.focusWindow(spread.modelData)
-                                else if (to > 0 && to !== win.shown) win.moveWindow(spread.modelData, to)
+                                if (!wasDrag) win.focusWindow(spread.c)
+                                else if (to > 0 && to !== win.shown) win.moveWindow(spread.c, to)
                             }
                         }
                     }

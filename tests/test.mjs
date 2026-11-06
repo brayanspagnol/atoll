@@ -443,6 +443,54 @@ ShellRoot {
     assert.deepEqual(rows.rows, { same: true, sure: true, cpu: [1, 60], first: "b", cores: [7, 8, 9], sameCore: true })
     fs.rmSync(perf, { recursive: true })
 
+    // Overview windows keep their delegates (and a drag in progress) across a refresh, with fresh data even when reordered.
+    // A fake hyprctl answers, so nothing reaches a running Hyprland; a plain window stands in for the layer shell.
+    const ov = fs.mkdtempSync("/tmp/atoll-test-")
+    fs.cpSync(new URL("../shell/", import.meta.url), ov, { recursive: true })
+    fs.mkdirSync(ov + "/bin"); fs.mkdirSync(ov + "/home")
+    fs.writeFileSync(ov + "/bin/hyprctl", "#!/bin/sh\n[ \"$1\" = -j ] && echo '[]'\nexit 0\n", { mode: 0o755 })
+    fs.writeFileSync(ov + "/Overview.qml", fs.readFileSync(ov + "/Overview.qml", "utf8")
+        .replace("PanelWindow {", "FloatingWindow { implicitWidth: 1600; implicitHeight: 1000")
+        .replace("    LazyLoader {", "    readonly property var win: loader.item\n    LazyLoader {\n    id: loader")
+        .split("\n").filter(l => !/^\s*(anchors \{ top|exclusionMode|WlrLayershell)/.test(l)).join("\n"))
+    fs.writeFileSync(ov + "/Ui.qml", `pragma Singleton\nimport Quickshell\nSingleton { property bool overview: true; property var screen: Quickshell.screens[0] }\n`)
+    fs.writeFileSync(ov + "/shell.qml", `import QtQuick
+import Quickshell
+ShellRoot {
+    Overview { id: ov }
+    function all(item, test, out) { for (const c of item.children) { if (test(c)) out.push(c); all(c, test, out) } return out }
+    function spreads() { return all(ov.win.contentItem, c => c.realX !== undefined, []) }
+    function client(address, title, x) { return { address, title, class: "kitty", at: [x, 0], size: [400, 300], workspace: { id: 1 }, mapped: true, hidden: false, monitor: ov.win.mon?.id } }
+    property var before: []
+    property int step: 0
+    Timer {
+        running: true; repeat: true; interval: 400
+        onTriggered: {
+            step++
+            if (step === 3) ov.win.clients = [client("0xa", "one", 0), client("0xb", "two", 500)]
+            if (step === 4) {
+                before = spreads()
+                const b = client("0xb", "two!", 500); b.size = [200, 300]
+                ov.win.clients = [b, client("0xa", "one", 0), client("0xc", "three", 900)]
+            }
+            if (step === 5) {
+                const now = spreads()
+                console.log("RESULT ov " + JSON.stringify({ before: before.length, kept: before.every(s => now.includes(s)), shown: now.map(s => s.c.address + " " + s.c.title + " " + s.c.size[0]) }))
+                Qt.quit()
+            }
+        }
+    }
+}
+`)
+    {
+        const { WAYLAND_DISPLAY, DISPLAY, HYPRLAND_INSTANCE_SIGNATURE, ...env } = process.env
+        const run = spawnSync("dbus-run-session", ["--", "qs", "-p", ov + "/shell.qml"], { encoding: "utf8", timeout: 30000, env: { ...env, PATH: ov + "/bin:" + env.PATH, LANG: "C.UTF-8", LC_ALL: "C.UTF-8", LANGUAGE: "en", QT_QPA_PLATFORM: "offscreen", HOME: ov + "/home", XDG_DATA_HOME: ov + "/home/share", XDG_CONFIG_HOME: ov + "/home/config", XDG_STATE_HOME: ov + "/home/state", XDG_DATA_DIRS: ov + "/data" } })
+        const said = Object.fromEntries([...(run.stdout + run.stderr).matchAll(/RESULT (\w+) (.*)/g)].map(m => [m[1], JSON.parse(m[2])]))
+        assert.deepEqual((run.stdout + run.stderr).split("\n").filter(l => /Overview\.qml/.test(l)), [])
+        assert.deepEqual(said.ov, { before: 2, kept: true, shown: ["0xb two! 200", "0xa one 400", "0xc three 400"] })
+    }
+    fs.rmSync(ov, { recursive: true })
+
     // Clipboard panel, against a throwaway cliphist database: the default one is the user's real history.
     const realCliphist = spawnSync("sh", ["-c", "command -v cliphist"], { encoding: "utf8" }).stdout.trim()
     if (realCliphist) {
