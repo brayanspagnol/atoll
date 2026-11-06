@@ -74,6 +74,11 @@ Singleton {
             property bool weatherAuto: false
             property string weatherUnit: "c" // "c" or "f"
             property bool weatherChip: true
+            // Focus mode. Minutes: 25, 50, 60, or 0 for until turned off. focusAllow: app names whose notifications still show.
+            property int focusMinutes: 25
+            property bool focusPomodoro: false
+            property bool focusHide: true
+            property var focusAllow: []
         }
     }
 }

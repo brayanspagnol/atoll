@@ -24,15 +24,20 @@ Singleton {
         if (!mediaOpen) { sheetScreen = screen; sheetIsland = island; open = false }
         mediaOpen = !mediaOpen
     }
-    // The weather card drops from the same place as the music card, so only one is open.
+    // The weather and focus cards drop from the same place as the music card, so only one is open.
     property bool weatherOpen: false
+    property bool focusOpen: false
     function toggleWeather(screen, island) {
-        if (!weatherOpen) { sheetScreen = screen; sheetIsland = island; open = false; mediaOpen = false }
+        if (!weatherOpen) { sheetScreen = screen; sheetIsland = island; open = false; mediaOpen = false; focusOpen = false }
         weatherOpen = !weatherOpen
     }
-    onMediaOpenChanged: if (mediaOpen) weatherOpen = false
-    onOpenChanged: if (open) weatherOpen = false
-    onDockEditorChanged: if (dockEditor) weatherOpen = false
+    function toggleFocus(screen, island) {
+        if (!focusOpen) { sheetScreen = screen; sheetIsland = island; open = false; mediaOpen = false; weatherOpen = false }
+        focusOpen = !focusOpen
+    }
+    onMediaOpenChanged: if (mediaOpen) { weatherOpen = false; focusOpen = false }
+    onOpenChanged: if (open) { weatherOpen = false; focusOpen = false }
+    onDockEditorChanged: if (dockEditor) { weatherOpen = false; focusOpen = false }
     function toggleDock() { dockPeek = !dockPeek }
     // A dock raised by shortcut goes away on its own; hovering keeps it up.
     Timer { interval: 4000; running: ui.dockPeek; onTriggered: ui.dockPeek = false }

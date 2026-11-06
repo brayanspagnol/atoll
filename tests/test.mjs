@@ -687,6 +687,76 @@ for (const file of fs.readdirSync(new URL("i18n/", shell))) {
     }
 }
 
+// Focus mode: the clock, the ring, pomodoro, more time, the let-through list and a saved session.
+const Fo = load("focus.js", "make,next,extend,minutes,seconds,fraction,clock,names,allowed,seenApps,restore,durations")
+const t0 = 1700000000000, MIN = 60000
+const f25 = Fo.make("focus", 25, t0, false), open = Fo.make("focus", 0, t0, true)
+assert.deepEqual(plain(f25), { phase: "focus", startedAt: t0, endsAt: t0 + 25 * MIN, pomodoro: false })
+assert.deepEqual([open.endsAt, open.pomodoro], [0, false]) // no end, so no cycle
+assert.deepEqual([Fo.make("focus", "x", t0).endsAt, Fo.make("focus", -5, t0).endsAt, Fo.make("focus", 1e9, t0).endsAt], [0, 0, t0 + 1440 * MIN])
+assert.deepEqual(plain(Fo.durations), [25, 50, 60, 0])
+assert.deepEqual([0, 5, 59, 60, 1122, 3600, 3725].map(Fo.clock), ["0:00", "0:05", "0:59", "1:00", "18:42", "1:00:00", "1:02:05"])
+assert.deepEqual([t0, t0 + 1, t0 + 1000, t0 + 26 * MIN].map(n => Fo.seconds(f25, n)), [1500, 1500, 1499, 0]) // counts down from 25:00, never below 0
+assert.deepEqual([Fo.seconds(open, t0 + 61500), Fo.seconds(open, t0 - 5000)], [61, 0]) // counts up with no end
+assert.deepEqual([t0 - MIN, t0, t0 + 12.5 * MIN, t0 + 99 * MIN].map(n => Fo.fraction(f25, n)), [1, 1, 0.5, 0])
+assert.equal(Fo.fraction(open, t0 + 5 * MIN), 1)
+assert.equal(Fo.next(f25, t0 + 25 * MIN), null)
+const p1 = Fo.make("focus", 25, t0, true), p2 = Fo.next(p1, t0 + 25 * MIN), p3 = Fo.next(p2, t0 + 30 * MIN)
+assert.deepEqual([p2.phase, Fo.minutes(p2), p2.pomodoro, p3.phase, Fo.minutes(p3), p3.startedAt], ["break", 5, true, "focus", 25, t0 + 30 * MIN])
+assert.equal(Fo.next(p1, t0 + 300 * MIN).startedAt, t0 + 300 * MIN) // woken long after: the next phase starts now
+assert.equal(Fo.extend(f25, 10, t0 + MIN).endsAt, t0 + 35 * MIN); assert.equal(Fo.minutes(Fo.extend(f25, 10, t0)), 35)
+assert.equal(Fo.extend(f25, 5, t0 + 30 * MIN).endsAt, t0 + 35 * MIN) // already over: from now
+assert.equal(Fo.extend(f25, 1e9, t0).endsAt, t0 + 1440 * MIN)
+assert.equal(Fo.extend(open, 25, t0), open); assert.deepEqual(plain(Fo.extend(null, 25, t0)), plain(f25))
+assert.deepEqual(plain(Fo.names(["Slack", 3, null, "", "  ", { a: 1 }, "Signal"])), ["Slack", "Signal"])
+assert.deepEqual([Fo.names("Slack").length, Fo.names(null).length, Fo.names({ 0: "Slack" }).length], [0, 0, 0])
+assert(Fo.allowed("slack", ["Slack"]) && Fo.allowed(" Slack ", [3, "slack "]))
+assert(!Fo.allowed("Slack", "Slack") && !Fo.allowed(undefined, ["undefined"]) && !Fo.allowed("", [""]) && !Fo.allowed("Signal", ["Slack"]))
+assert.deepEqual(plain(Fo.seenApps([{ appName: "A" }, { appName: "B" }, { appName: "A" }, { appName: "" }, {}, null, { appName: 5 }, { appName: "Slack" }], ["slack"])), ["A", "B"])
+assert.deepEqual(plain(Fo.seenApps("x", null)), [])
+const saveF = s => JSON.stringify(s)
+assert.deepEqual(plain(Fo.restore(saveF(f25), t0 + MIN)), plain(f25)); assert.deepEqual(plain(Fo.restore(saveF(open), t0 + 60 * MIN)), plain(open))
+for (const bad of ["", "{oops", "null", "[]", "42", saveF({ ...f25, phase: "nap" }), saveF({ ...f25, endsAt: "1" }), saveF({ ...f25, startedAt: null }),
+    saveF({ ...f25, endsAt: t0 + 3000 * MIN }), saveF({ ...open, pomodoro: true }), saveF({ ...open, phase: "break" })]) assert.equal(Fo.restore(bad, t0 + MIN), null, bad)
+assert.equal(Fo.restore(saveF(f25), t0 + 25 * MIN), null) // over while the shell was down
+assert.equal(Fo.restore(saveF(f25), t0 - 2 * MIN), null) // starts in the future: the clock went back
+assert.equal(Fo.restore(saveF(open), t0 + 1440 * MIN), null) // left on for a day
+assert.equal(Fo.restore(saveF({ ...f25, pomodoro: "yes" }), t0).pomodoro, false)
+// The singleton and its card: a session that outlived a restart, the let-through list, the end card and its break.
+if (haveQs) {
+    const fd = fs.mkdtempSync("/tmp/atoll-test-"), focusFile = fd + "/home/.local/state/atoll/focus.json"
+    fs.cpSync(new URL("../shell/", import.meta.url), fd, { recursive: true })
+    fs.mkdirSync(fd + "/home/.local/state/atoll", { recursive: true })
+    fs.writeFileSync(focusFile, saveF(Fo.make("focus", 10, Date.now() - MIN, false)))
+    const said = runQml(fd, `import QtQuick
+import Quickshell
+ShellRoot {
+    FloatingWindow { implicitWidth: 480; implicitHeight: 900; FocusCard { id: card; width: 480; open: true } }
+    property int step: 0
+    function say(tag, v) { console.log("RESULT " + tag + " " + JSON.stringify(v)) }
+    Timer {
+        running: true; repeat: true; interval: 400
+        onTriggered: {
+            step++
+            if (step === 2) { say("restored", { running: Focus.running, phase: Focus.phase, left: Math.round(Focus.seconds / 60), hiding: Focus.hiding, big: card.big }); Cfg.v.focusAllow = ["Slack", 3] }
+            if (step === 3) {
+                say("allow", { allow: Focus.allow, slack: Focus.lets("slack"), mail: Focus.lets("Mail") })
+                Focus.set(Object.assign({}, Focus.session, { startedAt: Date.now() - 600001, endsAt: Date.now() - 1 })); Focus.tick() // as after a suspend
+            }
+            if (step === 4) { say("ended", { running: Focus.running, toasts: Notifs.toasts.map(t => [t.summary, t.body, t.actions.map(a => a.text)]) }); Notifs.toasts[0].actions[0].invoke() }
+            if (step === 5) { say("rest", { phase: Focus.phase, left: Focus.clock, hiding: Focus.hiding, toasts: Notifs.toasts.length, label: Focus.label }); Qt.quit() }
+        }
+    }
+}
+`, { "Ui.qml": `pragma Singleton\nimport Quickshell\nSingleton { property bool open: false; property bool mediaOpen: false; property bool focusOpen: false; property var sheetScreen; property var screen }\n` })
+    assert.deepEqual(said.restored, { running: true, phase: "focus", left: 9, hiding: true, big: "9" })
+    assert.deepEqual(said.allow, { allow: ["Slack"], slack: true, mail: false })
+    assert.deepEqual(said.ended, { running: false, toasts: [["Focus finished", "10 min", ["5 min break", "25 more min"]]] })
+    assert.deepEqual(said.rest, { phase: "break", left: "5:00", hiding: false, toasts: 0, label: "Break, 5 min 0 s left" })
+    assert.equal(JSON.parse(fs.readFileSync(focusFile, "utf8")).phase, "break")
+    fs.rmSync(fd, { recursive: true })
+}
+
 // Clipboard: what a cliphist line is, and the filters.
 const K = load("clip.js", "classify,parseList,filter")
 const kinds = K.parseList("9\t[[ binary data 1.2 MiB png 3440x1440 ]]\n8\t #8CC8F5 \n7\thttps://a.example/x?y=1\n6\tmailto:a@b.c\n5\tsee https://a.example\n4\t#12345\n3\t#abc\n2\t[[ binary data 3 KiB ]]\n\nnot a line\n")

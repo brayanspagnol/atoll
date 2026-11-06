@@ -67,6 +67,20 @@ PanelWindow {
                 }
                 MouseArea { id: cm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Ui.toggle("cal") }
             }
+            // Focus mode's timer while it runs.
+            Rectangle {
+                visible: Focus.running
+                implicitWidth: focusRow.implicitWidth + 20; implicitHeight: 44; radius: 22
+                color: Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, Ui.focusOpen || fm.containsMouse ? 0.26 : 0.16)
+                Accessible.role: Accessible.Button
+                Accessible.name: Focus.label
+                RowLayout {
+                    id: focusRow; anchors.centerIn: parent; spacing: 8
+                    FocusRing { size: 26; stroke: 4; value: Focus.fraction; track: Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.25) }
+                    Tx { text: Focus.clock; mono: true; strong: true; color: Theme.accent }
+                }
+                MouseArea { id: fm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Ui.toggleFocus(win.modelData, win) }
+            }
             Rectangle {
                 visible: Weather.shown
                 implicitWidth: weatherRow.implicitWidth + 24; implicitHeight: 44; radius: Theme.radiusSmall
@@ -82,7 +96,7 @@ PanelWindow {
                 MouseArea { id: wm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Ui.toggleWeather(win.modelData, win) }
             }
             Rectangle {
-                visible: !!Audio.player?.trackTitle
+                visible: !!Audio.player?.trackTitle && !Focus.hiding
                 implicitWidth: mediaRow.implicitWidth + 24; implicitHeight: 44; radius: Theme.radiusSmall
                 color: Ui.mediaOpen || mm.containsMouse ? Theme.raised : "transparent"
                 Accessible.role: Accessible.Button
@@ -131,10 +145,11 @@ PanelWindow {
                     onActivated: Ui.clipboard ? Ui.clipboard = false : Ui.openClipboard()
                 }
                 Stat {
-                    icon: Cfg.v.dnd ? "bellOff" : "avisos"
+                    icon: Cfg.v.dnd || Focus.hiding ? "bellOff" : "avisos"
                     label: Notifs.all.length ? String(Notifs.all.length) : ""
                     a11y: Tr.t("Notifications"); target: "avisos"
                 }
+                Stat { icon: "timer"; a11y: Tr.t("Focus"); onActivated: Ui.toggleFocus(win.modelData, win) }
                 Stat { icon: "energia"; a11y: Tr.t("Power"); target: "energia" }
                 Stat {
                     readonly property var bat: UPower.displayDevice

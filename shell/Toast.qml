@@ -38,7 +38,8 @@ Frost {
             implicitWidth: 44; implicitHeight: 44; radius: 12
             color: Theme.raised
             IconImage { anchors.centerIn: parent; implicitSize: c.iconSource.startsWith("image://icon") || c.iconSource.endsWith(".svg") ? 30 : 44; source: c.iconSource; visible: !!c.iconSource }
-            Tx { anchors.centerIn: parent; visible: !c.iconSource; text: (c.modelData.appName || "?").charAt(0).toUpperCase(); size: 20; strong: true }
+            Ic { anchors.centerIn: parent; visible: !!c.modelData.icon; name: c.modelData.icon ?? ""; size: 24; color: Theme.accent } // the shell's own cards
+            Tx { anchors.centerIn: parent; visible: !c.iconSource && !c.modelData.icon; text: (c.modelData.appName || "?").charAt(0).toUpperCase(); size: 20; strong: true }
         }
         ColumnLayout {
             Layout.fillWidth: true; spacing: 1

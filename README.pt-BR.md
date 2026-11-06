@@ -20,6 +20,7 @@ Os prints estão no [README em inglês](README.md#screenshots).
 - **Dock:** se esconde na borda inferior, então as janelas ganham a altura toda. Encoste o mouse na borda ou aperte `Super+Z`. A engrenagem abre um launchpad em tela cheia para escolher os apps, da lista de instalados ou qualquer programa nos seus arquivos, e reordenar.
 - **Central:** som, internet, Bluetooth, desempenho, calendário, avisos, monitor, ajustes, sobre, energia e mais, numa lista com rolagem e uma busca que acha as telas e os ajustes dentro delas.
 - **Cartão de música:** capa, cores tiradas do álbum, barra de tempo, repetir, aleatório, curtidas, volume e troca de saída.
+- **Modo foco:** um timer na ilha (25 ou 50 min, 1 h, sem fim ou pomodoro) que esconde música e avisos, menos os apps que você deixa passar.
 - **Avisos e volume:** cartões de vidro que descem de baixo da ilha.
 - **Visão geral:** faixa com as áreas de trabalho acima das janelas da área atual, com prévia ao vivo. Arraste uma janela para outra área. `Super+O`.
 - **Busca:** aplicativos, telas do sistema, comandos, emoji (buscado no seu idioma) e prints, com abas e seus apps recentes no topo. Digite "wifi" ou "volume".

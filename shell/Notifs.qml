@@ -27,6 +27,11 @@ Singleton {
         toasts = toasts.filter(t => t !== n)
         if (!all.includes(n)) n.dismiss()
     }
+    // A toast under the island, on the screen in use unless a card there is already open.
+    function pop(t) {
+        if (toasts.length === 0 && !Ui.mediaOpen && !Ui.focusOpen) Ui.sheetScreen = Ui.screen
+        toasts = [t].concat(toasts)
+    }
     function remove(n) { all = all.filter(t => t !== n); saver.restart() }
     function clear() { all.slice().forEach(n => n.dismiss()) }
     function clearApp(name) { all.filter(n => n.appName === name).forEach(n => n.dismiss()) }
@@ -86,7 +91,8 @@ Singleton {
                 if (same) { n.tracked = true; root.attach(same, n); root.all = root.all.slice() } // cards hold copies, so they must be rebuilt
                 return
             }
-            const quiet = Cfg.v.dnd && n.urgency !== NotificationUrgency.Critical
+            // Focus holds back what Do not disturb would, except the apps it lets through.
+            const quiet = (Cfg.v.dnd || Focus.hiding && !Focus.lets(n.appName)) && n.urgency !== NotificationUrgency.Critical
             if (n.transient && quiet) return
             n.tracked = true
             // A copy, because the sheet keeps drawing the card during its closing animation, after n is gone.
@@ -99,9 +105,7 @@ Singleton {
                 kept.slice(0, -root.limit).forEach(old => { if (!old.restored && !root.toasts.includes(old)) old.dismiss() })
                 saver.restart()
             }
-            if (quiet) return
-            if (root.toasts.length === 0 && !Ui.mediaOpen) Ui.sheetScreen = Ui.screen
-            root.toasts = [t].concat(root.toasts)
+            if (!quiet) root.pop(t)
         }
     }
 }

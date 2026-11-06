@@ -127,7 +127,11 @@ Scope {
                 { name: Tr.t("Clipboard history"), icon: "clipboard", sub: "", words: "clipboard paste copy history", run: () => Ui.openClipboard() },
                 { name: Tr.t("Emoji"), icon: "smile", sub: "", words: "emoji smiley", run: () => Ui.launcherMode = "emoji" }
             ]
-            const commands = (mode === "shots" ? shots : mode === "" ? others.concat(shots) : [])
+            // Focus mode, only once something is typed: not part of the list before.
+            const focus = !q ? [] : [25, 50, 0].map(m => ({ name: m ? Tr.t("Focus for %1 min").arg(m) : Tr.t("Focus until turned off"), run: () => { Ui.launcher = false; Focus.start(m) } }))
+                .concat(Focus.running ? [{ name: Tr.t("Stop focus"), run: () => { Ui.launcher = false; Focus.stop() } }] : [])
+                .map(c => Object.assign(c, { icon: "timer", sub: "", words: "focus pomodoro timer" }))
+            const commands = (mode === "shots" ? shots : mode === "" ? others.concat(focus, shots) : [])
                 .map(c => Object.assign(c, { group: Tr.t("Commands"), kind: Tr.t("command"), hay: (c.name + " " + c.words).toLowerCase() }))
             const all = apps.concat(screens, commands)
             if (!q) return mode === "" ? screens.concat(commands, apps) : all

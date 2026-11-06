@@ -22,6 +22,7 @@ wallpaper, and windows keep the rest of the screen.
 - **Control center:** sound, internet, Bluetooth, performance, calendar, notifications, monitor, settings, about, power and more, in a scrolling list with a search that finds the screens and the settings inside them.
 - **Weather:** the temperature in the island, and a card with the next hours and 7 days from Open-Meteo. Pick your city in the Weather screen (`Super+Alt+W`).
 - **Music card:** cover art, colors taken from the album, seek bar, repeat, shuffle, likes, volume and output switching.
+- **Focus mode:** a timer in the island (25 or 50 min, 1 h, open-ended or pomodoro) that hides music and notifications, except the apps you let through.
 - **Notifications and volume:** glass cards that drop from under the island.
 - **Overview:** a strip of workspaces above the current one's windows, with live previews. Drag a window to another workspace. `Super+O`.
 - **Search:** apps, system screens, commands, emoji (searched in your language) and screenshots, with tabs and your recent apps on top. Type "wifi" or "volume".

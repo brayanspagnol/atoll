@@ -16,37 +16,40 @@ PanelWindow {
     readonly property bool weatherOpen: target && Ui.weatherOpen
     readonly property bool hasToasts: target && Notifs.toasts.length > 0
     readonly property bool volumeOn: target && Osd.shown
+    readonly property bool focusOpen: target && Ui.focusOpen
     anchors.top: true
     margins.top: 78
     implicitWidth: 480
     implicitHeight: Math.min(modelData.height - 86, 1200)
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    visible: mediaOpen || weatherOpen || hasToasts || volumeOn || panel.height > 0.5
+    visible: mediaOpen || weatherOpen || focusOpen || hasToasts || volumeOn || panel.height > 0.5
     // Pieces only, so the gaps around them stay clickable.
     mask: Region {
         Region { item: capsule; }
         Region { item: mediaBox }
+        Region { item: focusBox }
         Region { item: list }
     }
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "atoll-sheet"
-    // Never take the keyboard for a notification: only while the music or weather card is open.
-    WlrLayershell.keyboardFocus: mediaOpen || weatherOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    // Never take the keyboard for a notification: only while the music, weather or focus card is open.
+    WlrLayershell.keyboardFocus: mediaOpen || weatherOpen || focusOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
     HyprlandFocusGrab {
-        active: (win.mediaOpen || win.weatherOpen) && win.visible
+        active: (win.mediaOpen || win.weatherOpen || win.focusOpen) && win.visible
         windows: Ui.sheetIsland ? [win, Ui.sheetIsland] : [win]
-        onCleared: { Ui.mediaOpen = false; Ui.weatherOpen = false }
+        onCleared: { Ui.mediaOpen = false; Ui.weatherOpen = false; Ui.focusOpen = false }
     }
 
     Item {
         id: panel
         width: parent.width
-        height: volume.height + mediaBox.height + (mediaBox.height > 0 && list.height > 0 ? gap : 0) + list.height
+        readonly property real cards: mediaBox.height + focusBox.height
+        height: volume.height + cards + (cards > 0 && list.height > 0 ? gap : 0) + list.height
         readonly property int gap: 8
         focus: true
-        Keys.onEscapePressed: { Ui.mediaOpen = false; Ui.weatherOpen = false }
+        Keys.onEscapePressed: { Ui.mediaOpen = false; Ui.weatherOpen = false; Ui.focusOpen = false }
 
         Item {
             id: volume
@@ -116,9 +119,26 @@ PanelWindow {
             }
         }
 
+        ClippingRectangle {
+            id: focusBox
+            y: volume.height + mediaBox.height
+            width: parent.width
+            height: focusCard.height
+            radius: Theme.radius
+            color: Theme.surface
+            border.width: 1
+            border.color: Theme.lineStrong
+            contentUnderBorder: true
+            FocusCard {
+                id: focusCard
+                width: parent.width
+                open: win.focusOpen
+            }
+        }
+
         ListView {
             id: list
-            y: volume.height + mediaBox.height + (mediaBox.height > 0 ? panel.gap : 0)
+            y: volume.height + panel.cards + (panel.cards > 0 ? panel.gap : 0)
             anchors.horizontalCenter: parent.horizontalCenter
             width: 420
             height: win.target ? contentHeight : 0
