@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.15.1] - 2026-11-06
+
+### Changed
+
+- Default apps: the apps for a role open in a short list right under it, and one click uses one. The system default is tagged, with less text overall.
+
 ## [1.15.0] - 2026-11-06
 
 ### Added
@@ -254,7 +260,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.15.0...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.15.1...HEAD
+[1.15.1]: https://github.com/brayanspagnol/atoll/compare/v1.15.0...v1.15.1
 [1.15.0]: https://github.com/brayanspagnol/atoll/compare/v1.14.1...v1.15.0
 [1.14.1]: https://github.com/brayanspagnol/atoll/compare/v1.14.0...v1.14.1
 [1.14.0]: https://github.com/brayanspagnol/atoll/compare/v1.13.0...v1.14.0

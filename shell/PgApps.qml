@@ -140,7 +140,7 @@ Page {
                         spacing: 2
                         Repeater {
                             id: cands
-                            model: row.isOpen ? A.candidates(row.role, pg.entries, pg.st.mimes, [row.cur, row.off?.app ?? ""]) : []
+                            model: row.isOpen && pg.st ? A.candidates(row.role, pg.entries, pg.st.mimes, [row.cur, row.off?.app ?? ""]) : []
                             Rectangle {
                                 id: opt
                                 required property var modelData
