@@ -5,9 +5,10 @@
 local scripts = "$HOME/.local/share/atoll/scripts/"
 local qs = "qs -c atoll ipc call "
 local lock = "pidof hyprlock || hyprlock -c $HOME/.config/atoll/hyprlock.conf"
-local terminal = "kitty"
-local browser = "xdg-open https://"
-local fileManager = "xdg-open ~"
+-- The apps chosen in Default apps, falling back to the system's and then to fixed commands.
+local terminal = scripts .. "open-app terminal"
+local browser = scripts .. "open-app browser"
+local fileManager = scripts .. "open-app files"
 local shot = scripts .. "screenshot"
 local exec, focus, move = hl.dsp.exec_cmd, hl.dsp.focus, hl.dsp.window.move
 local function screen(page) return exec(qs .. "ui toggle " .. page) end

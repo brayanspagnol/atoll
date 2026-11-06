@@ -140,7 +140,7 @@ for `sudo`; everything else stays in your home directory. See `./install.sh --he
 | `Print` / `Shift+Print` | Screenshot of a region / the full screen |
 | `Super+Shift+R` | Restart the shell |
 
-The full list is in [`hypr/binds.lua`](hypr/binds.lua).
+The full list is in [`hypr/keys.lua`](hypr/keys.lua), and you can change any of them in the Shortcuts screen (`Super+Alt+K`).
 
 ## Configure
 

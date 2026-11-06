@@ -99,7 +99,7 @@ Para escolher o Atoll no gerenciador de login, rode também `./install.sh --sess
 | `Print` / `Shift+Print` | Captura de uma área / da tela inteira |
 | `Super+Shift+R` | Reiniciar o shell |
 
-A lista completa está em [`hypr/binds.lua`](hypr/binds.lua).
+A lista completa está em [`hypr/keys.lua`](hypr/keys.lua), e dá para trocar qualquer um na tela Atalhos (`Super+Alt+K`).
 
 ## Configurar
 
