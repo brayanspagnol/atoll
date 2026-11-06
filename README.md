@@ -73,9 +73,17 @@ Screenshots use demo data.
 |---|---|
 | ![Monitor](docs/screenshots/monitor.webp) | ![About](docs/screenshots/about.webp) |
 
-| Shortcuts | Light theme |
+| Personalization | Light theme |
 |---|---|
-| ![Shortcuts](docs/screenshots/shortcuts.webp) | ![Light theme](docs/screenshots/light.webp) |
+| ![Personalization](docs/screenshots/personalization.webp) | ![Light theme](docs/screenshots/light.webp) |
+
+| Shortcuts | Default apps |
+|---|---|
+| ![Shortcuts](docs/screenshots/shortcuts.webp) | ![Default apps](docs/screenshots/apps.webp) |
+
+| Window rules | Backup |
+|---|---|
+| ![Window rules](docs/screenshots/rules.webp) | ![Backup](docs/screenshots/backup.webp) |
 
 | Settings | Power |
 |---|---|

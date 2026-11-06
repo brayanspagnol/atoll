@@ -28,7 +28,7 @@ end
 for _, ns in ipairs({ "atoll-.*", "selection", "noanim" }) do
     hl.layer_rule({ match = { namespace = ns }, no_anim = true })
 end
-for _, ns in ipairs({ "atoll-island", "atoll-dock", "atoll-central", "atoll-palette", "atoll-sheet", "atoll-osd" }) do
+for _, ns in ipairs({ "atoll-island", "atoll-dock", "atoll-central", "atoll-palette", "atoll-clipboard", "atoll-sheet", "atoll-osd" }) do
     hl.layer_rule({ match = { namespace = ns }, blur = true })
     hl.layer_rule({ match = { namespace = ns }, ignore_alpha = 0.2 })
 end
