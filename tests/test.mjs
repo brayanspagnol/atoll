@@ -757,4 +757,138 @@ ShellRoot {
     fs.rmSync(root, { recursive: true })
 }
 
+// Shortcuts: the editor reads the same defaults Hyprland binds, and what it saves or applies live gives the same binds.
+const S = load("shortcuts.js", "rows,norm,combo,keyName,pretty,problem,safeText,parseDefaults,parseChanges,toLua,parseLive,effective,active,conflicts,free,layers,inLayer,onKey,offMap,setKeys,newId,liveCode,recordCode,enterRecord,leaveRecord")
+const keysLua = fs.readFileSync(new URL("../hypr/keys.lua", import.meta.url), "utf8")
+const defs = S.parseDefaults(keysLua)
+assert.equal(defs.length, (keysLua.match(/^S\(/gm) || []).length) // every line is readable
+assert.equal(new Set(defs.map(d => d.id)).size, defs.length)
+assert.equal(new Set(defs.map(d => S.norm(d.keys))).size, defs.length) // no two defaults on one key
+defs.forEach(d => assert.equal(S.problem(d.keys), "", d.keys))
+assert(defs.every(d => ["atoll", "windows", "workspaces", "apps", "shots"].includes(d.group)))
+assert.deepEqual(plain(defs.find(d => d.id === "ws10")), { id: "ws10", keys: "SUPER + 0", group: "workspaces", label: "Workspace %1", arg: "10" })
+assert.equal(S.norm("SHIFT + SUPER + tab"), S.norm("SUPER + SHIFT + TAB")); assert.equal(S.norm("SUPER + code:60"), S.norm("SUPER + period"))
+assert.notEqual(S.norm("SUPER + K"), S.norm("SUPER + SHIFT + K"))
+assert.equal(S.combo(["SHIFT", "SUPER"], S.keyName(45)), "SUPER + SHIFT + K"); assert.equal(S.keyName(191), "code:191")
+assert.deepEqual(plain(S.pretty("SUPER + SHIFT + period")), ["Super", "Shift", "."])
+assert.deepEqual(["SUPER + K", "K", "SHIFT + K", "SHIFT + PRINT", "SUPER + Escape", "SUPER + x\"y", "HYPER + K", "CTRL + code:191"].map(S.problem), ["", "typing", "typing", "", "reserved", "invalid", "invalid", ""])
+assert(S.safeText("Firefox «x» 🚀") && !S.safeText("a\nb") && !S.safeText("\ud800") && !S.safeText(7))
+const evil = 'notify-send "a\\" ]] end os.execute(\'touch /tmp/x\') --[['
+const saved1 = S.toLua([{ id: "terminal", keys: "SUPER + T" }, { id: "custom-1", keys: "SUPER + SHIFT + K", label: "Calc «1»", exec: evil, group: "apps" }, { id: "bad id", keys: "" }, { id: "x", keys: "", exec: "a\nb" }])
+assert.deepEqual(plain(S.parseChanges(saved1)), [{ id: "terminal", keys: "SUPER + T" }, { id: "custom-1", keys: "SUPER + SHIFT + K", label: "Calc «1»", exec: evil, group: "apps" }])
+assert.deepEqual(plain(S.parseChanges('{ id = "a", keys = "K" }\n{ id = "b", keys = "SUPER + B", exec = "x\\u0000" }\nnot a line\n')), [])
+// Giving Super+Shift+C (Center) to a new app turns Center off; giving it back removes the app.
+let ch = [], ent = S.effective(defs, ch, null)
+assert.deepEqual(S.conflicts(ent, "SHIFT + SUPER + c", "").map(e => e.id), ["center"])
+assert(S.free(ent, ["SUPER", "SHIFT"], 6).every(k => !S.conflicts(ent, k, "").length)); assert.equal(S.free(ent, ["SUPER", "SHIFT"], 6).length, 6)
+const id1 = S.newId(ch); assert.equal(id1, "custom-1")
+ch = S.setKeys(defs, ch, ent, id1, "SUPER + SHIFT + C", { label: "Calculator", exec: "gnome-calculator", group: "apps" })
+ch = S.setKeys(defs, ch, S.effective(defs, ch, null), "terminal", "SUPER + SHIFT + Return")
+let after = S.effective(defs, ch, null)
+assert.equal(after.find(e => e.id === "center").state, "off"); assert.equal(after.find(e => e.id === "terminal").state, "changed")
+assert.equal(S.onKey(after, ["SUPER", "SHIFT"], 54).id, id1); assert.equal(S.onKey(after, ["SUPER"], 36), null)
+assert.deepEqual(S.offMap(after, null).map(e => e.id), ["shot-print", "shot-print-full"])
+assert(S.inLayer("SUPER + CTRL + down", S.layers[3]) && !S.inLayer("SUPER + CTRL + SHIFT + down", S.layers[3]) && S.inLayer("SHIFT + PRINT", S.layers[4]))
+const restored = S.setKeys(defs, ch, after, "center", "SUPER + SHIFT + C")
+assert.deepEqual(plain(restored), [{ id: "terminal", keys: "SUPER + SHIFT + Return" }])
+assert.equal(S.newId([{ id: "custom-4" }, { id: "terminal" }]), "custom-5")
+// Live: binds not made by Atoll are someone else's, and an Atoll bind user.lua removed is gone.
+const liveJson = JSON.stringify([
+    { modmask: 64, key: "Return", description: "atoll:terminal", submap: "" }, { modmask: 65, key: "X", description: "", dispatcher: "exec", arg: "foot", submap: "" },
+    { modmask: 64, key: "mouse:272", mouse: true }, { modmask: 0, key: "XF86AudioMute" }, { modmask: 64, key: "Escape", submap: "atoll-record" }
+].concat(defs.filter(d => d.id !== "browser" && d.id !== "terminal").map(d => ({ modmask: 0, key: "?", description: "atoll:" + d.id }))))
+const liveBinds = S.parseLive(liveJson)
+assert.equal(liveBinds.length, 2 + defs.length - 2); assert.equal(S.parseLive("oops"), null)
+const withLive = S.effective(defs, [], liveBinds)
+assert.equal(withLive.find(e => e.id === "browser").state, "gone"); assert.equal(withLive.find(e => e.id === "terminal").state, "default")
+assert.deepEqual(S.conflicts(withLive, "SUPER + SHIFT + X", "").map(e => e.state), ["user"])
+// Applying live gives the binds a reload would: run binds.lua with the old file, then the eval code, against a stand-in hl.
+const hyprBinds = (changes, ...evals) => {
+    const h = fs.mkdtempSync("/tmp/atoll-test-")
+    fs.mkdirSync(h + "/.config/atoll/hypr", { recursive: true }); fs.writeFileSync(h + "/.config/atoll/hypr/keys.lua", keysLua)
+    fs.writeFileSync(h + "/.config/atoll/shortcuts.lua", S.toLua(changes))
+    assert.equal(spawnSync("luac", ["-p", h + "/.config/atoll/shortcuts.lua"]).status, 0)
+    evals.forEach((code, i) => fs.writeFileSync(`${h}/eval${i}.lua`, code))
+    const run = spawnSync("lua", [new URL("binds.lua", import.meta.url).pathname, new URL("../hypr/binds.lua", import.meta.url).pathname, ...evals.map((_, i) => `${h}/eval${i}.lua`)], { encoding: "utf8", env: { ...process.env, HOME: h } })
+    fs.rmSync(h, { recursive: true })
+    assert.equal(run.status, 0, run.stderr)
+    return run.stdout
+}
+const fresh = hyprBinds([])
+assert.equal(fresh.split("\n").filter(l => l.includes("description=atoll:")).length, defs.length)
+for (const keys of ["SUPER + Return", "SUPER + ALT + K", "SUPER + CTRL + 0", "SHIFT + PRINT", "SUPER + mouse:272", "XF86AudioMute"]) assert(fresh.includes("\n" + keys + " => ") || fresh.startsWith(keys + " => "), keys)
+const reloaded = hyprBinds(ch)
+assert(reloaded.includes("SUPER + SHIFT + C => {args={1=gnome-calculator},dsp=dsp.exec_cmd} {description=atoll:custom-1}"))
+assert(!reloaded.includes("description=atoll:center") && !reloaded.includes("SUPER + Return =>"))
+const code = S.liveCode(S.effective(defs, [], null), after)
+assert.equal(hyprBinds([], code), reloaded)
+assert.equal(hyprBinds(ch, S.liveCode(after, S.effective(defs, restored, null))), hyprBinds(restored))
+assert.equal(S.liveCode(after, after), "")
+// A default someone else's change already holds, after an update, stays theirs.
+assert(!hyprBinds([{ id: "custom-1", keys: "SUPER + period", exec: "foot" }]).includes("description=atoll:emoji"))
+// The page itself, against a stand-in hyprctl: it reads both files, saves, applies live and pauses shortcuts while recording.
+if (haveQs) {
+    const sc = fs.mkdtempSync("/tmp/atoll-test-"), cfg = sc + "/home/.config/atoll"
+    fs.cpSync(new URL("../shell/", import.meta.url), sc, { recursive: true })
+    fs.mkdirSync(cfg + "/hypr", { recursive: true }); fs.mkdirSync(sc + "/bin")
+    fs.writeFileSync(cfg + "/hypr/keys.lua", keysLua)
+    fs.writeFileSync(cfg + "/shortcuts.lua", S.toLua([{ id: "terminal", keys: "SUPER + SHIFT + Return" }]))
+    const liveBinds = S.active(S.effective(defs, [{ id: "terminal", keys: "SUPER + SHIFT + Return" }], null)).map(e => ({ modmask: 64 + (e.keys.includes("SHIFT") ? 1 : 0) + (e.keys.includes("ALT") ? 8 : 0) + (e.keys.includes("CTRL") ? 4 : 0) + (e.keys.includes("SUPER") ? 0 : -64), key: e.keys.split(" + ").pop(), description: "atoll:" + e.id, submap: "" }))
+        .concat([{ modmask: 65, key: "X", description: "", dispatcher: "exec", arg: "foot", submap: "" }, { modmask: 65, key: "C", description: "atoll:custom-1", submap: "" }]) // as after the save below
+    fs.writeFileSync(sc + "/binds.json", JSON.stringify(liveBinds))
+    fs.writeFileSync(sc + "/bin/hyprctl", `#!/bin/sh\nprintf '%s\\037' "$@" >> '${sc}/hyprctl.log'; printf '\\036' >> '${sc}/hyprctl.log'\n[ "$1 $2" = "-j binds" ] && cat '${sc}/binds.json'\nexit 0\n`, { mode: 0o755 })
+    const qmlRoot = `import QtQuick
+import Quickshell
+ShellRoot {
+    FloatingWindow { implicitWidth: 1000; implicitHeight: 1600; PgShortcuts { id: pg; anchors.fill: parent } }
+    property int step: 0
+    function say(tag, v) { console.log("RESULT " + tag + " " + JSON.stringify(v)) }
+    Timer {
+        running: true; repeat: true; interval: 500
+        onTriggered: {
+            step++
+            if (step === 2) {
+                pg.pick("SUPER + SHIFT + X")
+                const user = pg.selEntry?.state
+                pg.pick("SUPER + SHIFT + Return")
+                say("read", { defaults: pg.defaults.length, changes: pg.changes.length, live: !!pg.live, sel: pg.labelOf(pg.selEntry), user, layer: pg.layerIndex })
+                pg.startNew("SUPER + SHIFT + C")
+                pg.edit = Object.assign({}, pg.edit, { kind: 1, cmd: "notify-send hi" })
+                say("form", { conflicts: pg.editConflicts.map(e => e.id), canSave: pg.canSave, label: pg.editLabel })
+                pg.save()
+            }
+            if (step === 3) {
+                pg.startNew("SUPER + SHIFT + X")
+                pg.edit = Object.assign({}, pg.edit, { kind: 1, cmd: "foot" })
+                say("blocked", { canSave: pg.canSave, blocked: pg.editBlocked })
+                pg.startRecording()
+                say("recording", pg.recording)
+            }
+            if (step === 4) { pg.stopRecording(); pg.edit = null; pg.restore("center"); pg.restore("center") }
+            if (step === 5) { say("restored", pg.changes.map(c => c.id + "=" + c.keys)); Qt.quit() }
+        }
+    }
+}
+`
+    fs.writeFileSync(sc + "/shell.qml", qmlRoot)
+    fs.writeFileSync(sc + "/Ui.qml", `pragma Singleton\nimport Quickshell\nSingleton { property bool open: true; readonly property var pages: [{ id: "som", label: "Sound" }] }\n`)
+    const { WAYLAND_DISPLAY, DISPLAY, HYPRLAND_INSTANCE_SIGNATURE, ...env } = process.env
+    const run = spawnSync("dbus-run-session", ["--", "qs", "-p", sc + "/shell.qml"], { encoding: "utf8", timeout: 30000, env: { ...env, PATH: sc + "/bin:" + env.PATH, LANG: "C.UTF-8", LC_ALL: "C.UTF-8", LANGUAGE: "en", QT_QPA_PLATFORM: "offscreen", HOME: sc + "/home", XDG_DATA_HOME: sc + "/home/share", XDG_CONFIG_HOME: sc + "/home/config", XDG_STATE_HOME: sc + "/home/state", XDG_DATA_DIRS: sc + "/data" } })
+    const said = Object.fromEntries([...(run.stdout + run.stderr).matchAll(/RESULT (\w+) (.*)/g)].map(m => [m[1], JSON.parse(m[2])]))
+    const warnings = (run.stdout + run.stderr).split("\n").filter(l => /PgShortcuts\.qml|shortcuts\.js/.test(l))
+    assert.deepEqual(warnings, [])
+    assert.deepEqual(said.read, { defaults: defs.length, changes: 1, live: true, sel: "Terminal", user: "user", layer: 1 })
+    assert.deepEqual(said.form, { conflicts: ["center"], canSave: true, label: "notify-send hi" })
+    assert.deepEqual(said.blocked, { canSave: false, blocked: true }); assert.equal(said.recording, true)
+    assert.deepEqual(said.restored, ["terminal=SUPER + SHIFT + Return"])
+    const calls = fs.readFileSync(sc + "/hyprctl.log", "utf8").split("\x1e").filter(Boolean).map(l => l.split("\x1f").filter(Boolean))
+    const evals = calls.filter(c => c[0] === "eval").map(c => c[1])
+    assert(evals.some(c => c.includes('hl.unbind("SUPER + SHIFT + C")') && c.includes('hl.bind("SUPER + SHIFT + C", hl.dsp.exec_cmd("notify-send hi"), { description = "atoll:custom-1" })')))
+    assert(evals.some(c => c === S.recordCode))
+    assert.deepEqual(calls.filter(c => c[0] === "dispatch").map(c => c[1]), [S.enterRecord, S.leaveRecord])
+    assert(evals.some(c => c.includes('hl.unbind("SUPER + SHIFT + C")') && c.includes('d["center"]'))) // restored over the new one
+    assert.deepEqual(plain(S.parseChanges(fs.readFileSync(cfg + "/shortcuts.lua", "utf8"))), [{ id: "terminal", keys: "SUPER + SHIFT + Return" }])
+    fs.rmSync(sc, { recursive: true })
+}
+
 console.log("ok")
