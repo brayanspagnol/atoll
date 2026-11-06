@@ -36,6 +36,10 @@ Singleton {
         { id: "avisos", key: "Alt+V", label: Tr.t("Notifications"), icon: "avisos", kw: "notifications do not disturb " + Tr.t("do not disturb") },
         { id: "monitor", key: "Alt+M", label: Tr.t("Monitor"), icon: "monitor", kw: "monitor display screen resolution rotation mirror " + Tr.t("display resolution rotation mirror") },
         { id: "ajustes", key: "Alt+J", label: Tr.t("Settings"), icon: "ajustes", kw: "settings wallpaper color language profile " + Tr.t("wallpaper color language profile") },
+        { id: "atalhos", key: "Alt+K", label: Tr.t("Shortcuts"), icon: "keyboard", kw: "shortcuts keys keybinds hotkeys " + Tr.t("shortcuts keys") },
+        { id: "apps", key: "Alt+N", label: Tr.t("Default apps"), icon: "grid", kw: "default apps browser terminal files " + Tr.t("browser terminal files") },
+        { id: "regras", key: "Alt+R", label: Tr.t("Window rules"), icon: "window", kw: "window rules float workspace " + Tr.t("float workspace") },
+        { id: "backup", key: "Alt+U", label: Tr.t("Backup"), icon: "archive", kw: "backup export import profile " + Tr.t("export import profile") },
         { id: "energia", key: "Alt+E", label: Tr.t("Power"), icon: "energia", kw: "power shut down suspend restart lock log out " + Tr.t("shut down suspend restart lock log out") },
         { id: "sobre", key: "Alt+O", label: Tr.t("About"), icon: "sobre", kw: "about version update github " + Tr.t("version update") }
     ]

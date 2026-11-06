@@ -19,7 +19,7 @@ hl.bind(mainMod .. " + W",      hl.dsp.exec_cmd(qs .. "ui toggle som"))
 hl.bind(mainMod .. " + D",      hl.dsp.exec_cmd(qs .. "ui toggle ajustes"))
 hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd(qs .. "ui toggle energia"))
 hl.bind(mainMod .. " + Z",      hl.dsp.exec_cmd(qs .. "ui dock"))
-for key, page in pairs({ A = "som", I = "rede", B = "bt", D = "perf", C = "cal", V = "avisos", J = "ajustes", E = "energia", M = "monitor", O = "sobre" }) do
+for key, page in pairs({ A = "som", I = "rede", B = "bt", D = "perf", C = "cal", V = "avisos", J = "ajustes", E = "energia", M = "monitor", O = "sobre", K = "atalhos", N = "apps", R = "regras", U = "backup" }) do
     hl.bind(mainMod .. " + ALT + " .. key, hl.dsp.exec_cmd(qs .. "ui toggle " .. page))
 end
 hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("pkill -x qs"))

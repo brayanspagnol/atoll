@@ -39,6 +39,10 @@ Scope {
             ajustes: Tr.t("Profile, color, idle"),
             monitor: Tr.t("Screens: %1").arg(Displays.count_on),
             sobre: "Atoll " + Ui.version,
+            atalhos: Tr.t("Keys and commands"),
+            apps: Tr.t("Browser, terminal, files"),
+            regras: Tr.t("Per app"),
+            backup: Tr.t("Export, import"),
             energia: UPower.displayDevice?.isLaptopBattery ? Tr.t("Battery %1%").arg(Math.round(UPower.displayDevice.percentage * 100)) : Tr.t("Shut down, suspend")
         })
         MouseArea { anchors.fill: parent; enabled: Ui.open; onClicked: Ui.open = false }
@@ -75,7 +79,7 @@ Scope {
                                 readonly property bool sel: Ui.page === modelData.id
                                 readonly property color fg: sel ? Theme.accentInk : Theme.ink
                                 Layout.fillWidth: true; Layout.preferredWidth: 1
-                                implicitHeight: 104; radius: 16
+                                implicitHeight: 92; radius: 16
                                 color: sel ? Theme.accent : tm.containsMouse ? Qt.rgba(1, 1, 1, 0.16) : Theme.raised
                                 border.width: activeFocus ? 2 : 0; border.color: Theme.ink
                                 activeFocusOnTab: true
@@ -121,7 +125,7 @@ Scope {
                     property string shown: ""
                     Component.onCompleted: shown = Ui.page
                     property int direction: 1
-                    source: ({ som: "PgSound.qml", rede: "PgNet.qml", bt: "PgBt.qml", perf: "PgPerf.qml", cal: "PgCal.qml", avisos: "PgNotif.qml", ajustes: "PgSettings.qml", energia: "PgPower.qml", monitor: "PgMonitor.qml", sobre: "PgAbout.qml" })[shown]
+                    source: ({ som: "PgSound.qml", rede: "PgNet.qml", bt: "PgBt.qml", perf: "PgPerf.qml", cal: "PgCal.qml", avisos: "PgNotif.qml", ajustes: "PgSettings.qml", energia: "PgPower.qml", monitor: "PgMonitor.qml", sobre: "PgAbout.qml" , atalhos: "PgShortcuts.qml", apps: "PgApps.qml", regras: "PgRules.qml", backup: "PgBackup.qml" })[shown]
                     transform: Translate { id: slide }
                     Connections {
                         target: Ui
