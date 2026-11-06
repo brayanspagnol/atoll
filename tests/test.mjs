@@ -256,10 +256,18 @@ fs.rmSync(home, { recursive: true })
 
 // Settings and restored notifications, on the real QML in a throwaway offscreen instance with its own HOME and D-Bus session.
 const haveQs = ["qs", "dbus-run-session", "notify-send"].every(tool => spawnSync("sh", ["-c", `command -v ${tool}`]).status === 0)
+// A hyprctl that refuses everything, first on PATH: without it a test could reach the user's running Hyprland.
+const guardBin = fs.mkdtempSync("/tmp/atoll-test-bin-")
+fs.writeFileSync(guardBin + "/hyprctl", "#!/bin/sh\necho 'hyprctl is disabled in tests' >&2\nexit 1\n", { mode: 0o755 })
 const runQml = (dir, shellQml, files = {}) => {
     fs.writeFileSync(dir + "/shell.qml", shellQml)
     for (const [name, text] of Object.entries(files)) fs.writeFileSync(dir + "/" + name, text)
-    const { WAYLAND_DISPLAY, DISPLAY, HYPRLAND_INSTANCE_SIGNATURE, ...env } = process.env
+    const { WAYLAND_DISPLAY, DISPLAY, HYPRLAND_INSTANCE_SIGNATURE, ...base } = process.env
+    // Just before the real hyprctl, so a test's own fake one, earlier on PATH, still wins.
+    const dirs = base.PATH.split(":")
+    const real = dirs.findIndex(d => /^\/(usr\/)?(local\/)?s?bin$/.test(d) && fs.existsSync(d + "/hyprctl"))
+    if (real >= 0) dirs.splice(real, 0, guardBin); else dirs.push(guardBin)
+    const env = { ...base, PATH: dirs.join(":") }
     const run = spawnSync("dbus-run-session", ["--", "qs", "-p", dir + "/shell.qml"], { encoding: "utf8", timeout: 30000, env: { ...env, LANG: "C.UTF-8", LC_ALL: "C.UTF-8", LANGUAGE: "en", QT_QPA_PLATFORM: "offscreen", HOME: dir + "/home", XDG_DATA_HOME: dir + "/home/share", XDG_CONFIG_HOME: dir + "/home/config", XDG_STATE_HOME: dir + "/home/state", XDG_DATA_DIRS: dir + "/data" } })
     return Object.fromEntries([...(run.stdout + run.stderr).matchAll(/RESULT (\w+) (.*)/g)].map(m => [m[1], JSON.parse(m[2])]))
 }
