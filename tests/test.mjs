@@ -381,6 +381,31 @@ ShellRoot {
     assert(closedNow.includes("t"))
     fs.rmSync(nroot, { recursive: true, maxRetries: 10 }) // notify-send runs still ending may write their line meanwhile
 
+    // Profile tasks run one at a time, in order, each with its own callback, also one queued from a callback.
+    const proot = fs.mkdtempSync("/tmp/atoll-test-"), pscripts = proot + "/home/.local/share/atoll/scripts"
+    fs.cpSync(new URL("../shell/", import.meta.url), proot, { recursive: true })
+    fs.mkdirSync(pscripts, { recursive: true })
+    fs.writeFileSync(pscripts + "/profiles", `#!/bin/sh\ncase "$1" in list) echo '[]' ;; photos|wallpapers) ;; *) echo "start $*" >> '${proot}/order'; sleep 0.3; echo "$*" ;; esac\n`, { mode: 0o755 })
+    const pstub = body => `pragma Singleton\nimport Quickshell\nSingleton { ${body} }\n`
+    const queued = runQml(proot, `import QtQuick
+import Quickshell
+ShellRoot {
+    property var got: []
+    Timer {
+        running: true; interval: 500
+        onTriggered: {
+            Profiles.run(["one"], out => { got = got.concat([out]); Profiles.run(["four"], out => got = got.concat([out])) })
+            Profiles.run(["two"])
+            Profiles.run(["three", "x"], out => got = got.concat([out]))
+        }
+    }
+    Timer { running: true; interval: 3500; onTriggered: { console.log("RESULT got " + JSON.stringify(got)); Qt.quit() } }
+}
+`, { "Ui.qml": pstub("property bool open: true; function show(p) { open = true }"), "Night.qml": pstub("function apply() {}"), "Idle.qml": pstub("function apply() {}") })
+    assert.deepEqual(queued.got, ["one", "three x", "four"])
+    assert.deepEqual(fs.readFileSync(proot + "/order", "utf8").trim().split("\n"), ["start one", "start two", "start three x", "start four"])
+    fs.rmSync(proot, { recursive: true })
+
     // Clipboard panel, against a throwaway cliphist database: the default one is the user's real history.
     const realCliphist = spawnSync("sh", ["-c", "command -v cliphist"], { encoding: "utf8" }).stdout.trim()
     if (realCliphist) {

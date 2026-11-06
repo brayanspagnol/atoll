@@ -15,9 +15,18 @@ Singleton {
     property var wallpapers: []
 
     function refresh() { lister.running = false; lister.running = true; photoLister.running = true; wallpaperLister.running = true }
+    // One at a time, in order: a second request must not take over the first one's callback.
+    property var queue: []
     function run(args, then) {
-        task.then = then ?? null
-        task.command = [script].concat(args)
+        queue = queue.concat([{ args, then: then ?? null }])
+        next()
+    }
+    function next() {
+        if (!queue.length || task.running) return
+        const job = queue[0]
+        queue = queue.slice(1)
+        task.then = job.then
+        task.command = [script].concat(job.args)
         task.running = true
     }
     function select(id) {
@@ -105,6 +114,7 @@ Singleton {
         onExited: code => {
             if (code === 0 && then) then(taskOut.text.trim())
             root.refresh()
+            root.next() // after the callback, which may queue more work
         }
     }
 }
