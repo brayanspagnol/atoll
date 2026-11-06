@@ -6,6 +6,25 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.16.3] - 2026-11-06
+
+### Security
+
+- Backup import refuses a `user.lua` or shortcuts file larger than the review shows, so no code can hide past the excerpt.
+- Dock buttons that bring commands from a backup need an explicit yes, like code files.
+- Liking a song copies only a regular cover file of at most 20 MB.
+- Text fields show their placeholders as plain text, so a network name cannot style the password prompt.
+
+### Fixed
+
+- A broken file in the configuration, or an error in `user.lua`, no longer stops the session's services from starting; it shows a notification instead. The saved screen layout is checked before use.
+- Notifications that leave the history are released, so memory no longer grows over a long session.
+- The workspace overview keeps its previews when a window title changes, and a drag in progress survives refreshes.
+- Wi-Fi rows keep a password being typed while networks reorder, and process rows keep their confirmation across readings.
+- Profile requests wait their turn instead of overwriting each other.
+- The night light, window border and lock screen wallpaper no longer flash at each shell restart.
+- Clipboard image previews never reuse a half-written file, and the shell log stays bounded.
+
 ## [1.16.2] - 2026-11-06
 
 ### Fixed
@@ -282,7 +301,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.16.2...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.16.3...HEAD
+[1.16.3]: https://github.com/brayanspagnol/atoll/compare/v1.16.2...v1.16.3
 [1.16.2]: https://github.com/brayanspagnol/atoll/compare/v1.16.1...v1.16.2
 [1.16.1]: https://github.com/brayanspagnol/atoll/compare/v1.16.0...v1.16.1
 [1.16.0]: https://github.com/brayanspagnol/atoll/compare/v1.15.1...v1.16.0
