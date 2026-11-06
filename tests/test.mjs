@@ -673,6 +673,10 @@ ShellRoot {
     assert(!plain(R.choice(rows, {})).files.includes("user.lua")) // code needs an explicit yes
     assert.deepEqual(plain(R.choice(rows, { "f:user.lua": true, "p:dock": false, "f:rules.json": false })).files, ["monitors.lua", "input.lua", "user.lua"])
     assert(!plain(R.choice(rows, { "p:dock": false })).keys.includes("dock"))
+    // A dock with commands new here runs them when clicked: it starts unticked and needs its own yes; the same commands do not.
+    assert(row("p:dock").ask && !plain(R.choice(rows, {})).keys.includes("dock") && plain(R.choice(rows, { "p:dock": true })).keys.includes("dock"))
+    const sameDock = R.review({ ...seen, current: { ...seen.current, profile: { ...seen.current.profile, dock: [{ label: "S", cmd: "steam" }] } } }, "alex", ["DP-1"], t, [], {})
+    assert(!sameDock.profile.find(r => r.id === "p:dock").ask && plain(R.choice(sameDock, {})).keys.includes("dock"))
 
     // As a new profile: pictures land in this computer's galleries, screens it lacks are dropped, nothing to back up.
     const added = JSON.parse(run(b, "backup", "import", one, "--into", "new", "--files", "input.lua", "--screens", "DP-1").stdout)
@@ -682,6 +686,9 @@ ShellRoot {
     assert(made.photo.startsWith(b + "/.local/share/atoll/faces/") && fs.readFileSync(made.photo, "utf8") === "face")
     assert.deepEqual(made.wallpapers, { "DP-1": made.wallpaper })
     assert.equal(made.name, "Alex"); assert.equal(made.extra, 3) // a value of another type is not taken
+    assert.deepEqual(made.dock, [{ label: "Term", cmd: "kitty" }]) // without --keys, the dock stays this computer's
+    const docked = JSON.parse(run(b, "backup", "import", one, "--into", "new", "--keys", "dock", "--screens", "DP-1").stdout)
+    assert.deepEqual(json(`${b}/.config/atoll/profiles/${docked.id}.json`).dock, [{ label: "Steam", cmd: "steam" }])
     assert.equal(fs.readFileSync(b + "/.config/atoll/input.lua", "utf8"), fs.readFileSync(a + "/.config/atoll/input.lua", "utf8"))
     assert.equal(json(b + "/.config/atoll/profiles/default.json").name, "Me")
     // Replacing: only the chosen keys, and the state before is saved next to the imported file.

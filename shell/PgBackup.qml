@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "parse.js" as P
+import "backup.js" as B
 
 // Export one profile or all of them; import in three steps: file, destination, a line-by-line review.
 Page {
@@ -64,7 +65,7 @@ Page {
     component Line: Rowi {
         id: line
         property var row
-        readonly property bool on: !row.skip && Backup.picked[row.id] !== false
+        readonly property bool on: B.checked(row, Backup.picked)
         clickable: false
         a11y: row.label + ": " + row.before + ", " + (row.skip ? row.skip : row.after)
         Chk { visible: !line.row.skip; checked: line.on; a11y: Tr.t("Import") + ": " + line.row.label; onToggled: on => Backup.pick(line.row.id, on) }

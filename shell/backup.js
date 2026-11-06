@@ -19,6 +19,11 @@ const groups = [
 const codeFile = name => name === "user.lua" || name.startsWith("shortcuts")
 const lineCount = text => text ? text.replace(/\n$/, "").split("\n").length : 0
 const kind = v => Array.isArray(v) ? "array" : v === null ? "null" : typeof v
+// A dock button runs its command, so commands new to this computer are named, and the dock then needs its own yes.
+function newCommands(dock, here) {
+    const known = new Set((Array.isArray(here) ? here : []).map(a => a?.cmd))
+    return (Array.isArray(dock) ? dock : []).map(a => a?.cmd).filter(c => c && !known.has(c))
+}
 
 function show(id, p, t, langs, accents, cur) {
     const v = p[id]
@@ -29,9 +34,7 @@ function show(id, p, t, langs, accents, cur) {
     case "accent": return accents[v]?.name ?? String(v ?? "")
     case "dock": {
         const list = Array.isArray(v) ? v : []
-        const known = new Set((Array.isArray(cur?.dock) ? cur.dock : []).map(a => a?.cmd))
-        // A dock button runs its command, so commands new to this computer are named.
-        const fresh = cur ? list.map(a => a?.cmd).filter(c => c && !known.has(c)) : []
+        const fresh = cur ? newCommands(list, cur.dock) : []
         return arg(t("%1 apps"), list.length) + (fresh.length ? " · " + arg(t("new commands: %1"), fresh.join(", ")) : "")
     }
     case "idle": return arg(t("Plugged in %1 · battery %2 min"), [p.lockAc, p.dpmsAc, p.sleepAc].map(min).join("/"), [p.lockBat, p.dpmsBat, p.sleepBat].map(min).join("/"))
@@ -47,7 +50,7 @@ function show(id, p, t, langs, accents, cur) {
     }
 }
 
-// rows: { profile: [...], files: [...], code: [...] }; a row is { id, label, before, after, same, skip, keys | file(s) }.
+// rows: { profile: [...], files: [...], code: [...] }; a row is { id, label, before, after, same, skip, ask, keys | file(s) }; ask: on only after a yes.
 function review(info, from, screens, t, langs, accents) {
     const cur = info.current?.profile ?? {}, imp = info.profiles?.[from] ?? {}
     const status = path => {
@@ -78,7 +81,8 @@ function review(info, from, screens, t, langs, accents) {
         if (!keys.length && !skip) skip = t("Not valid here: the current one stays")
         const before = show(g.id, cur, t, langs, accents)
         const same = !skip && JSON.stringify(g.keys.map(k => cur[k] ?? null)) === JSON.stringify(g.keys.map(k => after[k] ?? null))
-        profile.push({ id: "p:" + g.id, label: g.raw ? g.label : t(g.label), keys, before, after: skip || (text ?? show(g.id, after, t, langs, accents, cur)), same, skip })
+        const ask = g.id === "dock" && newCommands(imp.dock, cur.dock).length > 0
+        profile.push({ id: "p:" + g.id, label: g.raw ? g.label : t(g.label), keys, before, after: skip || (text ?? show(g.id, after, t, langs, accents, cur)), same, skip, ask })
     }
 
     const files = [], code = []
@@ -115,9 +119,11 @@ function review(info, from, screens, t, langs, accents) {
     return { profile, files, code }
 }
 
+// Whether a row is checked: on unless unticked, or, for one that can run commands, only once ticked.
+function checked(row, picked) { return !row.skip && (row.ask ? picked[row.id] === true : picked[row.id] !== false) }
 // What the rows the person left checked ask the script for. Code files need their own explicit yes.
 function choice(r, picked) {
-    const on = row => !row.skip && picked[row.id] !== false
+    const on = row => checked(row, picked)
     const flat = rows => [].concat(...rows)
     const keys = flat(r.profile.filter(on).map(row => row.keys))
     const files = flat(r.files.filter(on).map(row => row.files).concat(r.code.filter(row => !row.skip && picked[row.id] === true).map(row => row.files)))

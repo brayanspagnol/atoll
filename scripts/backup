@@ -4,7 +4,7 @@
 #   backup export ID|all FILE [images]   -> writes FILE; with "images", the pictures the profiles use go too
 #   backup inspect FILE [SCREEN...]      -> what FILE holds, next to what this computer has (JSON)
 #   backup import FILE [--profile ID] [--into new|replace] [--keys K,K] [--files F,F] [--screens S,S]
-#        takes the profile's keys K (all if omitted) and the files F (none if omitted); prints {"id", "backup"}
+#        takes the profile's keys K (all but the dock if omitted) and the files F (none if omitted); prints {"id", "backup"}
 # An archive is untrusted: only known names under known folders, regular files, bounded sizes.
 set -euo pipefail
 conf="$HOME/.config/atoll"
@@ -257,7 +257,8 @@ do_import() {
         jq --argjson cur "$current" --argjson map "$map" --arg keys "$keys" --arg screens "$screens" '
             def r: if type == "string" and . != "" then $map[.] // null elif . == "" then "" else null end;
             ($screens | split(",")) as $here
-            | (if $keys == "*" then keys else $keys | split(",") end) as $wanted
+            # The dock runs its commands when clicked, so it only comes when asked for by name.
+            | (if $keys == "*" then keys - ["dock"] else $keys | split(",") end) as $wanted
             | (if has("photo") then .photo |= r else . end)
             | (if has("wallpaper") then .wallpaper |= r else . end)
             # Per-screen wallpapers only for screens here; when none is left, the current ones stay.
