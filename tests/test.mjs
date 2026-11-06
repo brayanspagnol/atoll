@@ -178,7 +178,7 @@ assert.deepEqual([P.duration(720), P.duration(12000), P.duration(190000)], ["12 
 // The control center's search: screens and what is inside them, accents ignored, best match first.
 const F = (() => {
     const ctx = { P }; vm.createContext(ctx)
-    vm.runInContext(fs.readFileSync(new URL("../shell/finder.js", import.meta.url), "utf8").replace(".pragma library", "").replace(/^\.import .*$/m, "") + ";this.x={search,items}", ctx)
+    vm.runInContext(fs.readFileSync(new URL("../shell/finder.js", import.meta.url), "utf8").replace(".pragma library", "").replace(/^\.import .*$/m, "") + ";this.x={search,items,labelsFrom}", ctx)
     return ctx.x
 })()
 const pagesForTest = [{ id: "ajustes", label: "Ajustes", icon: "ajustes", key: "Alt+J", kw: "settings" }, { id: "energia", label: "Energia", icon: "energia", key: "Alt+E", kw: "power" }]
@@ -188,6 +188,19 @@ assert.deepEqual(F.search(pagesForTest, "luz", trPt).map(r => r.label), ["Luz no
 assert.deepEqual(F.search(pagesForTest, "ENER", trPt)[0], { page: "energia", label: "Energia", icon: "energia", key: "Alt+E", item: false, rank: 0 })
 assert.ok(F.search(pagesForTest, "noturna", trPt).some(r => r.item && r.page === "ajustes")) // a word inside the label
 assert.ok(F.search(pagesForTest, "night", trPt).some(r => r.label === "Luz noturna")) // the English key still finds it
+{
+    // Labels read from the screens' files: buttons are found, sentences and placeholders are not.
+    const grep = ['PgMonitor.qml:Tr.t("Extend")', 'PgMonitor.qml:Tr.t("Extend")', 'PgMonitor.qml:Tr.t("Screens: %1")', 'PgMonitor.qml:Tr.t("Drag the screens to position them.")', 'Other.qml:Tr.t("Nope")'].join("\n")
+    const got = F.labelsFrom(grep, { monitor: "PgMonitor.qml" })
+    assert.deepEqual(JSON.parse(JSON.stringify(got)), { monitor: ["Extend"] })
+    const tr = k => ({ Extend: "Estender" })[k] ?? k
+    const hits = F.search([{ id: "monitor", label: "Monitor", icon: "monitor", key: "Alt+M", kw: "" }], "estender", tr, got)
+    assert.deepEqual(hits.map(h => h.label + "@" + h.page), ["Estender@monitor"])
+    // Every screen file holds some labels, so the real grep output feeds the search.
+    const real = spawnSync("sh", ["-c", 'cd "$1" && grep -oH "Tr\\.t(\\"[^\\"]*\\")" Pg*.qml', "sh", new URL("../shell/", import.meta.url).pathname], { encoding: "utf8" }).stdout
+    const all = F.labelsFrom(real, { monitor: "PgMonitor.qml", ajustes: "PgSettings.qml" })
+    assert.ok(all.monitor.includes("Extend") && all.ajustes.includes("Pointer speed"))
+}
 assert.ok(Object.keys(F.items).every(id => ["som", "rede", "bt", "perf", "cal", "avisos", "monitor", "ajustes", "visual", "atalhos", "apps", "regras", "backup", "energia", "sobre"].includes(id)))
 const kb = P.zipLayouts("br,us", "abnt2,")
 assert.deepEqual(JSON.parse(JSON.stringify(kb)), [{ layout: "br", variant: "abnt2" }, { layout: "us", variant: "" }])

@@ -20,8 +20,26 @@ const items = {
     sobre: ["Check for updates", "Copy for a report", "This system"]
 }
 
-// pages: Ui.pages, already translated. tr: Tr.t. Screens first, then what is inside them, best match first.
-function search(pages, query, tr) {
+// "PgMonitor.qml:Tr.t("Extend")" lines from grep, to labels per screen. files: screen id to its file.
+// Sentences and texts with placeholders are left out: they are messages, not things to look for.
+function labelsFrom(text, files) {
+    const byFile = {}
+    for (const id in files) byFile[files[id]] = id
+    const out = {}
+    for (const line of String(text).split("\n")) {
+        const m = line.match(/^([^:]+):Tr\.t\("(.*)"\)$/)
+        if (!m || !byFile[m[1]]) continue
+        const key = m[2]
+        if (!key || key.length > 40 || key.includes("%") || /[.!?:]$/.test(key)) continue
+        const id = byFile[m[1]]
+        if (!out[id]) out[id] = []
+        if (!out[id].includes(key)) out[id].push(key)
+    }
+    return out
+}
+
+// pages: Ui.pages, already translated. tr: Tr.t. extra: more labels per screen (labelsFrom). Screens first, then what is inside them, best match first.
+function search(pages, query, tr, extra) {
     const q = P.fold(String(query).trim())
     if (!q) return []
     const score = (label, extra) => {
@@ -35,7 +53,10 @@ function search(pages, query, tr) {
     for (const p of pages) {
         const s = score(p.label, p.kw || "")
         if (s >= 0) out.push({ page: p.id, label: p.label, icon: p.icon, key: p.key, item: false, rank: s })
-        for (const key of items[p.id] || []) {
+        const seen = new Set()
+        for (const key of (items[p.id] || []).concat((extra || {})[p.id] || [])) {
+            if (seen.has(key)) continue
+            seen.add(key)
             const label = tr(key)
             const t = score(label, key + " " + p.label)
             if (t >= 0) out.push({ page: p.id, label, icon: p.icon, key: "", sub: p.label, item: true, rank: t + 0.5 })

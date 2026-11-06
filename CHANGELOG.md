@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.16.1] - 2026-11-06
+
+### Fixed
+
+- The control center's search finds every button and option on every screen, read from the screens themselves, such as Extend in Monitor.
+
 ## [1.16.0] - 2026-11-06
 
 ### Changed
@@ -266,7 +272,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.16.0...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.16.1...HEAD
+[1.16.1]: https://github.com/brayanspagnol/atoll/compare/v1.16.0...v1.16.1
 [1.16.0]: https://github.com/brayanspagnol/atoll/compare/v1.15.1...v1.16.0
 [1.15.1]: https://github.com/brayanspagnol/atoll/compare/v1.15.0...v1.15.1
 [1.15.0]: https://github.com/brayanspagnol/atoll/compare/v1.14.1...v1.15.0

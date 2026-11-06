@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import "finder.js" as F
 import Quickshell.Bluetooth
 import Quickshell.Services.UPower
@@ -31,6 +32,15 @@ Scope {
         WlrLayershell.keyboardFocus: Ui.open ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
         WlrLayershell.namespace: "atoll-central"
         color: "transparent"
+        readonly property var files: ({ som: "PgSound.qml", rede: "PgNet.qml", bt: "PgBt.qml", perf: "PgPerf.qml", cal: "PgCal.qml", avisos: "PgNotif.qml", ajustes: "PgSettings.qml", energia: "PgPower.qml", monitor: "PgMonitor.qml", sobre: "PgAbout.qml" , visual: "PgLook.qml", atalhos: "PgShortcuts.qml", apps: "PgApps.qml", regras: "PgRules.qml", backup: "PgBackup.qml" })
+        // Every label on every screen, read from the screens' own files, so the search finds any button or option.
+        property var labels: ({})
+        Process {
+            running: true
+            workingDirectory: Quickshell.shellPath("")
+            command: ["grep", "-oH", 'Tr\\.t("[^"]*")'].concat(Object.keys(win.files).map(id => win.files[id]))
+            stdout: StdioCollector { onStreamFinished: win.labels = F.labelsFrom(text, win.files) }
+        }
         // A screen, or an item in one: open it, and for an item scroll there.
         function go(m) {
             find.text = ""
@@ -118,7 +128,7 @@ Scope {
                         clip: true; spacing: 4
                         boundsBehavior: Flickable.StopAtBounds
                         // Screens when empty; matches while typing. A new array each time, so it fades in again.
-                        model: find.text.trim() ? F.search(Ui.pages, find.text, Tr.t) : Ui.pages.map(p => ({ page: p.id, label: p.label, icon: p.icon, key: p.key, item: false }))
+                        model: find.text.trim() ? F.search(Ui.pages, find.text, Tr.t, win.labels) : Ui.pages.map(p => ({ page: p.id, label: p.label, icon: p.icon, key: p.key, item: false }))
                         currentIndex: -1
                         highlightFollowsCurrentItem: false
                         ScrollBar.vertical: ScrollBar { policy: nav.contentHeight > nav.height ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff; width: 6 }
@@ -184,7 +194,7 @@ Scope {
                     property string shown: ""
                     Component.onCompleted: shown = Ui.page
                     property int direction: 1
-                    source: ({ som: "PgSound.qml", rede: "PgNet.qml", bt: "PgBt.qml", perf: "PgPerf.qml", cal: "PgCal.qml", avisos: "PgNotif.qml", ajustes: "PgSettings.qml", energia: "PgPower.qml", monitor: "PgMonitor.qml", sobre: "PgAbout.qml" , visual: "PgLook.qml", atalhos: "PgShortcuts.qml", apps: "PgApps.qml", regras: "PgRules.qml", backup: "PgBackup.qml" })[shown]
+                    source: win.files[shown]
                     transform: Translate { id: slide }
                     Connections {
                         target: Ui
