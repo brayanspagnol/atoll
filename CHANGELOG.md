@@ -6,6 +6,22 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-11-06
+
+### Added
+
+- Shortcuts screen: a keyboard map with every shortcut by group, recording a new combination with conflict warnings and free key suggestions, restoring defaults, and custom shortcuts for apps or commands. Defaults are data in `hypr/keys.lua`; changes are saved in `~/.config/atoll/shortcuts.lua`.
+- Default apps screen: choose the browser, terminal, file manager, text editor, image viewer, video and music players and email client, for Atoll's shortcuts and the system defaults together, with a warning when they disagree.
+- Window rules screen: per-app rules for floating, centering, size, maximized, fullscreen, pinned, opacity, focus on open and workspace, saved in `~/.config/atoll/rules.json` and applied live to new windows.
+- Backup screen: export a profile or everything, with or without images, and import with a line-by-line review, as a new profile or replacing the current one, with an automatic copy first. Archives are checked before anything is read.
+- Light theme, with dark, light and automatic modes. Automatic follows the night light schedule.
+- Four control center cards for the new screens, with `Super+Alt+K`, `N`, `R` and `U`.
+
+### Changed
+
+- `Super+Enter`, `Super+B` and `Super+E` open the default apps.
+- `xdg-utils` is a dependency.
+
 ## [1.13.0] - 2026-11-05
 
 ### Added
@@ -217,7 +233,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.13.0...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.14.0...HEAD
+[1.14.0]: https://github.com/brayanspagnol/atoll/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/brayanspagnol/atoll/compare/v1.12.1...v1.13.0
 [1.12.1]: https://github.com/brayanspagnol/atoll/compare/v1.12.0...v1.12.1
 [1.12.0]: https://github.com/brayanspagnol/atoll/compare/v1.11.0...v1.12.0

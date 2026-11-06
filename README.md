@@ -33,6 +33,11 @@ wallpaper, and windows keep the rest of the screen.
 - **Idle and power:** lock, screen off and suspend times per power source, each with a Never option, power modes, and a night light with its own schedule.
 - **Keyboard and mouse:** layouts, pointer speed, natural scrolling and touchpad options in Settings.
 - **Internet:** Wi-Fi with hidden and enterprise (802.1X: PEAP, TTLS and certificate-based TLS) networks, plus WireGuard and OpenVPN files you import.
+- **Shortcuts:** a keyboard map of every shortcut, colored by group. Press a new combination to change one, see conflicts and free keys, and add your own for apps or commands.
+- **Default apps:** browser, terminal, files, text, images, video, music and email, for Atoll's shortcuts and for the files and links you open.
+- **Window rules:** per app, open floating, centered, at a size, maximized, pinned, see-through or on a given workspace, without writing Lua.
+- **Backup:** export a profile or everything to one file, with or without images, and review line by line before importing it here or on another computer.
+- **Light theme:** dark, light, or automatic with the night light schedule.
 - **About:** version, one-click update, project links, and your computer's details (model, processor, graphics, memory, storage, battery health, screens and software) to read or paste in a bug report.
 - **Resilient by design:** if the shell crashes, it restarts by itself. Your windows stay open.
 
@@ -67,6 +72,10 @@ Screenshots use demo data.
 | Monitor | About |
 |---|---|
 | ![Monitor](docs/screenshots/monitor.webp) | ![About](docs/screenshots/about.webp) |
+
+| Shortcuts | Light theme |
+|---|---|
+| ![Shortcuts](docs/screenshots/shortcuts.webp) | ![Light theme](docs/screenshots/light.webp) |
 
 | Settings | Power |
 |---|---|
@@ -127,6 +136,7 @@ for `sudo`; everything else stays in your home directory. See `./install.sh --he
 | `Super+Alt+A` / `I` / `B` / `D` | Sound / Internet / Bluetooth / Performance |
 | `Super+Alt+C` / `V` / `J` / `E` | Calendar / Notifications / Settings / Power |
 | `Super+Alt+M` / `O` | Monitor / About |
+| `Super+Alt+K` / `N` / `R` / `U` | Shortcuts / Default apps / Window rules / Backup |
 | `Super+Shift+V` / `Super+.` | Clipboard history / Emoji |
 | `Super+O` | Workspace overview |
 | `Super+Enter` | Terminal |

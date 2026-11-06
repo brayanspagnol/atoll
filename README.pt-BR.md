@@ -31,6 +31,11 @@ Os prints estão no [README em inglês](README.md#screenshots).
 - **Ociosidade e energia:** tempos de bloqueio, desligar a tela e suspender para tomada e bateria, cada um com a opção Nunca, modos de energia e luz noturna com horário próprio.
 - **Teclado e mouse:** layouts, velocidade do ponteiro, rolagem natural e opções do touchpad em Ajustes.
 - **Internet:** Wi-Fi com redes ocultas e corporativas (802.1X: PEAP, TTLS e TLS com certificado), mais arquivos WireGuard e OpenVPN que você importa.
+- **Atalhos:** um mapa do teclado com todos os atalhos, por cor de grupo. Aperte uma combinação nova para trocar, veja conflitos e teclas livres, e crie os seus para apps ou comandos.
+- **Apps padrão:** navegador, terminal, arquivos, texto, imagens, vídeo, música e e-mail, para os atalhos do Atoll e para os arquivos e links que você abre.
+- **Regras de janela:** por app, abrir flutuando, centralizada, num tamanho, maximizada, fixa no topo, transparente ou numa área de trabalho, sem escrever Lua.
+- **Backup:** exporte um perfil ou tudo num arquivo, com ou sem imagens, e revise linha por linha antes de importar aqui ou em outro computador.
+- **Tema claro:** escuro, claro ou automático com o horário da luz noturna.
 - **Sobre:** versão, atualização com um clique, links do projeto e dados do seu computador (modelo, processador, vídeo, memória, armazenamento, saúde da bateria, telas e software) para consultar ou colar ao relatar bugs.
 - **Resistente:** se o shell cair, ele volta sozinho. Suas janelas continuam abertas.
 
@@ -86,6 +91,7 @@ Para escolher o Atoll no gerenciador de login, rode também `./install.sh --sess
 | `Super+Alt+A` / `I` / `B` / `D` | Som / Internet / Bluetooth / Desempenho |
 | `Super+Alt+C` / `V` / `J` / `E` | Calendário / Avisos / Ajustes / Energia |
 | `Super+Alt+M` / `O` | Monitor / Sobre |
+| `Super+Alt+K` / `N` / `R` / `U` | Atalhos / Apps padrão / Regras de janela / Backup |
 | `Super+Shift+V` / `Super+.` | Área de transferência / Emoji |
 | `Super+O` | Visão geral das áreas |
 | `Super+Enter` | Terminal |
