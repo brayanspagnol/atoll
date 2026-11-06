@@ -11,7 +11,23 @@ local function saved()
     end
     file:close()
     local ok, data = pcall(dofile, path)
-    return ok and type(data) == "table" and data or {}
+    if not ok or type(data) ~= "table" then
+        return {}
+    end
+    -- Keep only well-formed entries: a file from a backup or an older version may hold anything.
+    local rules = {}
+    for _, rule in ipairs(type(data.monitors) == "table" and data.monitors or {}) do
+        if type(rule) == "table" and type(rule.output) == "string" then
+            rules[#rules + 1] = rule
+        end
+    end
+    local spaces = {}
+    for workspace, monitor in pairs(type(data.workspaces) == "table" and data.workspaces or {}) do
+        if type(monitor) == "string" then
+            spaces[tostring(workspace)] = monitor
+        end
+    end
+    return { lid = type(data.lid) == "string" and data.lid or nil, monitors = rules, workspaces = spaces }
 end
 
 local function is_laptop(name)
