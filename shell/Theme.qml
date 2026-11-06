@@ -53,17 +53,17 @@ Singleton {
     function pushBorder() {
         Quickshell.execDetached(["hyprctl", "eval", `hl.config({ general = { col = { active_border = "rgb(${accent.toString().slice(1)})", inactive_border = "rgba(${t.inactiveBorder})" } } })`])
     }
-    onAccentChanged: pushBorder()
-    onLightChanged: pushBorder()
+    onAccentChanged: if (Cfg.ready) pushBorder()
+    onLightChanged: if (Cfg.ready) pushBorder()
     // The lock screen reads the wallpaper through this link, because it runs outside the shell.
     readonly property string wallpaper: Cfg.v.wallpaper
     function linkWallpaper() {
         Quickshell.execDetached(["sh", "-c", 'if [ -n "$1" ]; then ln -sfn "$1" "$2"; else rm -f "$2"; fi', "sh", wallpaper, Quickshell.env("HOME") + "/.local/share/atoll/current-wallpaper"])
     }
-    onWallpaperChanged: linkWallpaper()
+    onWallpaperChanged: if (Cfg.ready) linkWallpaper()
     // Backgrounds for screens with their own wallpaper. hyprlock draws them over the main one, from a file its config includes.
     readonly property var screenWallpapers: Cfg.v.wallpapers ?? ({})
-    onScreenWallpapersChanged: writeLockScreens()
+    onScreenWallpapersChanged: if (Cfg.ready) writeLockScreens()
     function writeLockScreens() {
         const blocks = Object.keys(screenWallpapers).map(name => {
             const path = screenWallpapers[name]
@@ -77,6 +77,9 @@ Singleton {
     function linkPhoto() {
         Quickshell.execDetached(["sh", "-c", 'if [ -e "$1" ]; then ln -sfn "$1" "$2"; else rm -f "$2"; fi', "sh", photo || Quickshell.env("HOME") + "/.face", Quickshell.env("HOME") + "/.local/share/atoll/current-face"])
     }
-    onPhotoChanged: linkPhoto()
-    Component.onCompleted: { pushBorder(); linkWallpaper(); linkPhoto() }
+    onPhotoChanged: if (Cfg.ready) linkPhoto()
+    // Not before the profile loads: its defaults would flash the border and unlink the lock screen's wallpaper.
+    readonly property bool ready: Cfg.ready
+    onReadyChanged: { pushBorder(); linkWallpaper(); writeLockScreens(); linkPhoto() }
+    Component.onCompleted: if (ready) readyChanged() // first used after the load
 }

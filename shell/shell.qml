@@ -14,5 +14,5 @@ ShellRoot {
     DockEditor {}
     Variants { model: Quickshell.screens; DisplayOverlay {} }
     Variants { model: Quickshell.screens; Sheet {} }
-    Component.onCompleted: { Theme.accent; Notifs.all; Events.list; Sys.cpu; Osd.shown; Night.apply() }
+    Component.onCompleted: { Theme.accent; Notifs.all; Events.list; Sys.cpu; Osd.shown; Night.wanted } // Night applies itself once the profile loads
 }

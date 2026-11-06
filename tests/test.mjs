@@ -491,6 +491,46 @@ ShellRoot {
     }
     fs.rmSync(ov, { recursive: true })
 
+    // Startup effects wait for the profile: no default border, night light or missing wallpaper link in the meantime.
+    const startup = (profile, tag) => {
+        const dir = fs.mkdtempSync("/tmp/atoll-test-")
+        fs.cpSync(new URL("../shell/", import.meta.url), dir, { recursive: true })
+        fs.mkdirSync(dir + "/bin"); fs.mkdirSync(dir + "/home/.local/share/atoll", { recursive: true })
+        fs.writeFileSync(dir + "/bin/hyprctl", `#!/bin/sh\nprintf '%s\\037' "$@" >> '${dir}/hyprctl.log'; printf '\\036' >> '${dir}/hyprctl.log'\nexit 0\n`, { mode: 0o755 })
+        fs.symlinkSync("/old-wallpaper", dir + "/home/.local/share/atoll/current-wallpaper")
+        if (profile) fs.writeFileSync(dir + "/profile.json", JSON.stringify(profile))
+        fs.writeFileSync(dir + "/Profiles.qml", `pragma Singleton\nimport Quickshell\nSingleton { property string path: "${dir}/profile.json" }\n`)
+        fs.writeFileSync(dir + "/shell.qml", `import QtQuick
+import Quickshell
+ShellRoot {
+    property bool early: true
+    Component.onCompleted: { early = Cfg.ready; Theme.accent; Night.wanted }
+    Connections { target: Cfg; function onReadyChanged() { console.log("RESULT ${tag} " + JSON.stringify({ early, accent: Cfg.v.accent, nightK: Cfg.v.nightK })) } }
+    Timer { running: true; interval: 1500; onTriggered: Qt.quit() }
+}
+`)
+        const { WAYLAND_DISPLAY, DISPLAY, HYPRLAND_INSTANCE_SIGNATURE, ...env } = process.env
+        const run = spawnSync("dbus-run-session", ["--", "qs", "-p", dir + "/shell.qml"], { encoding: "utf8", timeout: 30000, env: { ...env, PATH: dir + "/bin:" + env.PATH, LANG: "C.UTF-8", LC_ALL: "C.UTF-8", LANGUAGE: "en", QT_QPA_PLATFORM: "offscreen", HOME: dir + "/home", XDG_DATA_HOME: dir + "/home/share", XDG_CONFIG_HOME: dir + "/home/config", XDG_STATE_HOME: dir + "/home/state", XDG_DATA_DIRS: dir + "/data" } })
+        const said = Object.fromEntries([...(run.stdout + run.stderr).matchAll(/RESULT (\w+) (.*)/g)].map(m => [m[1], JSON.parse(m[2])]))
+        const calls = fs.existsSync(dir + "/hyprctl.log") ? fs.readFileSync(dir + "/hyprctl.log", "utf8").split("\x1e").filter(Boolean).map(l => l.split("\x1f").filter(Boolean)) : []
+        let link = null
+        try { link = fs.readlinkSync(dir + "/home/.local/share/atoll/current-wallpaper") } catch (e) {}
+        const screens = fs.readFileSync(dir + "/home/.config/atoll/hyprlock-screens.conf", "utf8")
+        fs.rmSync(dir, { recursive: true })
+        return { said: said[tag], calls: calls.sort((a, b) => a[0].localeCompare(b[0])), link, screens } // eval before hyprsunset, whichever ran first
+    }
+    const dark = load("theme.js", "dark").dark
+    const border = hex => `hl.config({ general = { col = { active_border = "rgb(${hex.slice(1).toLowerCase()})", inactive_border = "rgba(${dark.inactiveBorder})" } } })`
+    const loaded = startup({ accent: "coral", theme: "dark", wallpaper: "/w.png", wallpapers: { "DP-1": "/x.png" }, nightOn: true, nightK: 3000 }, "saved")
+    assert.deepEqual(loaded.said, { early: false, accent: "coral", nightK: 3000 }) // ready comes with the loaded values
+    assert.deepEqual(loaded.calls, [["eval", border(dark.accents.coral)], ["hyprsunset", "temperature", "3000"]])
+    assert.equal(loaded.link, "/w.png")
+    assert(loaded.screens.includes("monitor = DP-1") && loaded.screens.includes("path = /x.png"))
+    const missing = startup(null, "missing") // a profile without a file starts from the defaults, once
+    assert.deepEqual(missing.said, { early: false, accent: "gelo", nightK: 4500 })
+    assert.deepEqual(missing.calls, [["eval", border(dark.accents.gelo)], ["hyprsunset", "identity"]])
+    assert.equal(missing.link, null)
+
     // Clipboard panel, against a throwaway cliphist database: the default one is the user's real history.
     const realCliphist = spawnSync("sh", ["-c", "command -v cliphist"], { encoding: "utf8" }).stdout.trim()
     if (realCliphist) {

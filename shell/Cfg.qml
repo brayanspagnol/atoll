@@ -4,7 +4,10 @@ import Quickshell
 import Quickshell.Io
 
 Singleton {
+    id: root
     property alias v: adapter
+    // False until the first profile has loaded (or turned out missing): until then v holds only the defaults.
+    property bool ready: false
     FileView {
         id: file
         path: Profiles.path
@@ -23,6 +26,7 @@ Singleton {
             for (const key in fresh) if (saved?.[key] === undefined) adapter[key] = fresh[key]
             completing = false
             writeAdapter()
+            root.ready = true
         }
         onLoaded: {
             if (completed === path.toString()) return
