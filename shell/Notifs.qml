@@ -21,7 +21,12 @@ Singleton {
     function appOf(n) {
         return [n.desktopEntry, n.appName].map(id => id ? DesktopEntries.heuristicLookup(id) : null).find(e => e && !e.noDisplay) ?? null
     }
-    function drop(n) { toasts = toasts.filter(t => t !== n) }
+    // A toast going away lets go of its notification if the history doesn't hold it: a transient one, or one pushed out.
+    function drop(n) {
+        if (!toasts.includes(n)) return
+        toasts = toasts.filter(t => t !== n)
+        if (!all.includes(n)) n.dismiss()
+    }
     function remove(n) { all = all.filter(t => t !== n); saver.restart() }
     function clear() { all.slice().forEach(n => n.dismiss()) }
     function clearApp(name) { all.filter(n => n.appName === name).forEach(n => n.dismiss()) }
@@ -42,7 +47,7 @@ Singleton {
         t.restored = false
         t.actions = n.actions.map(a => ({ text: a.text, invoke: () => a.invoke() }))
         t.dismiss = () => n.dismiss()
-        n.closed.connect(() => { root.drop(t); root.remove(t) })
+        n.closed.connect(() => { t.dismiss = () => {}; root.drop(t); root.remove(t) }) // gone: nothing left to dismiss
         // An app replacing its notification updates this same object.
         const refresh = () => { t.summary = n.summary; t.body = n.body; root.all = root.all.slice(); saver.restart() }
         n.summaryChanged.connect(refresh)
@@ -75,17 +80,26 @@ Singleton {
         bodyMarkupSupported: false
         persistenceSupported: true
         onNotification: n => {
-            n.tracked = true
+            // Tracked only while a card or a toast holds it; the server lets go of the rest.
             if (n.lastGeneration) { // carried over a shell reload: already shown once
                 const same = root.all.find(t => t.id === n.id && t.summary === n.summary)
-                if (same) { root.attach(same, n); root.all = root.all.slice() } // cards hold copies, so they must be rebuilt
+                if (same) { n.tracked = true; root.attach(same, n); root.all = root.all.slice() } // cards hold copies, so they must be rebuilt
                 return
             }
+            const quiet = Cfg.v.dnd && n.urgency !== NotificationUrgency.Critical
+            if (n.transient && quiet) return
+            n.tracked = true
             // A copy, because the sheet keeps drawing the card during its closing animation, after n is gone.
             const t = { id: n.id, time: Date.now(), appName: n.appName, summary: n.summary, body: n.body, image: n.image, appIcon: n.appIcon, urgency: n.urgency, expireTimeout: n.expireTimeout }
             root.attach(t, n)
-            if (!n.transient) { root.all = root.all.concat([t]).slice(-root.limit); saver.restart() }
-            if (Cfg.v.dnd && n.urgency !== NotificationUrgency.Critical) return
+            if (!n.transient) {
+                const kept = root.all.concat([t])
+                root.all = kept.slice(-root.limit)
+                // Pushed out of the history. One still on a toast goes when the toast does, in drop().
+                kept.slice(0, -root.limit).forEach(old => { if (!old.restored && !root.toasts.includes(old)) old.dismiss() })
+                saver.restart()
+            }
+            if (quiet) return
             if (root.toasts.length === 0 && !Ui.mediaOpen) Ui.sheetScreen = Ui.screen
             root.toasts = [t].concat(root.toasts)
         }

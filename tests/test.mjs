@@ -340,6 +340,47 @@ ShellRoot {
     assert.equal(history.find(n => n.summary === "live").desktopEntry, "fake-app")
     fs.rmSync(root, { recursive: true })
 
+    // The server lets go of what nothing shows any more: pushed out of the history, or transient once its toast goes.
+    const nroot = fs.mkdtempSync("/tmp/atoll-test-"), closedLog = nroot + "/closed"
+    fs.cpSync(new URL("../shell/", import.meta.url), nroot, { recursive: true })
+    fs.mkdirSync(nroot + "/home/.local/state/atoll", { recursive: true })
+    fs.writeFileSync(nroot + "/home/.local/state/atoll/notifications.json", JSON.stringify([saved("r1", "x"), saved("r2", "x")]))
+    const released = runQml(nroot, `import QtQuick
+import Quickshell
+import Quickshell.Io
+ShellRoot {
+    property int step: 0
+    property var early: Notifs.all
+    // Each line in the log is one notification the server closed.
+    Process { id: send; command: ["sh", "-c", 'for i in $(seq 103); do (notify-send --wait -a app "n$i" && echo "n$i" >> "$1") & done; (notify-send --wait -e -a app t && echo t >> "$1") & wait', "sh", "${closedLog}"] }
+    Timer {
+        running: true; repeat: true; interval: 500
+        onTriggered: {
+            step++
+            if (step === 1) send.running = true
+            if (step === 10) {
+                console.log("RESULT before " + JSON.stringify({ all: Notifs.all.length, toasts: Notifs.toasts.length, restored: Notifs.all.filter(t => t.restored).length }))
+                Quickshell.execDetached(["sh", "-c", 'cp "$1" "$1.before" 2>/dev/null; :', "sh", "${closedLog}"])
+            }
+            if (step === 11) Notifs.toasts.slice().forEach(t => Notifs.drop(t))
+            if (step === 14) {
+                console.log("RESULT after " + JSON.stringify({ all: Notifs.all.length, toasts: Notifs.toasts.length, actions: Notifs.all.every(t => typeof t.dismiss === "function") }))
+                Quickshell.execDetached(["cp", "${closedLog}", "${closedLog}.after"])
+            }
+            if (step === 15) Qt.quit()
+        }
+    }
+}
+`, { "Ui.qml": `pragma Singleton\nimport Quickshell\nSingleton { property bool open: true; property bool mediaOpen: false; property var sheetScreen; property var screen }\n` })
+    const closedLines = file => fs.existsSync(file) ? fs.readFileSync(file, "utf8").split("\n").filter(Boolean) : []
+    assert.deepEqual(released.before, { all: 100, toasts: 104, restored: 0 })
+    assert.deepEqual(closedLines(closedLog + ".before"), []) // a toast still up keeps its notification
+    assert.deepEqual(released.after, { all: 100, toasts: 0, actions: true })
+    const closedNow = closedLines(closedLog + ".after")
+    assert.equal(closedNow.length, 4, closedNow.join(" ")) // the transient one, and the 3 oldest live ones the history dropped
+    assert(closedNow.includes("t"))
+    fs.rmSync(nroot, { recursive: true, maxRetries: 10 }) // notify-send runs still ending may write their line meanwhile
+
     // Clipboard panel, against a throwaway cliphist database: the default one is the user's real history.
     const realCliphist = spawnSync("sh", ["-c", "command -v cliphist"], { encoding: "utf8" }).stdout.trim()
     if (realCliphist) {
