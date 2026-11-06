@@ -68,9 +68,10 @@ Item {
         }
         return best ?? Theme.accent
     }
-    readonly property color tone: Qt.hsla(seed.hslHue, Math.min(seed.hslSaturation, 0.45), 0.12, 0.42)
-    readonly property color accent: Qt.hsla(seed.hslHue, Math.max(0.55, seed.hslSaturation), 0.66, 1)
-    readonly property color accentInk: "#10151C"
+    // On light glass the tint washes the cover out instead of darkening it, and the accent goes deep enough for white on it.
+    readonly property color tone: Qt.hsla(seed.hslHue, Math.min(seed.hslSaturation, 0.45), Theme.light ? 0.93 : 0.12, Theme.light ? 0.6 : 0.42)
+    readonly property color accent: Qt.hsla(seed.hslHue, Math.max(0.55, seed.hslSaturation), Theme.light ? 0.28 : 0.66, 1)
+    readonly property color accentInk: Theme.light ? Theme.accentInk : "#10151C"
 
     Item {
         width: card.width; height: card.fullHeight

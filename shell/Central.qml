@@ -80,7 +80,7 @@ Scope {
                                 readonly property color fg: sel ? Theme.accentInk : Theme.ink
                                 Layout.fillWidth: true; Layout.preferredWidth: 1
                                 implicitHeight: 92; radius: 16
-                                color: sel ? Theme.accent : tm.containsMouse ? Qt.rgba(1, 1, 1, 0.16) : Theme.raised
+                                color: sel ? Theme.accent : tm.containsMouse ? Theme.raisedHover : Theme.raised
                                 border.width: activeFocus ? 2 : 0; border.color: Theme.ink
                                 activeFocusOnTab: true
                                 Accessible.role: Accessible.Button

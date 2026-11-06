@@ -38,6 +38,6 @@ ComboBox {
             model: c.delegateModel
             currentIndex: c.highlightedIndex
         }
-        background: Rectangle { radius: Theme.radiusSmall; color: Qt.rgba(13 / 255, 21 / 255, 31 / 255, 0.97); border.width: 1; border.color: Theme.lineStrong }
+        background: Rectangle { radius: Theme.radiusSmall; color: Theme.glassStrong; border.width: 1; border.color: Theme.lineStrong }
     }
 }

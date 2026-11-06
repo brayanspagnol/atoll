@@ -177,7 +177,7 @@ Scope {
                 anchors.fill: parent; anchors.margins: 16; spacing: 12
                 Rectangle {
                     Layout.fillWidth: true; implicitHeight: 56; radius: 16
-                    color: Qt.rgba(1, 1, 1, 0.06)
+                    color: Theme.hover
                     border.width: 1.5; border.color: Theme.accent
                     RowLayout {
                         anchors.fill: parent; anchors.leftMargin: 18; anchors.rightMargin: 18; spacing: 12
@@ -292,7 +292,7 @@ Scope {
                             visible: !it.heading
                             anchors.fill: parent
                             radius: 14
-                            color: it.selected ? Qt.rgba(140 / 255, 200 / 255, 245 / 255, 0.18) : rowArea.containsMouse ? Theme.hover : "transparent"
+                            color: it.selected ? Theme.accentSoft : rowArea.containsMouse ? Theme.hover : "transparent"
                             border.width: it.selected ? 1 : 0; border.color: Theme.accent
                             Accessible.role: Accessible.Button
                             Accessible.name: it.modelData.name ?? ""

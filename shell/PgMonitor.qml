@@ -58,7 +58,7 @@ Item {
             Layout.fillWidth: true
             implicitHeight: 300
             radius: 18
-            color: Qt.rgba(0, 0, 0, 0.25)
+            color: Theme.field
             border.width: activeFocus ? 2 : 1
             border.color: activeFocus ? Theme.ink : Theme.line
             clip: true
@@ -99,9 +99,9 @@ Item {
                     width: size[0] * map.view.k
                     height: size[1] * map.view.k
                     radius: 10
-                    color: sel ? Qt.rgba(140 / 255, 200 / 255, 245 / 255, 0.28) : Qt.rgba(1, 1, 1, 0.14)
+                    color: sel ? Theme.accentSoft : Theme.raised
                     border.width: 2
-                    border.color: sel ? Theme.accent : Qt.rgba(1, 1, 1, 0.3)
+                    border.color: sel ? Theme.accent : Theme.lineStrong
                     Column {
                         anchors.centerIn: parent
                         width: parent.width - 12
@@ -270,7 +270,7 @@ Item {
         anchors { left: parent.left; right: parent.right; rightMargin: 14; bottom: parent.bottom }
         height: 64
         radius: 16
-        color: Qt.rgba(10 / 255, 16 / 255, 24 / 255, 0.96)
+        color: Theme.glassStrong
         border.width: 1; border.color: Theme.lineStrong
         RowLayout {
             anchors.fill: parent; anchors.leftMargin: 16; anchors.rightMargin: 12

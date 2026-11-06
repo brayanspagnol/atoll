@@ -75,6 +75,31 @@ assert.ok(!P.inWindow("07:00", "20:00", "07:00") && !P.inWindow("12:00", "20:00"
 assert.ok(P.inWindow("09:00", "08:00", "17:00") && !P.inWindow("17:00", "08:00", "17:00"))
 assert.ok(!P.inWindow("08:00", "08:00", "08:00"))
 assert.deepEqual(JSON.parse(JSON.stringify(P.nmcliRows("Home\\: VPN:abc:wireguard:yes\nback\\\\slash:def:vpn:no\n"))), [["Home: VPN", "abc", "wireguard", "yes"], ["back\\slash", "def", "vpn", "no"]])
+// Theme sets: the same keys in both, and text that reads on the glass (WCAG 4.5:1), over the plain
+// background and over black, the darkest a wallpaper can make the blurred glass.
+const T = load("theme.js", "dark,light")
+assert.deepEqual(Object.keys(T.dark).sort(), Object.keys(T.light).sort())
+assert.deepEqual(Object.keys(T.dark.accents).sort(), Object.keys(T.light.accents).sort())
+const rgba = hex => { const h = hex.slice(1), a = h.length === 8 ? parseInt(h.slice(0, 2), 16) / 255 : 1; return [0, 2, 4].map(i => parseInt(h.slice(-6).slice(i, i + 2), 16)).concat(a) }
+const over = (top, under) => top.slice(0, 3).map((c, i) => c * top[3] + under[i] * (1 - top[3])).concat(1)
+const luminance = c => c.slice(0, 3).map(v => (v /= 255) <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4).reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0)
+const contrast = (a, b) => { const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x); return (hi + 0.05) / (lo + 0.05) }
+for (const [name, set] of Object.entries({ dark: T.dark, light: T.light })) {
+    for (const [key, value] of Object.entries(set)) if (key !== "accents" && key !== "inactiveBorder") assert.match(value, /^#([0-9A-F]{6}|[0-9A-F]{8})$/, `${name}.${key}`)
+    for (const back of [rgba(set.ground), [0, 0, 0, 1]]) {
+        const glass = over(rgba(set.surface), back)
+        for (const key of ["ink", "muted", "danger", "holiday", "good", "warn"]) {
+            const r = contrast(rgba(set[key]), glass); assert(r >= 4.5, `${name}.${key} on glass: ${r.toFixed(2)}`)
+        }
+        assert(contrast(rgba(set.ink), over(rgba(set.glassStrong), back)) >= 4.5, `${name}.ink on glassStrong`)
+        assert(contrast(rgba(set.ink), over(rgba(set.scrim), back)) >= 4.5, `${name}.ink on scrim`)
+    }
+    for (const [key, hex] of Object.entries(set.accents)) {
+        assert(contrast(rgba(hex), over(rgba(set.surface), rgba(set.ground))) >= 4.5, `${name} accent ${key} on glass`)
+        assert(contrast(rgba(set.accentInk), rgba(hex)) >= 4.5, `${name} text on accent ${key}`)
+    }
+    assert(contrast(rgba(set.accentInk), rgba(set.danger)) >= 4.5, `${name} text on danger`)
+}
 const O = load("overview.js", "spread")
 const plain = v => JSON.parse(JSON.stringify(v))
 // Tiled windows keep their arrangement, centered at the scale that fits.

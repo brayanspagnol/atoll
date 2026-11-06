@@ -6,14 +6,14 @@ Rectangle {
     radius: Theme.radius
     color: Theme.surface
     border.width: 1
-    border.color: Theme.lineStrong
+    border.color: Theme.rim
     Rectangle {
         anchors.fill: parent
         anchors.margins: 1
         radius: frost.radius - 1
         gradient: Gradient {
-            GradientStop { position: 0; color: Qt.rgba(1, 1, 1, 0.1) }
-            GradientStop { position: 0.45; color: Qt.rgba(1, 1, 1, 0) }
+            GradientStop { position: 0; color: Theme.sheen }
+            GradientStop { position: 0.45; color: Qt.rgba(1, 1, 1, 0) } // white so the fade stays white
         }
     }
 }

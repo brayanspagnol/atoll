@@ -53,7 +53,7 @@ PanelWindow {
         default property alias content: slot.data
         signal clicked()
         implicitWidth: 72; implicitHeight: 72; radius: 20
-        color: m.pressed ? Theme.lineStrong : m.containsMouse || active ? Qt.rgba(1, 1, 1, 0.16) : Theme.raised
+        color: m.pressed ? Theme.lineStrong : m.containsMouse || active ? Theme.raisedHover : Theme.raised
         border.width: activeFocus ? 2 : 0; border.color: Theme.ink
         activeFocusOnTab: true
         Accessible.role: Accessible.Button
@@ -151,7 +151,7 @@ PanelWindow {
             id: tip
             property string text: ""
             property real x0: 0
-            anchors.fill: parent; radius: 8; color: Qt.rgba(13 / 255, 21 / 255, 31 / 255, 0.94); border.width: 1; border.color: Theme.lineStrong
+            anchors.fill: parent; radius: 8; color: Theme.glassStrong; border.width: 1; border.color: Theme.lineStrong
             Tx { id: tipT; anchors.centerIn: parent; text: tip.text; size: 13 }
         }
     }

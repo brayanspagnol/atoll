@@ -162,7 +162,7 @@ Scope {
                         font.pixelSize: 19
                         leftPadding: 52
                         background: Rectangle {
-                            radius: 16; color: Qt.rgba(1, 1, 1, 0.06)
+                            radius: 16; color: Theme.hover
                             border.width: 1.5; border.color: Theme.accent
                             Ic { anchors { left: parent.left; leftMargin: 18; verticalCenter: parent.verticalCenter } name: "search"; size: 22; color: Theme.muted }
                         }
@@ -315,7 +315,7 @@ Scope {
                             Btn { text: Tr.t("Copy"); icon: "copy"; variant: "solid"; implicitHeight: 46; Layout.fillWidth: true; onClicked: win.copy(win.current) }
                             Btn {
                                 implicitHeight: 46
-                                color: pressed ? Qt.rgba(1, 1, 1, 0.3) : hovered ? Qt.rgba(1, 1, 1, 0.24) : Qt.rgba(1, 1, 1, 0.16)
+                                color: pressed ? Theme.lineStrong : hovered ? Theme.raisedHover : Theme.raised
                                 border.color: activeFocus ? Theme.ink : Theme.lineStrong
                                 readonly property bool pinned: !!win.current?.pinned
                                 text: pinned ? Tr.t("Unpin") : Tr.t("Pin"); icon: pinned ? "pinOff" : "pin"

@@ -36,6 +36,7 @@ Singleton {
             // Files load in the background, so this always runs before the first one replaces a value.
             Component.onCompleted: file.defaults = JSON.stringify(adapter)
             property string accent: "gelo"
+            property string theme: "dark" // "dark", "light", or "auto" (see Theme.qml)
             property string wallpaper: ""
             property var wallpapers: ({}) // per screen, by output name; the others use wallpaper
             property bool dnd: false

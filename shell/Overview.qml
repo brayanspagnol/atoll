@@ -123,7 +123,7 @@ Scope {
                 asynchronous: true
                 cache: false
             }
-            Rectangle { anchors.fill: parent; color: Qt.rgba(8 / 255, 14 / 255, 22 / 255, 0.55) }
+            Rectangle { anchors.fill: parent; color: Theme.scrim }
         }
         MouseArea { anchors.fill: parent; enabled: Ui.overview; onClicked: Ui.overview = false }
 
@@ -145,7 +145,7 @@ Scope {
                 anchors { top: parent.top; topMargin: 14; horizontalCenter: parent.horizontalCenter }
                 implicitWidth: clockRow.implicitWidth + 36; implicitHeight: 46; radius: 23
                 opacity: win.p
-                color: Qt.rgba(12 / 255, 18 / 255, 26 / 255, 0.62)
+                color: Theme.surface
                 border.width: 1; border.color: Theme.lineStrong
                 SystemClock { id: clock; precision: SystemClock.Minutes }
                 RowLayout {
@@ -175,7 +175,7 @@ Scope {
                         Layout.preferredHeight: width * win.monH / win.monW
                         radius: 14
                         clip: true
-                        color: Qt.rgba(1, 1, 1, 0.08)
+                        color: Theme.hover
                         border.width: here || target || activeFocus ? 2 : 1
                         border.color: activeFocus ? Theme.ink : here || target ? Theme.accent : Theme.lineStrong
                         activeFocusOnTab: true
@@ -191,7 +191,7 @@ Scope {
                         Rectangle {
                             anchors { left: parent.left; bottom: parent.bottom; margins: 8 }
                             implicitWidth: Math.max(26, number.implicitWidth + 12); implicitHeight: 26; radius: 13
-                            color: thumb.here ? Theme.accent : Qt.rgba(8 / 255, 14 / 255, 22 / 255, 0.82)
+                            color: thumb.here ? Theme.accent : Theme.glassStrong
                             Tx { id: number; anchors.centerIn: parent; text: thumb.modelData; mono: true; strong: true; size: 13; color: thumb.here ? Theme.accentInk : Theme.ink }
                         }
                         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: win.goTo(thumb.modelData) }
@@ -237,7 +237,7 @@ Scope {
                             anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: 8 }
                             implicitHeight: 34; radius: 12
                             opacity: win.p
-                            color: Qt.rgba(8 / 255, 14 / 255, 22 / 255, 0.82)
+                            color: Theme.glassStrong
                             Tx { anchors.fill: parent; anchors.leftMargin: 12; anchors.rightMargin: 12; text: spread.modelData.title || spread.modelData.class; size: 14 }
                         }
                         MouseArea {
@@ -292,7 +292,7 @@ Scope {
                 visible: false
                 z: 10
                 width: 280; height: 44; radius: 14
-                color: Qt.rgba(12 / 255, 18 / 255, 26 / 255, 0.92)
+                color: Theme.glassStrong
                 border.width: 1; border.color: Theme.accent
                 Tx { anchors.fill: parent; anchors.margins: 12; text: ghost.title; size: 14 }
             }

@@ -87,7 +87,7 @@ Scope {
                 Behavior on opacity { NumberAnimation { duration: 170 } }
 
                 // The blur itself comes from the layer rule in hypr/look.lua.
-                Rectangle { anchors.fill: parent; color: Qt.rgba(8 / 255, 13 / 255, 20 / 255, 0.58) }
+                Rectangle { anchors.fill: parent; color: Theme.scrim }
                 MouseArea { anchors.fill: parent; enabled: Ui.dockEditor; onClicked: win.tapOutside() }
 
                 ColumnLayout {
@@ -100,7 +100,7 @@ Scope {
                     Rectangle {
                         Layout.alignment: Qt.AlignHCenter
                         implicitWidth: Math.min(760, win.width - 96); implicitHeight: 72; radius: 36
-                        color: Qt.rgba(1, 1, 1, 0.1)
+                        color: Theme.hover
                         border.width: search.activeFocus ? 2 : 1
                         border.color: search.activeFocus ? Theme.accent : Theme.lineStrong
                         RowLayout {
@@ -269,7 +269,7 @@ Scope {
                                 }
                                 z: held ? 1 : 0
                                 implicitWidth: 72; implicitHeight: 72; radius: 20
-                                color: sel ? Qt.rgba(140 / 255, 200 / 255, 245 / 255, 0.25) : pm.containsMouse ? Qt.rgba(1, 1, 1, 0.2) : Theme.raised
+                                color: sel ? Theme.accentSoft : pm.containsMouse ? Theme.raisedHover : Theme.raised
                                 border.width: sel || activeFocus ? 2 : 0
                                 border.color: activeFocus ? Theme.ink : Theme.accent
                                 activeFocusOnTab: true
@@ -313,7 +313,7 @@ Scope {
                                     anchors { bottom: parent.top; bottomMargin: 14; horizontalCenter: parent.horizontalCenter }
                                     implicitWidth: actions.implicitWidth + 12; implicitHeight: actions.implicitHeight + 12
                                     radius: 16
-                                    color: Qt.rgba(10 / 255, 16 / 255, 24 / 255, 0.92)
+                                    color: Theme.glassStrong
                                     border.width: 1; border.color: Theme.lineStrong
                                     RowLayout {
                                         id: actions

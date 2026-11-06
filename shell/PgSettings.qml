@@ -34,7 +34,7 @@ Page {
         }
         visible: hovered || sure
         width: 28; height: 28; radius: 14
-        color: sure ? Theme.danger : Qt.rgba(10 / 255, 16 / 255, 24 / 255, 0.85)
+        color: sure ? Theme.danger : Theme.glassStrong
         border.width: 1; border.color: Theme.lineStrong
         Accessible.role: Accessible.Button
         Accessible.name: sure ? Tr.t("Click again within 5 s to confirm") : Tr.t("Remove")
@@ -50,6 +50,71 @@ Page {
             Layout.fillWidth: true; spacing: 0
             Tx { text: label; Layout.fillWidth: true }
             Tx { visible: hint; text: hint; dim: true; size: 13; Layout.fillWidth: true }
+        }
+    }
+
+    // One choice of the theme picker, with a small desktop drawn in the colors of each set it uses.
+    component ThemeCard: Rectangle {
+        id: card
+        property string value: ""
+        property string label: ""
+        property string sub: ""
+        property var looks: []
+        readonly property bool on: Cfg.v.theme === value
+        Layout.fillWidth: true; Layout.preferredWidth: 1
+        implicitHeight: cardCol.implicitHeight + 16
+        radius: Theme.radiusSmall
+        color: on ? Theme.raisedHover : Theme.raised
+        border.width: on || activeFocus ? 2 : 1
+        border.color: activeFocus ? Theme.ink : on ? Theme.accent : Theme.line
+        activeFocusOnTab: true
+        Accessible.role: Accessible.RadioButton
+        Accessible.name: label + ", " + sub
+        Accessible.checked: on
+        Keys.onSpacePressed: Cfg.v.theme = value
+        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Cfg.v.theme = card.value }
+        ColumnLayout {
+            id: cardCol
+            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }
+            spacing: 8
+            Rectangle {
+                Layout.fillWidth: true; implicitHeight: 84; radius: 10; clip: true
+                color: card.looks[0]?.ground ?? Theme.ground
+                Image { anchors.fill: parent; visible: !!Cfg.v.wallpaper; source: Cfg.v.wallpaper ? "file://" + Cfg.v.wallpaper : ""; fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(240, 168); asynchronous: true }
+                Row {
+                    id: halves
+                    anchors { fill: parent; margins: 14; topMargin: 16 }
+                    spacing: 4
+                    Repeater {
+                        model: card.looks
+                        Rectangle {
+                            required property var modelData
+                            width: (halves.width - halves.spacing * (card.looks.length - 1)) / card.looks.length; height: halves.height
+                            radius: 7; color: modelData.surface; border.width: 1; border.color: modelData.rim
+                            Column {
+                                anchors { fill: parent; margins: 8 }
+                                spacing: 5
+                                Rectangle { width: parent.width * 0.5; height: 4; radius: 2; color: modelData.ink }
+                                Rectangle { width: parent.width * 0.8; height: 3; radius: 2; color: modelData.muted }
+                                Rectangle { width: 18; height: 8; radius: 3; color: modelData.accents[Cfg.v.accent] ?? modelData.accents.gelo }
+                            }
+                        }
+                    }
+                }
+            }
+            RowLayout {
+                Layout.leftMargin: 4; spacing: 8
+                Rectangle {
+                    implicitWidth: 16; implicitHeight: 16; radius: 8
+                    color: "transparent"; border.width: 2; border.color: card.on ? Theme.accent : Theme.muted
+                    Rectangle { anchors.centerIn: parent; width: 8; height: 8; radius: 4; color: Theme.accent; visible: card.on }
+                }
+                ColumnLayout {
+                    spacing: 0; Layout.fillWidth: true
+                    Tx { text: card.label; strong: true; size: 14; Layout.fillWidth: true }
+                    Tx { text: card.sub; dim: true; size: 12; Layout.fillWidth: true }
+                }
+            }
         }
     }
 
@@ -161,8 +226,24 @@ Page {
     }
 
     Sec { title: Tr.t("Appearance") }
+    Tx { text: Tr.t("Theme") }
+    RowLayout {
+        Layout.fillWidth: true; spacing: 10
+        Accessible.role: Accessible.Grouping; Accessible.name: Tr.t("Theme")
+        ThemeCard { value: "dark"; label: Tr.t("Dark"); sub: Tr.t("Always dark"); looks: [Theme.sets.dark] }
+        ThemeCard { value: "light"; label: Tr.t("Light"); sub: Tr.t("Always light"); looks: [Theme.sets.light] }
+        ThemeCard {
+            value: "auto"; label: Tr.t("Automatic"); looks: [Theme.sets.light, Theme.sets.dark]
+            sub: (Theme.night ? Tr.t("Now: dark, until %1") : Tr.t("Now: light, until %1")).arg(Theme.switchAt)
+        }
+    }
+    Tx {
+        text: Tr.t("Automatic follows the night light schedule when it is on, otherwise it is light from 07:00 to 19:00. The lock screen and apps keep their own colors.")
+        dim: true; size: 13; wrapMode: Text.Wrap; Layout.fillWidth: true
+    }
     Line {
         label: Tr.t("Accent color")
+        hint: Tr.t("Deeper in the light theme, so it reads on white glass")
         Repeater {
             model: Object.keys(Theme.accents)
             Rectangle {

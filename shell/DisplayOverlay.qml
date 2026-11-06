@@ -17,7 +17,7 @@ Scope {
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.namespace: "atoll-central"
             WlrLayershell.keyboardFocus: Displays.confirming ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-            color: Displays.confirming ? Qt.rgba(6 / 255, 10 / 255, 16 / 255, 0.6) : "transparent"
+            color: Displays.confirming ? Theme.scrim : "transparent"
             mask: Region { item: Displays.confirming ? fullArea : null }
             Item { id: fullArea; anchors.fill: parent }
 
