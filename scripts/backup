@@ -1,0 +1,303 @@
+#!/usr/bin/env bash
+# Atoll backup: profiles and this computer's settings files in one .tar.gz, and back.
+#   backup estimate ID|all               -> {"base": bytes, "images": bytes, "files": [names]}
+#   backup export ID|all FILE [images]   -> writes FILE; with "images", the pictures the profiles use go too
+#   backup inspect FILE [SCREEN...]      -> what FILE holds, next to what this computer has (JSON)
+#   backup import FILE [--profile ID] [--into new|replace] [--keys K,K] [--files F,F] [--screens S,S]
+#        takes the profile's keys K (all if omitted) and the files F (none if omitted); prints {"id", "backup"}
+# An archive is untrusted: only known names under known folders, regular files, bounded sizes.
+set -euo pipefail
+conf="$HOME/.config/atoll"
+dir="$conf/profiles"
+faces="$HOME/.local/share/atoll/faces"
+walls="$HOME/.local/share/atoll/backgrounds"
+max_archive=$((256 << 20)) max_total=$((1024 << 20)) max_member=$((128 << 20)) max_entries=2000 max_text=$((1 << 20))
+file_re='monitors\.(lua|json)|input\.lua|user\.lua|apps\.json|rules\.json|shortcuts[A-Za-z0-9._-]{0,60}'
+image_re='[A-Za-z0-9][A-Za-z0-9._-]{0,99}'
+member_re="^(manifest\\.json|profiles/[a-z0-9-]{1,40}\\.json|config/($file_re)|images/(faces|backgrounds)/$image_re)\$"
+
+die() { echo "$*" >&2; exit "${2:-1}"; }
+valid() { [[ "$1" =~ ^[a-z0-9-]{1,40}$ ]] || die "invalid profile id: $1" 2; }
+size_of() { stat -c %s -- "$1"; }
+active() {
+    local id
+    id="$({ tr -d "[:space:]" <"$conf/active-profile"; } 2>/dev/null || true)"
+    [[ "$id" =~ ^[a-z0-9-]{1,40}$ ]] && echo "$id" || echo default
+}
+gallery() { [[ "$1" == photo ]] && echo "$faces" || echo "$walls"; }
+folder() { [[ "$1" == photo ]] && echo faces || echo backgrounds; }
+# Pictures a profile points at, as "kind<TAB>path".
+refs() { jq -r '[["photo", .photo], ["wallpaper", .wallpaper]] + [(.wallpapers // {} | if type == "object" then .[] else empty end) | ["wallpaper", .]]
+    | .[] | select((.[1] | type) == "string" and .[1] != "") | @tsv' "$1"; }
+machine_files() {
+    local f
+    for f in "$conf"/*; do
+        [[ -f "$f" && ! -L "$f" && "$(basename -- "$f")" =~ ^($file_re)$ ]] && (( $(size_of "$f") <= max_text )) && basename -- "$f"
+    done
+    return 0
+}
+
+# Lua that is only a returned table of plain values: no calls, no names read, so loading it runs nothing.
+lua_data() {
+    jq -Rse '
+        if test("\\[\\[|\\[=") then false else
+        [scan("\\s+|--[^\\n]*|\"(?:[^\"\\\\\\n]|\\\\.)*\"|-?[0-9]+(?:\\.[0-9]+)?|[A-Za-z_][A-Za-z0-9_]*|[{}\\[\\]=,;]")] as $all
+        | ($all | join("")) == . and
+          ([$all[] | select(test("^(\\s|--)") | not)] as $t
+           | $t[0] == "return" and ([$t[] | select(. == "return")] | length) == 1
+             and all(range(1; $t | length); . as $i | $t[$i] | (test("^[A-Za-z_]") | not) or . == "true" or . == "false" or . == "nil" or $t[$i + 1] == "="))
+        end' <"$1" >/dev/null
+}
+# Screens a saved layout lights up.
+layout_screens() {
+    grep -v 'disabled = true' "$1" | grep -o 'output = "[^"]*"' | cut -d'"' -f2 | sort -u
+}
+
+# Fills the globals: profile ids, files and pictures one export would take.
+collect() {
+    shopt -s nullglob
+    ids=()
+    if [[ "$1" == all ]]; then
+        local f
+        for f in "$dir"/*.json; do ids+=("$(basename "$f" .json)"); done
+    else
+        valid "$1"
+        [[ -f "$dir/$1.json" ]] || die "no such profile: $1"
+        ids=("$1")
+    fi
+    mapfile -t files < <(machine_files)
+    declare -gA images=()
+    local id kind path name
+    for id in "${ids[@]}"; do
+        while IFS=$'\t' read -r kind path; do
+            [[ -f "$path" && -z "${images[$path]:-}" ]] || continue
+            # Gallery files are named by their content already; anything else gets such a name.
+            name="$(basename -- "$path")"
+            [[ "$(dirname -- "$path")" == "$(gallery "$kind")" && "$name" =~ ^$image_re$ ]] || name="$(sha256sum -- "$path" | cut -c1-32)"
+            images[$path]="images/$(folder "$kind")/$name"
+        done < <(refs "$dir/$id.json")
+    done
+}
+
+do_export() {
+    collect "$1"
+    local out="$2" with="${3:-}" id f path
+    stage="$(mktemp -d)"
+    trap 'rm -rf "$stage"' EXIT
+    mkdir -p "$stage/profiles" "$stage/config"
+    for id in "${ids[@]}"; do jq -e 'type == "object"' "$dir/$id.json" >/dev/null && cp -- "$dir/$id.json" "$stage/profiles/"; done
+    for f in "${files[@]}"; do cp -- "$conf/$f" "$stage/config/"; done
+    local map='{}'
+    if [[ "$with" == images ]]; then
+        for path in "${!images[@]}"; do
+            mkdir -p "$stage/$(dirname "${images[$path]}")"
+            cp -- "$path" "$stage/${images[$path]}"
+            map="$(jq -c --arg k "$path" --arg v "${images[$path]}" '. + {($k): $v}' <<<"$map")"
+        done
+    fi
+    jq -n --arg created "$(date -Iseconds)" --arg host "$(cat /etc/hostname 2>/dev/null || uname -n)" \
+        --arg version "$(cat "$HOME/.local/share/atoll/VERSION" 2>/dev/null || true)" --arg active "$(active)" \
+        --argjson images "$map" --args \
+        '{format: "atoll-backup", version: 1, created: $created, host: $host, atoll: $version, active: $active, images: $images,
+          profiles: [$ARGS.positional[] | select(startswith("p:")) | ltrimstr("p:")], files: [$ARGS.positional[] | select(startswith("f:")) | ltrimstr("f:")]}' \
+        "${ids[@]/#/p:}" "${files[@]/#/f:}" >"$stage/manifest.json"
+    mkdir -p -- "$(dirname -- "$out")"
+    local parts=(manifest.json profiles config)
+    [[ -d "$stage/images" ]] && parts+=(images)
+    (cd "$stage" && tar -czf "$out.part" --owner=0 --group=0 --numeric-owner --sort=name "${parts[@]}")
+    mv -- "$out.part" "$out"
+}
+
+# Checks FILE and unpacks it into $work/x.
+open_archive() {
+    [[ -f "$1" ]] || die "not a file: $1"
+    (( $(size_of "$1") <= max_archive )) || die "archive too large"
+    work="$(mktemp -d)"
+    trap 'rm -rf "$work"' EXIT
+    # A copy, so the checked file is the unpacked file.
+    cp -- "$1" "$work/in.tar.gz"
+    tar -tvzf "$work/in.tar.gz" --numeric-owner 2>/dev/null | RE="$member_re" awk -v maxn="$max_entries" -v maxm="$max_member" -v maxt="$max_total" '
+        { n++; type = substr($1, 1, 1)
+          if (n > maxn || NF != 6 || $3 > maxm || (total += $3) > maxt) { bad = 1; exit }
+          if (type == "d") { if ($6 !~ /^(profiles|config|images|images\/faces|images\/backgrounds)\/$/) { bad = 1; exit } }
+          else if (type != "-" || $6 !~ ENVIRON["RE"]) { bad = 1; exit } }
+        END { exit bad || !n }' || die "not an Atoll backup, or unsafe: $1"
+    mkdir "$work/x"
+    tar -xzf "$work/in.tar.gz" -C "$work/x" --no-same-owner --no-same-permissions
+    [[ -z "$(find "$work/x" -mindepth 1 ! -type f ! -type d -print -quit)" ]] || die "unsafe archive"
+    m="$work/x/manifest.json"
+    jq -e '.format == "atoll-backup" and .version == 1 and (.images // {} | type) == "object"' "$m" >/dev/null 2>&1 || die "not an Atoll backup: $1"
+    local f
+    for f in "$work/x/profiles"/*.json "$work/x/config"/*.json; do
+        [[ -e "$f" ]] || continue
+        jq -e 'type == "object" or type == "array"' "$f" >/dev/null 2>&1 || die "broken file in archive: ${f#"$work/x/"}"
+    done
+}
+# Where each picture of the archive's profiles would come from: "file" (inside it), "here" (same picture already here) or "missing".
+image_sources() {
+    local f kind path name src
+    for f in "$work/x/profiles"/*.json; do
+        [[ -e "$f" ]] || continue
+        while IFS=$'\t' read -r kind path; do
+            src="$(jq -r --arg p "$path" '.images[$p] // ""' "$m")"
+            name="$(basename -- "$path")"
+            if [[ "$src" =~ ^images/(faces|backgrounds)/$image_re$ && -f "$work/x/$src" ]]; then echo "file"
+            elif [[ "$name" =~ ^$image_re$ && -f "$(gallery "$kind")/$name" ]]; then echo "here:$(gallery "$kind")/$name"
+            else echo "missing"; fi
+            printf '%s\n' "$path"
+        done < <(refs "$f")
+    done | jq -Rn '[inputs] | [range(0; length; 2) as $i | {(.[$i + 1]): .[$i]}] | add // {}'
+}
+screens_match() { # archive layout vs. the screens given
+    local layout="$work/x/config/monitors.lua"
+    [[ -f "$layout" ]] || return 1
+    [[ "$(layout_screens "$layout")" == "$(printf '%s\n' "$@" | grep . | sort -u)" ]]
+}
+
+do_inspect() {
+    open_archive "$1"; shift
+    local cur current='{}' f name here data
+    cur="$(active)"
+    [[ -f "$dir/$cur.json" ]] && current="$(jq -c 'if type == "object" then . else {} end' "$dir/$cur.json" 2>/dev/null || echo '{}')"
+    local list='[]'
+    shopt -s nullglob
+    for f in "$work/x/config"/*; do
+        name="$(basename -- "$f")"
+        here=""; [[ -f "$conf/$name" ]] && here="$(head -c "$max_text" -- "$conf/$name")"
+        data=null; [[ "$name" == *.lua && "$name" != user.lua && "$name" != shortcuts* ]] && { lua_data "$f" && data=true || data=false; }
+        list="$(jq -c --arg name "$name" --rawfile text "$f" --arg here "$here" --argjson exists "$([[ -f "$conf/$name" ]] && echo true || echo false)" \
+            --argjson data "$data" --argjson bytes "$(size_of "$f")" \
+            '. + [{name: $name, bytes: $bytes, text: $text[0:65536], here: (if $exists then $here[0:65536] else null end), data: $data}]' <<<"$list")"
+    done
+    local profiles='{}'
+    for f in "$work/x/profiles"/*.json; do
+        profiles="$(jq -c --arg id "$(basename "$f" .json)" --slurpfile p "$f" '. + {($id): $p[0]}' <<<"$profiles")"
+    done
+    jq -n --slurpfile m "$m" --argjson profiles "$profiles" --argjson current "$current" --arg cur "$cur" \
+        --argjson images "$(image_sources)" --argjson files "$list" --argjson bytes "$(size_of "$work/in.tar.gz")" \
+        --argjson match "$(screens_match "$@" && echo true || echo false)" \
+        --argjson layout "$( [[ -f "$work/x/config/monitors.lua" ]] && layout_screens "$work/x/config/monitors.lua" | jq -Rn '[inputs]' || echo '[]')" \
+        '{manifest: $m[0], bytes: $bytes, profiles: $profiles, current: {id: $cur, profile: $current}, images: $images, files: $files,
+          screens: {layout: $layout, match: $match}}'
+}
+
+do_import() {
+    local file="$1"; shift
+    local from="" into=new keys="*" files_arg="" screens=""
+    while (( $# )); do
+        case "$1" in
+            --profile) from="$2" ;;
+            --into) into="$2" ;;
+            --keys) keys="$2" ;;
+            --files) files_arg="$2" ;;
+            --screens) screens="$2" ;;
+            *) die "unknown option: $1" 2 ;;
+        esac
+        shift 2
+    done
+    [[ "$into" == new || "$into" == replace ]] || die "--into is new or replace" 2
+    open_archive "$file"
+    shopt -s nullglob
+    local all=("$work/x/profiles"/*.json)
+    if [[ -z "$from" && ${#all[@]} -gt 0 ]]; then from="$(basename "${all[0]}" .json)"; fi
+    local take=() names=() name
+    IFS=, read -ra take <<<"$files_arg"
+    IFS=, read -ra names <<<"$screens"
+    for name in "${take[@]}"; do
+        [[ "$name" =~ ^($file_re)$ && -f "$work/x/config/$name" ]] || die "not in the archive: $name"
+        if [[ "$name" == monitors.* ]]; then screens_match "${names[@]}" || die "the screen layout belongs to other screens"; fi
+        if [[ "$name" == *.lua && "$name" != user.lua && "$name" != shortcuts* ]]; then lua_data "$work/x/config/$name" || die "$name holds code, not settings"; fi
+    done
+
+    local cur target id overwrite=0 safety=""
+    cur="$(active)"
+    if [[ -n "$from" ]]; then
+        valid "$from"
+        [[ -f "$work/x/profiles/$from.json" ]] || die "no such profile in the archive: $from"
+        jq -e 'type == "object"' "$work/x/profiles/$from.json" >/dev/null || die "broken profile in the archive"
+    fi
+    [[ "$into" == replace && -n "$from" ]] && overwrite=1
+    for name in "${take[@]}"; do [[ -e "$conf/$name" ]] && overwrite=1; done
+    # Whatever gets overwritten is saved first, next to the file being imported (or in the home folder).
+    if (( overwrite )); then
+        local where stamp
+        where="$(dirname -- "$(realpath -- "$file")")"
+        [[ -w "$where" ]] || where="$HOME"
+        stamp="$(date +%Y-%m-%d-%H%M%S)"
+        safety="$where/atoll-before-import-$stamp.tar.gz"
+        "$0" export all "$safety" >/dev/null
+    fi
+
+    if [[ -n "$from" ]]; then
+        # Pictures go to this computer's galleries, named by content; one that can't be found keeps the current one.
+        local map='{}' kind path src base new
+        while IFS=$'\t' read -r kind path; do
+            src="$(jq -r --arg p "$path" '.images[$p] // ""' "$m")"
+            base="$(basename -- "$path")"
+            new=""
+            if [[ "$src" =~ ^images/(faces|backgrounds)/$image_re$ && -f "$work/x/$src" ]]; then
+                mkdir -p "$(gallery "$kind")"
+                new="$(gallery "$kind")/$(sha256sum -- "$work/x/$src" | cut -c1-32)"
+                [[ -e "$new" ]] || cp -- "$work/x/$src" "$new"
+            elif [[ "$base" =~ ^$image_re$ && -f "$(gallery "$kind")/$base" ]]; then
+                new="$(gallery "$kind")/$base"
+            fi
+            [[ -n "$new" ]] && map="$(jq -c --arg k "$path" --arg v "$new" '. + {($k): $v}' <<<"$map")"
+        done < <(refs "$work/x/profiles/$from.json")
+
+        local current='{}'
+        [[ -f "$dir/$cur.json" ]] && current="$(jq -c 'if type == "object" then . else {} end' "$dir/$cur.json" 2>/dev/null || echo '{}')"
+        id="$cur"
+        [[ "$into" == new ]] && id="p$(date +%s)$RANDOM"
+        mkdir -p "$dir"
+        target="$(mktemp "$dir/.XXXXXX")"
+        jq --argjson cur "$current" --argjson map "$map" --arg keys "$keys" --arg screens "$screens" '
+            def r: if type == "string" and . != "" then $map[.] // null elif . == "" then "" else null end;
+            ($screens | split(",")) as $here
+            | (if $keys == "*" then keys else $keys | split(",") end) as $wanted
+            | (if has("photo") then .photo |= r else . end)
+            | (if has("wallpaper") then .wallpaper |= r else . end)
+            # Per-screen wallpapers only for screens here; when none is left, the current ones stay.
+            | (if (.wallpapers | type) == "object" then .wallpapers |= (with_entries(select(.key as $k | $here | any(. == $k)) | .value |= r | select(.value != null)) as $kept
+                | if $kept == {} and . != {} then null else $kept end) else . end)
+            | with_entries(select(.value != null and (.key as $k | $wanted | any(. == $k))
+                # A value of another type than the one here would break the setting that reads it.
+                and (($cur[.key] == null) or ((.value | type) == ($cur[.key] | type)))))
+            | $cur + .' "$work/x/profiles/$from.json" >"$target"
+        mv -- "$target" "$dir/$id.json"
+    fi
+    for name in "${take[@]}"; do
+        target="$(mktemp "$conf/.XXXXXX")"
+        cp -- "$work/x/config/$name" "$target"
+        mv -- "$target" "$conf/$name"
+    done
+    jq -nc --arg id "${id:-}" --arg backup "$safety" '{id: $id, backup: $backup}'
+}
+
+case "${1:-}" in
+    estimate)
+        collect "${2:-}"
+        base=0 pics=0
+        for id in "${ids[@]}"; do base=$((base + $(size_of "$dir/$id.json"))); done
+        for f in "${files[@]}"; do base=$((base + $(size_of "$conf/$f"))); done
+        for path in "${!images[@]}"; do pics=$((pics + $(size_of "$path"))); done
+        jq -nc --argjson base "$base" --argjson images "$pics" '{base: $base, images: $images, files: $ARGS.positional}' --args "${files[@]}"
+        ;;
+    export)
+        [[ -n "${3:-}" ]] || die "usage: backup export ID|all FILE [images]" 2
+        do_export "$2" "$3" "${4:-}"
+        ;;
+    inspect)
+        [[ -n "${2:-}" ]] || die "usage: backup inspect FILE [SCREEN...]" 2
+        file="$2"; shift 2
+        do_inspect "$file" "$@"
+        ;;
+    import)
+        [[ -n "${2:-}" ]] || die "usage: backup import FILE [options]" 2
+        file="$2"; shift 2
+        do_import "$file" "$@"
+        ;;
+    *)
+        die "usage: backup estimate|export|inspect|import" 2
+        ;;
+esac

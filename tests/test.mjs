@@ -434,6 +434,7 @@ for (const file of fs.readdirSync(shell).filter(f => f.endsWith(".qml"))) {
     for (const m of code.matchAll(/Tr\.date\([^"]*"([^"]+)"\)/g)) used.add(m[1])
 }
 for (const label of ["Browser", "Code", "Files", "Terminal"]) used.add(label) // default dock labels in Cfg.qml
+for (const m of fs.readFileSync(new URL("backup.js", shell), "utf8").matchAll(/\bt\("((?:[^"\\]|\\.)+)"\)|label: "([^"]+)"/g)) used.add(m[1] ?? m[2]) // the import review's labels
 const placeholders = text => (text.match(/%\d/g) || []).sort().join()
 for (const file of fs.readdirSync(new URL("i18n/", shell))) {
     const dict = JSON.parse(fs.readFileSync(new URL("i18n/" + file, shell), "utf8"))
@@ -592,6 +593,167 @@ ShellRoot {
     assert.deepEqual(page.terms, ["term-a"]) // the second Change, after the browser's, is the terminal's; hidden apps stay out
     assert.equal(spawnSync("xdg-mime", ["query", "default", "x-scheme-handler/https"], { env: fake, encoding: "utf8" }).stdout.trim(), "web-a.desktop")
     assert.deepEqual(JSON.parse(fs.readFileSync(root + "/home/.config/atoll/apps.json")), { browser: "web-a" })
+    fs.rmSync(root, { recursive: true })
+}
+
+// Backup: export, then import on "another computer", each with its own throwaway HOME.
+{
+    const root = fs.mkdtempSync("/tmp/atoll-test-")
+    const run = (home, name, ...args) => spawnSync(new URL("../scripts/" + name, import.meta.url).pathname, args, { env: { ...process.env, HOME: home }, encoding: "utf8" })
+    const json = path => JSON.parse(fs.readFileSync(path, "utf8"))
+    const [a, b, c] = ["a", "b", "c"].map(n => { fs.mkdirSync(`${root}/${n}/.config/atoll/profiles`, { recursive: true }); return `${root}/${n}` })
+    fs.writeFileSync(root + "/wall.png", "wall"); fs.writeFileSync(root + "/face.png", "face")
+    const wall = run(a, "profiles", "wallpaper", root + "/wall.png").stdout.trim(), face = run(a, "profiles", "photo", root + "/face.png").stdout.trim()
+    fs.writeFileSync(a + "/.config/atoll/profiles/alex.json", JSON.stringify({ name: "Alex", accent: "hortela", lockAc: 10, wallpaper: wall, photo: face,
+        wallpapers: { "DP-1": wall, "HDMI-A-1": wall }, dock: [{ label: "Steam", cmd: "steam" }], extra: "x" }))
+    fs.writeFileSync(a + "/.config/atoll/profiles/work.json", JSON.stringify({ name: "Work" }))
+    fs.writeFileSync(a + "/.config/atoll/active-profile", "alex\n")
+    fs.writeFileSync(a + "/.config/atoll/input.lua", '-- Written by the Settings screen.\nreturn { kb_layout = "br,us", kb_variant = "abnt2,", sensitivity = -0.20, natural_scroll = false,\n    touchpad = { natural_scroll = false, tap_to_click = true, disable_while_typing = true, scroll_factor = 1.00 } }\n')
+    const mon = (name, x, more) => ({ name, x, y: 0, w: 1920, h: 1080, rate: "60.00", scale: 1, rot: 0, on: true, mirror: "", vrr: false, bit: false, ...more })
+    fs.writeFileSync(a + "/.config/atoll/monitors.lua", D.configFile([mon("DP-1", 0), mon("eDP-1", 1920, { on: false })], "off", { 1: "DP-1" }))
+    fs.writeFileSync(a + "/.config/atoll/user.lua", Array.from({ length: 9 }, (_, i) => `hl.exec_cmd("app${i}")`).join("\n") + "\n")
+    fs.writeFileSync(a + "/.config/atoll/rules.json", "[]\n")
+    fs.writeFileSync(a + "/.config/atoll/notes.txt", "not ours")
+
+    const size = JSON.parse(run(a, "backup", "estimate", "alex").stdout)
+    assert(size.base > 0 && size.images === 8); assert.deepEqual(size.files, ["input.lua", "monitors.lua", "rules.json", "user.lua"])
+    const one = root + "/out/alex.tar.gz", all = root + "/out/all.tar.gz"
+    assert.equal(run(a, "backup", "export", "alex", one, "images").status, 0)
+    assert.equal(run(a, "backup", "export", "all", all).status, 0)
+    const members = file => spawnSync("tar", ["-tzf", file], { encoding: "utf8" }).stdout.split("\n").filter(Boolean)
+    assert(members(one).includes("images/backgrounds/" + wall.split("/").pop()) && members(one).includes("profiles/alex.json") && !members(one).includes("profiles/work.json"))
+    assert(!members(all).some(m => m.startsWith("images/")) && members(all).includes("profiles/work.json") && !members(all).includes("config/notes.txt"))
+    assert.equal(run(a, "backup", "export", "../x", one).status, 2)
+
+    // The other computer: one screen of the same name, its own profile.
+    fs.writeFileSync(b + "/.config/atoll/profiles/default.json", JSON.stringify({ name: "Me", accent: "gelo", lockAc: 5, dock: [{ label: "Term", cmd: "kitty" }], extra: 3 }))
+    const seen = JSON.parse(run(b, "backup", "inspect", one, "DP-1").stdout)
+    assert.deepEqual(seen.screens, { layout: ["DP-1"], match: true }); assert.equal(seen.current.id, "default")
+    assert.equal(seen.images[wall], "file"); assert.equal(seen.files.find(f => f.name === "input.lua").data, true)
+    assert.equal(JSON.parse(run(b, "backup", "inspect", one, "HDMI-A-1").stdout).screens.match, false)
+
+    // The review, line by line, mirrors what the import will do.
+    const R = load("backup.js", "review,choice")
+    const t = s => s, rows = R.review(seen, "alex", ["DP-1"], t, [{ code: "en", name: "English" }], { hortela: { name: "Mint" }, gelo: { name: "Ice" } })
+    const row = id => rows.profile.concat(rows.files, rows.code).find(r => r.id === id)
+    assert.deepEqual([row("p:accent").before, row("p:accent").after], ["Ice", "Mint"])
+    assert(row("p:dock").after.includes("steam")) // a command new to this computer is named
+    assert(row("p:wallpapers").after.includes("HDMI-A-1")); assert.equal(row("p:wallpapers").skip, "")
+    assert(row("p:extra").skip) // another type than the setting here
+    assert.equal(row("f:screens").skip, ""); assert.equal(row("f:input.lua").after, "br, us, pointer -0.20")
+    assert.equal(row("f:user.lua").lines, 9)
+    assert(R.review(seen, "alex", ["HDMI-A-1"], t, [], {}).files.find(r => r.id === "f:screens").skip.includes("DP-1"))
+    const plain = v => JSON.parse(JSON.stringify(v))
+    assert(!plain(R.choice(rows, {})).files.includes("user.lua")) // code needs an explicit yes
+    assert.deepEqual(plain(R.choice(rows, { "f:user.lua": true, "p:dock": false, "f:rules.json": false })).files, ["monitors.lua", "input.lua", "user.lua"])
+    assert(!plain(R.choice(rows, { "p:dock": false })).keys.includes("dock"))
+
+    // As a new profile: pictures land in this computer's galleries, screens it lacks are dropped, nothing to back up.
+    const added = JSON.parse(run(b, "backup", "import", one, "--into", "new", "--files", "input.lua", "--screens", "DP-1").stdout)
+    assert.equal(added.backup, "")
+    const made = json(`${b}/.config/atoll/profiles/${added.id}.json`), galleryB = b + "/.local/share/atoll/backgrounds/"
+    assert(made.wallpaper.startsWith(galleryB) && fs.readFileSync(made.wallpaper, "utf8") === "wall")
+    assert(made.photo.startsWith(b + "/.local/share/atoll/faces/") && fs.readFileSync(made.photo, "utf8") === "face")
+    assert.deepEqual(made.wallpapers, { "DP-1": made.wallpaper })
+    assert.equal(made.name, "Alex"); assert.equal(made.extra, 3) // a value of another type is not taken
+    assert.equal(fs.readFileSync(b + "/.config/atoll/input.lua", "utf8"), fs.readFileSync(a + "/.config/atoll/input.lua", "utf8"))
+    assert.equal(json(b + "/.config/atoll/profiles/default.json").name, "Me")
+    // Replacing: only the chosen keys, and the state before is saved next to the imported file.
+    const before = fs.readFileSync(b + "/.config/atoll/profiles/default.json", "utf8")
+    const replaced = JSON.parse(run(b, "backup", "import", one, "--into", "replace", "--keys", "accent,lockAc", "--files", "monitors.lua", "--screens", "DP-1").stdout)
+    assert.equal(replaced.id, "default"); assert(replaced.backup.startsWith(root + "/out/atoll-before-import-"))
+    assert.deepEqual(json(b + "/.config/atoll/profiles/default.json"), { ...JSON.parse(before), accent: "hortela", lockAc: 10 })
+    assert(fs.existsSync(b + "/.config/atoll/monitors.lua"))
+    const safety = JSON.parse(run(c, "backup", "inspect", replaced.backup).stdout)
+    assert.equal(safety.profiles.default.accent, "gelo"); assert(safety.files.some(f => f.name === "input.lua"))
+    assert.equal(run(b, "backup", "import", one, "--files", "monitors.lua", "--screens", "HDMI-A-1").status, 1) // other screens
+    // Without images: a picture already here (same content, same name) is used; one that is nowhere keeps the current one.
+    const fromAll = JSON.parse(run(b, "backup", "import", all, "--profile", "alex", "--into", "new", "--screens", "DP-1").stdout)
+    assert.equal(json(`${b}/.config/atoll/profiles/${fromAll.id}.json`).wallpaper, made.wallpaper)
+    fs.writeFileSync(c + "/.config/atoll/profiles/default.json", JSON.stringify({ wallpaper: "/mine.png" }))
+    const bare = JSON.parse(run(c, "backup", "import", all, "--profile", "alex", "--into", "replace").stdout)
+    assert.equal(json(c + "/.config/atoll/profiles/default.json").wallpaper, "/mine.png"); assert(fs.existsSync(bare.backup))
+    assert.equal(json(c + "/.config/atoll/profiles/default.json").wallpapers, undefined)
+
+    // Untrusted archives: absolute paths, .., links, unknown names, Lua that runs code. Nothing is written.
+    const evil = (name, setup, ...tarArgs) => {
+        const stage = `${root}/stage-${name}`
+        fs.mkdirSync(stage + "/config", { recursive: true }); fs.mkdirSync(stage + "/profiles")
+        fs.writeFileSync(stage + "/manifest.json", JSON.stringify({ format: "atoll-backup", version: 1, images: {} }))
+        fs.writeFileSync(stage + "/profiles/x.json", "{}")
+        setup(stage)
+        const out = `${root}/${name}.tar.gz`
+        assert.equal(spawnSync("tar", ["-czf", out, "-C", stage, ...tarArgs]).status, 0)
+        return out
+    }
+    const target = root + "/escaped"
+    const bad = [
+        evil("abs", () => {}, "-P", "--transform", `s,^profiles/x.json,${target}/x.json,`, "manifest.json", "profiles"),
+        evil("dots", () => {}, "-P", "--transform", "s,^profiles/x.json,profiles/../../escaped.json,", "manifest.json", "profiles"),
+        evil("link", s => fs.symlinkSync("/etc/passwd", s + "/config/user.lua"), "manifest.json", "config"),
+        evil("hard", s => { fs.writeFileSync(s + "/config/input.lua", "return {}"); fs.linkSync(s + "/config/input.lua", s + "/config/user.lua") }, "manifest.json", "config"),
+        evil("name", s => fs.writeFileSync(s + "/config/evil.sh", "x"), "manifest.json", "config"),
+        evil("manifest", s => fs.writeFileSync(s + "/manifest.json", "{}"), "manifest.json", "profiles")
+    ]
+    fs.writeFileSync(root + "/plain.tar.gz", "not an archive"); bad.push(root + "/plain.tar.gz")
+    const listed = member => spawnSync("tar", ["-tzf", bad[member]], { encoding: "utf8" }).stdout
+    assert(listed(0).includes(target) && listed(1).includes("..")) // the archives really hold what they claim
+    const untouched = fs.readFileSync(c + "/.config/atoll/profiles/default.json", "utf8")
+    for (const file of bad) {
+        assert.equal(run(c, "backup", "inspect", file).status, 1, file)
+        assert.equal(run(c, "backup", "import", file, "--into", "replace", "--files", "user.lua").status, 1, file)
+    }
+    assert(!fs.existsSync(target) && !fs.existsSync(root + "/escaped.json") && !fs.existsSync(c + "/.config/atoll/user.lua"))
+    assert.equal(fs.readFileSync(c + "/.config/atoll/profiles/default.json", "utf8"), untouched)
+    for (const [name, code] of [["exec", 'return os.execute("touch pwned")'], ["call", 'return { a = dofile"x" }'], ["long", 'return { a = 1 } --[[x]] dofile"y"'], ["global", 'x = 1 return {}']]) {
+        const file = evil(name, s => fs.writeFileSync(s + "/config/input.lua", code), "manifest.json", "config")
+        assert.equal(JSON.parse(run(c, "backup", "inspect", file).stdout).files[0].data, false, name)
+        assert.equal(run(c, "backup", "import", file, "--files", "input.lua").status, 1, name)
+    }
+    assert(!fs.existsSync(c + "/.config/atoll/input.lua"))
+    fs.rmSync(root, { recursive: true })
+}
+// The Backup page on the real QML: pick a file, review it, replace. user.lua waits for its own yes.
+if (haveQs) {
+    const root = fs.mkdtempSync("/tmp/atoll-test-"), home = root + "/home", other = root + "/other", file = root + "/alex.tar.gz"
+    fs.cpSync(new URL("../shell/", import.meta.url), root, { recursive: true })
+    for (const dir of [home + "/.local/share/atoll", home + "/.config/atoll/profiles", other + "/.config/atoll/profiles"]) fs.mkdirSync(dir, { recursive: true })
+    fs.symlinkSync(new URL("../scripts", import.meta.url).pathname, home + "/.local/share/atoll/scripts")
+    fs.writeFileSync(home + "/.config/atoll/profiles/default.json", JSON.stringify({ name: "Me", accent: "gelo" }))
+    fs.writeFileSync(other + "/.config/atoll/profiles/alex.json", JSON.stringify({ name: "Alex", accent: "hortela", wallpapers: { "DP-9": "/x" } }))
+    fs.writeFileSync(other + "/.config/atoll/user.lua", 'hl.exec_cmd("app")\n')
+    assert.equal(spawnSync(new URL("../scripts/backup", import.meta.url).pathname, ["export", "all", file], { env: { ...process.env, HOME: other } }).status, 0)
+    const stub = body => `pragma Singleton\nimport Quickshell\nSingleton { ${body} }\n`
+    const out = runQml(root, `import QtQuick
+import Quickshell
+ShellRoot {
+    FloatingWindow { implicitWidth: 1100; implicitHeight: 1400; PgBackup { anchors.fill: parent } }
+    property int step: 0
+    function say(tag, v) { console.log("RESULT " + tag + " " + JSON.stringify(v)) }
+    Timer {
+        running: true; repeat: true; interval: 500
+        onTriggered: {
+            step++
+            if (step === 1) Backup.inspect("${file}")
+            if (step === 3) { say("target", [Backup.step, Backup.from, Backup.into]); Backup.next() }
+            if (step === 4) {
+                say("review", { rows: Backup.review.profile.map(r => r.id + (r.skip ? "!" : "")), code: Backup.review.code.map(r => r.id), files: Backup.chosen.files })
+                Backup.pick("f:user.lua", true)
+                Backup.pick("p:name", false)
+            }
+            if (step === 5) { say("chosen", Backup.chosen); Backup.apply() }
+            if (step === 7) { say("done", [Backup.step, Backup.saved, Backup.error]); Qt.quit() }
+        }
+    }
+}
+`, { "Ui.qml": stub(`property bool open: true; function show(p) { open = true }`), "Night.qml": stub("function apply() {}"), "Idle.qml": stub("function apply() {}") })
+    assert.deepEqual(out.target, ["target", "alex", "replace"])
+    assert.deepEqual(out.review, { rows: ["p:name", "p:accent", "p:wallpapers!"], code: ["f:user.lua"], files: [] })
+    assert.deepEqual(out.chosen, { keys: ["accent"], files: ["user.lua"], changes: 1, changedFiles: 1 })
+    assert.equal(out.done[0], "done"); assert(fs.existsSync(out.done[1]) && out.done[1].startsWith(root + "/atoll-before-import-")); assert.equal(out.done[2], "")
+    const now = JSON.parse(fs.readFileSync(home + "/.config/atoll/profiles/default.json"))
+    assert.deepEqual([now.name, now.accent, now.wallpapers], ["Me", "hortela", {}])
+    assert.equal(fs.readFileSync(home + "/.config/atoll/user.lua", "utf8"), 'hl.exec_cmd("app")\n')
     fs.rmSync(root, { recursive: true })
 }
 

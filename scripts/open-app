@@ -49,7 +49,7 @@ case "${1:-}" in
     ;;
 --set)
     role="${2:-}" id="${3:-}"
-    valid_role "$role" && valid_id "$id" || { echo "usage: open-app --set ROLE ID [TYPE...]" >&2; exit 2; }
+    if ! valid_role "$role" || ! valid_id "$id"; then echo "usage: open-app --set ROLE ID [TYPE...]" >&2; exit 2; fi
     entry_of "$id" >/dev/null || { echo "no app with id $id" >&2; exit 2; }
     shift 3
     for t; do valid_type "$t" || { echo "not a MIME type: $t" >&2; exit 2; }; done
@@ -58,7 +58,10 @@ case "${1:-}" in
     mkdir -p "${file%/*}"
     tmp=$(mktemp "$file.XXXXXX") || exit 1
     # A broken file is replaced: it held nothing readable.
-    { jq -e 'objects' "$file" 2>/dev/null || echo '{}'; } | jq --arg r "$role" --arg id "$id" '.[$r] = $id' >"$tmp" && mv "$tmp" "$file" || { rm -f "$tmp"; exit 1; }
+    if ! { { jq -e 'objects' "$file" 2>/dev/null || echo '{}'; } | jq --arg r "$role" --arg id "$id" '.[$r] = $id' >"$tmp" && mv "$tmp" "$file"; }; then
+        rm -f "$tmp"
+        exit 1
+    fi
     ;;
 *)
     role="${1:-}"
