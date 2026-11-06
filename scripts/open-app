@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# Default apps, as chosen in Atoll's Default apps page and stored in ~/.config/atoll/apps.json.
+#   open-app ROLE                    start the app for ROLE: Atoll's choice, else the system default, else the old fixed command
+#   open-app --state TYPE...         print Atoll's choices, the system default for each TYPE, and the MIME types of each app
+#   open-app --set ROLE ID TYPE...   make ID the system default for each TYPE, then save it as Atoll's choice for ROLE
+set -u
+file="$HOME/.config/atoll/apps.json"
+
+valid_role() { [[ $1 =~ ^(browser|terminal|files|text|images|video|music|email)$ ]]; }
+valid_id() { [[ $1 =~ ^[A-Za-z0-9][A-Za-z0-9._+-]*$ ]]; }
+valid_type() { [[ $1 =~ ^[a-z-]+/[A-Za-z0-9.+_-]+$ ]]; }
+
+dirs() {
+    local IFS=: d
+    for d in "${XDG_DATA_HOME:-$HOME/.local/share}" ${XDG_DATA_DIRS:-/usr/local/share:/usr/share}; do
+        [[ -d $d/applications ]] && printf '%s\n' "$d/applications"
+    done
+}
+# shortcut: only top-level .desktop files, not ids from subfolders (kde-foo.desktop in kde/); add them if a real app needs it.
+entry_of() {
+    local d
+    while read -r d; do [[ -f $d/$1.desktop ]] && { printf '%s\n' "$d/$1.desktop"; return 0; }; done < <(dirs)
+    return 1
+}
+launch() {
+    local f cmd
+    valid_id "$1" && f=$(entry_of "$1") || return 1
+    # Field codes such as %U are arguments nobody passes here.
+    cmd=$(grep -m1 '^Exec=' "$f" | cut -d= -f2- | sed -E 's/ *%[a-zA-Z]//g')
+    [[ -n $cmd ]] || return 1
+    exec sh -c "$cmd"
+}
+choice() { [[ -s $file ]] && jq -r --arg r "$1" '.[$r] // empty | strings' "$file" 2>/dev/null; }
+system_default() { local id; id=$(xdg-mime query default "$1" 2>/dev/null); printf '%s\n' "${id%.desktop}"; }
+
+case "${1:-}" in
+--state)
+    shift
+    [[ -s $file ]] && jq -r 'to_entries[] | select(.value | type == "string") | "atoll\t\(.key)\t\(.value)"' "$file" 2>/dev/null
+    for t; do valid_type "$t" && { printf 'default\t%s\t%s\n' "$t" "$(system_default "$t")" & }; done
+    wait
+    while read -r d; do
+        for f in "$d"/*.desktop; do
+            [[ -f $f ]] || continue
+            types=$(grep -m1 '^MimeType=' "$f" | cut -d= -f2-)
+            [[ -n $types ]] && printf 'entry\t%s\t%s\n' "$(basename "$f" .desktop)" "$types"
+        done
+    done < <(dirs)
+    ;;
+--set)
+    role="${2:-}" id="${3:-}"
+    valid_role "$role" && valid_id "$id" || { echo "usage: open-app --set ROLE ID [TYPE...]" >&2; exit 2; }
+    entry_of "$id" >/dev/null || { echo "no app with id $id" >&2; exit 2; }
+    shift 3
+    for t; do valid_type "$t" || { echo "not a MIME type: $t" >&2; exit 2; }; done
+    # The system first: if that fails, Atoll keeps its old choice too, so the two sides never drift apart here.
+    if (($#)); then xdg-mime default "$id.desktop" "$@" || exit 1; fi
+    mkdir -p "${file%/*}"
+    tmp=$(mktemp "$file.XXXXXX") || exit 1
+    # A broken file is replaced: it held nothing readable.
+    { jq -e 'objects' "$file" 2>/dev/null || echo '{}'; } | jq --arg r "$role" --arg id "$id" '.[$r] = $id' >"$tmp" && mv "$tmp" "$file" || { rm -f "$tmp"; exit 1; }
+    ;;
+*)
+    role="${1:-}"
+    valid_role "$role" || { echo "usage: open-app ROLE (browser terminal files text images video music email)" >&2; exit 2; }
+    launch "$(choice "$role")"
+    case $role in
+        browser) type=x-scheme-handler/https ;; files) type=inode/directory ;; text) type=text/plain ;;
+        images) type=image/png ;; video) type=video/mp4 ;; music) type=audio/mpeg ;; email) type=x-scheme-handler/mailto ;;
+        *) type="" ;;
+    esac
+    [[ -n $type ]] && launch "$(system_default "$type")"
+    case $role in
+        terminal) exec kitty ;;
+        browser) exec xdg-open https:// ;;
+        files) exec xdg-open "$HOME" ;;
+    esac
+    echo "open-app: no app for $role" >&2
+    exit 1
+    ;;
+esac

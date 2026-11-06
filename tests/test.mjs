@@ -484,4 +484,115 @@ assert(E.emojiSearch(pt, "coracao").some(e => e.label === "coração vermelho"))
 assert.equal(pt.find(e => e.glyph === "🌢").label, "black droplet") // CLDR has no annotation for it
 for (const [lang, q] of [["en", "rocket"], ["es", "cohete"], ["fr", "fusee"], ["de", "RAKETE"], ["ru", "ракета"], ["zh", "火箭"]]) assert.equal(best(real(lang), q).glyph, "🚀", `${lang}: ${q}`)
 
+// Default apps: what open-app --state says, the candidates per role, and when Atoll and the system disagree.
+const A = load("apps.js", "roles,allTypes,parseState,current,candidates,mismatch")
+const role = id => A.roles.find(r => r.id === id)
+const st = A.parseState("atoll\tbrowser\tchromium\natoll\ttext\tcode\ndefault\tx-scheme-handler/https\tfirefox.desktop\ndefault\tx-scheme-handler/http\tchromium.desktop\ndefault\ttext/html\t\ndefault\ttext/plain\tcode.desktop\ndefault\timage/png\tloupe.desktop\nentry\tloupe\timage/png;image/gif;\nentry\tloupe\ttext/plain;\nbroken line\n")
+assert.deepEqual(plain(st.mimes), { loupe: ["image/png", "image/gif"] }) // the first file of an id wins
+assert.equal(st.defaults["text/html"], "")
+assert.deepEqual([A.current(role("browser"), st), A.current(role("images"), st), A.current(role("terminal"), st), A.current(role("email"), st)], ["chromium", "loupe", "kitty", ""])
+assert.deepEqual(plain(A.mismatch(role("browser"), st)), { app: "firefox", all: false })
+assert.equal(A.mismatch(role("text"), st), null); assert.equal(A.mismatch(role("images"), st), null) // agrees; no choice of Atoll's
+assert.equal(A.mismatch(role("terminal"), { ...st, atoll: { terminal: "foot" } }), null) // no system side at all
+assert.equal(A.mismatch(role("text"), { ...st, defaults: { "text/plain": "gedit" } }).all, true)
+const apps = [{ id: "loupe", name: "Loupe", categories: ["Graphics"] }, { id: "foot", name: "Foot", categories: ["System", "TerminalEmulator"] },
+    { id: "secret", name: "Secret", categories: ["TerminalEmulator"], noDisplay: true }, { id: "alacritty", name: "Alacritty", categories: ["TerminalEmulator"] }]
+assert.deepEqual(A.candidates(role("terminal"), apps, st.mimes, []).map(e => e.id), ["alacritty", "foot"])
+assert.deepEqual(A.candidates(role("terminal"), apps, st.mimes, ["secret"]).map(e => e.id), ["alacritty", "foot", "secret"])
+assert.deepEqual(A.candidates(role("images"), apps, st.mimes, []).map(e => e.id), ["loupe"])
+assert.equal(A.candidates(role("video"), apps, st.mimes, []).length, 0)
+assert.equal(new Set(A.allTypes()).size, A.allTypes().length)
+
+// open-app, with a fake HOME: never the real one, whose mimeapps.list is the user's.
+const oa = fs.mkdtempSync("/tmp/atoll-test-")
+fs.mkdirSync(oa + "/data/applications", { recursive: true })
+const app = (id, more = "") => fs.writeFileSync(`${oa}/data/applications/${id}.desktop`, `[Desktop Entry]\nType=Application\nName=${id}\nExec=touch ${oa}/ran-${id} %U\n${more}`)
+app("web-a", "MimeType=x-scheme-handler/http;x-scheme-handler/https;text/html;\n"); app("web-b", "MimeType=x-scheme-handler/https;\n"); app("term-a")
+const { DE, KDE_SESSION_VERSION, GNOME_DESKTOP_SESSION_ID, XDG_CURRENT_DESKTOP, DESKTOP_SESSION, ...clean } = process.env
+const openApp = (...args) => spawnSync(new URL("../scripts/open-app", import.meta.url).pathname, args, { encoding: "utf8", env: { ...clean, HOME: oa + "/home", XDG_CONFIG_HOME: oa + "/home/.config", XDG_DATA_HOME: oa + "/home/.local/share", XDG_DATA_DIRS: oa + "/data" } })
+const ran = id => fs.existsSync(`${oa}/ran-${id}`)
+const haveXdgMime = spawnSync("sh", ["-c", "command -v xdg-mime"]).status === 0
+for (const args of [["nope"], ["--set", "nope", "web-a"], ["--set", "browser", "../web-a"], ["--set", "browser", "missing"], ["--set", "browser", "web-a", "not a type"]]) assert.equal(openApp(...args).status, 2, args.join())
+assert(!fs.existsSync(oa + "/home/.config/atoll/apps.json")) // refused before writing anything
+assert.equal(openApp("email").status, 1) // nothing chosen, no system default, no old command
+if (haveXdgMime) {
+    assert.equal(openApp("--set", "browser", "web-a", "x-scheme-handler/http", "x-scheme-handler/https", "text/html").status, 0)
+    assert.equal(openApp("--set", "terminal", "term-a").status, 0)
+    assert.deepEqual(JSON.parse(fs.readFileSync(oa + "/home/.config/atoll/apps.json")), { browser: "web-a", terminal: "term-a" })
+    const s = A.parseState(openApp("--state", ...A.allTypes()).stdout)
+    assert.deepEqual(plain(s.atoll), { browser: "web-a", terminal: "term-a" })
+    assert.deepEqual([s.defaults["x-scheme-handler/http"], s.defaults["text/html"], s.defaults["text/plain"]], ["web-a", "web-a", ""])
+    assert.deepEqual(plain(s.mimes), { "web-a": ["x-scheme-handler/http", "x-scheme-handler/https", "text/html"], "web-b": ["x-scheme-handler/https"] })
+    assert.equal(openApp("browser").status, 0); assert(ran("web-a"))
+    assert.equal(openApp("terminal").status, 0); assert(ran("term-a"))
+    // Atoll's choice uninstalled: the system default opens instead.
+    fs.writeFileSync(oa + "/home/.config/atoll/apps.json", JSON.stringify({ browser: "gone" }))
+    spawnSync("xdg-mime", ["default", "web-b.desktop", "x-scheme-handler/https"], { env: { ...clean, HOME: oa + "/home", XDG_CONFIG_HOME: oa + "/home/.config", XDG_DATA_DIRS: oa + "/data" } })
+    assert.equal(openApp("browser").status, 0); assert(ran("web-b"))
+    fs.writeFileSync(oa + "/home/.config/atoll/apps.json", "{oops")
+    assert.equal(openApp("--set", "text", "web-b", "text/plain").status, 0)
+    assert.deepEqual(JSON.parse(fs.readFileSync(oa + "/home/.config/atoll/apps.json")), { text: "web-b" })
+} else console.log("skipped the open-app checks that need xdg-mime")
+fs.rmSync(oa, { recursive: true })
+
+// The Default apps page: a disagreement shows Resolve, and resolving fixes both sides.
+if (haveQs && haveXdgMime) {
+    const root = fs.mkdtempSync("/tmp/atoll-test-")
+    fs.cpSync(new URL("../shell/", import.meta.url), root, { recursive: true })
+    fs.mkdirSync(root + "/data/applications", { recursive: true }); fs.mkdirSync(root + "/home/.local/share/atoll/scripts", { recursive: true }); fs.mkdirSync(root + "/home/config/atoll", { recursive: true })
+    fs.cpSync(new URL("../scripts/open-app", import.meta.url), root + "/home/.local/share/atoll/scripts/open-app")
+    const desk = (id, more) => fs.writeFileSync(`${root}/data/applications/${id}.desktop`, `[Desktop Entry]\nType=Application\nName=${id}\nExec=touch ${root}/ran-${id}\n${more}\n`) // xdg-mime skips defaults whose program it cannot find
+    desk("web-a", "Categories=Network;WebBrowser;\nMimeType=x-scheme-handler/http;x-scheme-handler/https;text/html;"); desk("web-b", "MimeType=x-scheme-handler/https;")
+    desk("term-a", "Categories=System;TerminalEmulator;"); desk("term-hidden", "Categories=TerminalEmulator;\nNoDisplay=true")
+    fs.mkdirSync(root + "/home/.config/atoll", { recursive: true }); fs.writeFileSync(root + "/home/.config/atoll/apps.json", JSON.stringify({ browser: "web-a" }))
+    const fake = { ...clean, HOME: root + "/home", XDG_CONFIG_HOME: root + "/home/config", XDG_DATA_DIRS: root + "/data" }
+    spawnSync("xdg-mime", ["default", "web-b.desktop", "x-scheme-handler/https"], { env: fake })
+    const page = runQml(root, `import QtQuick
+import Quickshell
+ShellRoot {
+    property int step: 0
+    FloatingWindow { implicitWidth: 1000; implicitHeight: 900; PgApps { id: pg; anchors.fill: parent } }
+    function find(item, test) {
+        for (const c of item.children) {
+            if (c.visible && test(c)) return c
+            const inner = find(c, test)
+            if (inner) return inner
+        }
+        return null
+    }
+    function all(item, test, out) { for (const c of item.children) { if (c.visible && test(c)) out.push(c); all(c, test, out) } return out }
+    function say(tag, v) { console.log("RESULT " + tag + " " + JSON.stringify(v)) }
+    Timer {
+        running: true; repeat: true; interval: 500
+        onTriggered: {
+            step++
+            if (step === 4) {
+                say("before", { resolve: !!find(pg.contentItem, c => c.text === "Resolve"), changes: all(pg.contentItem, c => c.text === "Change" && c.a11y !== undefined, []).length })
+                find(pg.contentItem, c => c.text === "Resolve").clicked()
+            }
+            if (step === 5) {
+                say("cards", all(pg.contentItem, c => c.chosen !== undefined && c.modelData, []).map(c => c.modelData.id + (c.chosen ? "*" : "")))
+                say("box", all(pg.contentItem, c => typeof c.text === "string" && c.text.indexOf("open in") >= 0 || c.text === "Super + B opens web-a", []).map(c => c.text))
+                find(pg.contentItem, c => c.text === "Use web-a").clicked()
+            }
+            if (step === 9) {
+                say("after", { resolve: !!find(pg.contentItem, c => c.text === "Resolve"), open: pg.openRole })
+                const term = all(pg.contentItem, c => c.text === "Change" && c.a11y !== undefined, [])[1]
+                term.clicked()
+            }
+            if (step === 10) { say("terms", all(pg.contentItem, c => c.chosen !== undefined && c.modelData, []).map(c => c.modelData.id)); Qt.quit() }
+        }
+    }
+}
+`, { "Ui.qml": `pragma Singleton\nimport Quickshell\nSingleton { property bool open: true; property var screen }\n` })
+    assert.deepEqual(page.before, { resolve: true, changes: 7 })
+    assert.deepEqual(page.cards, ["web-a*", "web-b"])
+    assert.deepEqual(page.box, ["Super + B opens web-a", "Links and web pages open in web-a"])
+    assert.deepEqual(page.after, { resolve: false, open: "" })
+    assert.deepEqual(page.terms, ["term-a"]) // the second Change, after the browser's, is the terminal's; hidden apps stay out
+    assert.equal(spawnSync("xdg-mime", ["query", "default", "x-scheme-handler/https"], { env: fake, encoding: "utf8" }).stdout.trim(), "web-a.desktop")
+    assert.deepEqual(JSON.parse(fs.readFileSync(root + "/home/.config/atoll/apps.json")), { browser: "web-a" })
+    fs.rmSync(root, { recursive: true })
+}
+
 console.log("ok")
