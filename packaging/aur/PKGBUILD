@@ -9,7 +9,7 @@ license=(MIT)
 depends=(hyprland quickshell hyprlock hypridle hyprsunset xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
     polkit-gnome networkmanager bluez bluez-utils pipewire wireplumber libnotify cliphist wl-clipboard
     grim slurp jq brightnessctl ttf-jetbrains-mono-nerd papirus-icon-theme qt6-svg curl noto-fonts noto-fonts-cjk
-    noto-fonts-emoji playerctl zenity)
+    noto-fonts-emoji playerctl zenity xdg-utils)
 optdepends=('power-profiles-daemon: choose a power mode'
     'networkmanager-openvpn: import OpenVPN files'
     'ddcutil: brightness of external monitors')

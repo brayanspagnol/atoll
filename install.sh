@@ -31,9 +31,9 @@ bin="$HOME/.local/bin"
 
 packages=(hyprland quickshell hyprlock hypridle hyprsunset xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
     polkit-gnome networkmanager bluez bluez-utils pipewire wireplumber libnotify cliphist wl-clipboard
-    grim slurp jq brightnessctl ttf-jetbrains-mono-nerd papirus-icon-theme qt6-svg curl noto-fonts noto-fonts-cjk noto-fonts-emoji playerctl zenity)
+    grim slurp jq brightnessctl ttf-jetbrains-mono-nerd papirus-icon-theme qt6-svg curl noto-fonts noto-fonts-cjk noto-fonts-emoji playerctl zenity xdg-utils)
 commands=(Hyprland start-hyprland qs hyprlock hypridle hyprsunset nmcli bluetoothctl wpctl notify-send cliphist
-    wl-paste grim slurp jq brightnessctl zenity)
+    wl-paste grim slurp jq brightnessctl zenity xdg-mime)
 
 if ((want_deps)); then
     command -v pacman >/dev/null || { echo "--deps needs pacman. Install the packages listed in README.md by hand." >&2; exit 1; }
