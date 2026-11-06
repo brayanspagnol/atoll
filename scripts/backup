@@ -12,6 +12,7 @@ dir="$conf/profiles"
 faces="$HOME/.local/share/atoll/faces"
 walls="$HOME/.local/share/atoll/backgrounds"
 max_archive=$((256 << 20)) max_total=$((1024 << 20)) max_member=$((128 << 20)) max_entries=2000 max_text=$((1 << 20))
+max_code=65536 # the most of a code file the review shows; a larger one is never imported, so nothing hides past the cut
 file_re='monitors\.(lua|json)|input\.lua|user\.lua|apps\.json|rules\.json|shortcuts[A-Za-z0-9._-]{0,60}'
 image_re='[A-Za-z0-9][A-Za-z0-9._-]{0,99}'
 member_re="^(manifest\\.json|profiles/[a-z0-9-]{1,40}\\.json|config/($file_re)|images/(faces|backgrounds)/$image_re)\$"
@@ -156,7 +157,7 @@ screens_match() { # archive layout vs. the screens given
 
 do_inspect() {
     open_archive "$1"; shift
-    local cur current='{}' f name here data
+    local cur current='{}' f name here data big
     cur="$(active)"
     [[ -f "$dir/$cur.json" ]] && current="$(jq -c 'if type == "object" then . else {} end' "$dir/$cur.json" 2>/dev/null || echo '{}')"
     local list='[]'
@@ -165,9 +166,10 @@ do_inspect() {
         name="$(basename -- "$f")"
         here=""; [[ -f "$conf/$name" ]] && here="$(head -c "$max_text" -- "$conf/$name")"
         data=null; [[ "$name" == *.lua && "$name" != user.lua && "$name" != shortcuts* ]] && { lua_data "$f" && data=true || data=false; }
+        big=false; [[ ( "$name" == user.lua || "$name" == shortcuts* ) && $(size_of "$f") -gt max_code ]] && big=true
         list="$(jq -c --arg name "$name" --rawfile text "$f" --arg here "$here" --argjson exists "$([[ -f "$conf/$name" ]] && echo true || echo false)" \
-            --argjson data "$data" --argjson bytes "$(size_of "$f")" \
-            '. + [{name: $name, bytes: $bytes, text: $text[0:65536], here: (if $exists then $here[0:65536] else null end), data: $data}]' <<<"$list")"
+            --argjson data "$data" --argjson bytes "$(size_of "$f")" --argjson big "$big" --argjson max "$max_code" \
+            '. + [{name: $name, bytes: $bytes, text: $text[0:$max], here: (if $exists then $here[0:$max] else null end), data: $data, big: $big}]' <<<"$list")"
     done
     local profiles='{}'
     for f in "$work/x/profiles"/*.json; do
@@ -207,6 +209,7 @@ do_import() {
         [[ "$name" =~ ^($file_re)$ && -f "$work/x/config/$name" ]] || die "not in the archive: $name"
         if [[ "$name" == monitors.* ]]; then screens_match "${names[@]}" || die "the screen layout belongs to other screens"; fi
         if [[ "$name" == *.lua && "$name" != user.lua && "$name" != shortcuts* ]]; then lua_data "$work/x/config/$name" || die "$name holds code, not settings"; fi
+        if [[ "$name" == user.lua || "$name" == shortcuts* ]] && (( $(size_of "$work/x/config/$name") > max_code )); then die "$name is too large to review: never imported"; fi
     done
 
     local cur target id overwrite=0 safety=""

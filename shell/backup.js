@@ -103,7 +103,7 @@ function review(info, from, screens, t, langs, accents) {
         const lines = arg(t("%1 lines"), lineCount(f.text))
         if (codeFile(f.name)) {
             code.push({ id: "f:" + f.name, label: f.name, files: [f.name], before: f.here !== null ? arg(t("%1 lines"), lineCount(f.here)) : t("None"),
-                after: lines, same: f.text === f.here, skip: "", text: f.text, lines: lineCount(f.text) })
+                after: lines, same: f.text === f.here, skip: f.big ? t("Too large to review in full (over 64 KB): never imported") : "", text: f.text, lines: lineCount(f.text) })
             continue
         }
         const input = f.name === "input.lua"
@@ -120,8 +120,8 @@ function choice(r, picked) {
     const on = row => !row.skip && picked[row.id] !== false
     const flat = rows => [].concat(...rows)
     const keys = flat(r.profile.filter(on).map(row => row.keys))
-    const files = flat(r.files.filter(on).map(row => row.files).concat(r.code.filter(row => picked[row.id] === true).map(row => row.files)))
+    const files = flat(r.files.filter(on).map(row => row.files).concat(r.code.filter(row => !row.skip && picked[row.id] === true).map(row => row.files)))
     const changes = r.profile.filter(row => on(row) && !row.same).length
-    const changedFiles = r.files.filter(row => on(row) && !row.same).length + r.code.filter(row => picked[row.id] === true && !row.same).length
+    const changedFiles = r.files.filter(row => on(row) && !row.same).length + r.code.filter(row => !row.skip && picked[row.id] === true && !row.same).length
     return { keys, files, changes, changedFiles }
 }

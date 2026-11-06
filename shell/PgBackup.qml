@@ -84,7 +84,7 @@ Page {
         id: code
         property var row
         readonly property bool all: !!pg.opened[row.id]
-        readonly property bool yes: Backup.picked[row.id] === true
+        readonly property bool yes: !row.skip && Backup.picked[row.id] === true
         Layout.fillWidth: true
         implicitHeight: codeCol.implicitHeight + 28
         radius: Theme.radiusSmall
@@ -110,9 +110,15 @@ Page {
                 Tx { id: codeText; x: 12; y: 10; width: parent.width - 24; mono: true; size: 13; text: pg.numbered(code.row.text, code.all); wrapMode: Text.WrapAnywhere; elide: Text.ElideNone; Accessible.name: code.row.label; Accessible.role: Accessible.StaticText }
             }
             RowLayout {
+                visible: !!code.row.skip
                 Layout.fillWidth: true; spacing: 10
-                Chk { id: accept; checked: code.yes; a11y: Tr.t("I read the code and want to import it"); onToggled: on => Backup.pick(code.row.id, on) }
-                Tx { text: Tr.t("I read the code and want to import it"); Layout.fillWidth: true; MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Backup.pick(code.row.id, !code.yes) } }
+                Ic { name: "ban"; size: 22; color: Theme.warn }
+                Wrap { text: code.row.skip; color: Theme.warn }
+            }
+            RowLayout {
+                Layout.fillWidth: true; spacing: 10
+                Chk { id: accept; visible: !code.row.skip; checked: code.yes; a11y: Tr.t("I read the code and want to import it"); onToggled: on => Backup.pick(code.row.id, on) }
+                Tx { visible: !code.row.skip; text: Tr.t("I read the code and want to import it"); Layout.fillWidth: true; MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Backup.pick(code.row.id, !code.yes) } }
                 Btn {
                     visible: code.row.lines > 6
                     text: code.all ? Tr.t("Show less") : Tr.t("Show all %1 lines").arg(code.row.lines)

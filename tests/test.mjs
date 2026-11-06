@@ -737,6 +737,14 @@ ShellRoot {
         assert.equal(run(c, "backup", "import", file, "--files", "input.lua").status, 1, name)
     }
     assert(!fs.existsSync(c + "/.config/atoll/input.lua"))
+    // A code file longer than the review shows: what hides past the cut never lands, and the page cannot accept it.
+    const long = evil("big", s => fs.writeFileSync(s + "/config/user.lua", "-- notes\n".repeat(8400) + 'hl.exec_cmd("touch pwned")\n'), "manifest.json", "config")
+    const longInfo = JSON.parse(run(c, "backup", "inspect", long).stdout)
+    assert(longInfo.files[0].bytes > 75000 && longInfo.files[0].big === true && !longInfo.files[0].text.includes("pwned"))
+    const longRows = R.review(longInfo, "x", [], t, [], {})
+    assert(longRows.code[0].skip.includes("never imported")); assert(!plain(R.choice(longRows, { "f:user.lua": true })).files.includes("user.lua"))
+    assert.equal(run(c, "backup", "import", long, "--files", "user.lua").status, 1)
+    assert(!fs.existsSync(c + "/.config/atoll/user.lua"))
     fs.rmSync(root, { recursive: true })
 }
 // The Backup page on the real QML: pick a file, review it, replace. user.lua waits for its own yes.
