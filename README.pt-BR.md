@@ -91,6 +91,7 @@ Para escolher o Atoll no gerenciador de login, rode também `./install.sh --sess
 | `Super+Alt+A` / `I` / `B` / `D` | Som / Internet / Bluetooth / Desempenho |
 | `Super+Alt+C` / `V` / `J` / `E` | Calendário / Avisos / Ajustes / Energia |
 | `Super+Alt+M` / `O` | Monitor / Sobre |
+| `Super+Alt+T` | Personalização |
 | `Super+Alt+K` / `N` / `R` / `U` | Atalhos / Apps padrão / Regras de janela / Backup |
 | `Super+Shift+V` / `Super+.` | Área de transferência / Emoji |
 | `Super+O` | Visão geral das áreas |
@@ -109,7 +110,7 @@ A lista completa está em [`hypr/keys.lua`](hypr/keys.lua), e dá para trocar qu
 
 ## Configurar
 
-**Quase tudo** está na tela Ajustes: perfil, idioma, cor de destaque, papel de parede, luz noturna e tempos de ociosidade. As telas ficam em Monitor, salvas em `~/.config/atoll/monitors.lua`.
+**Quase tudo** fica em duas telas: Personalização (perfil, tema, cor de destaque e papel de parede) e Ajustes (idioma, luz noturna, teclado e mouse, feriados e tempos de ociosidade). As telas ficam em Monitor, salvas em `~/.config/atoll/monitors.lua`.
 O Atoll não traz papéis de parede e começa com uma cor sólida. Adicione os seus com o **+** em Ajustes: eles ficam na galeria, e a tela de bloqueio segue o que você escolher. A foto é definida por perfil e, sem uma, usa `~/.face`.
 
 **Tela de bloqueio:** é o arquivo `~/.config/atoll/hyprlock.conf`. Atualizações o substituem e guardam sua versão como `hyprlock.conf.bak`.

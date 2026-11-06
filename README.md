@@ -136,6 +136,7 @@ for `sudo`; everything else stays in your home directory. See `./install.sh --he
 | `Super+Alt+A` / `I` / `B` / `D` | Sound / Internet / Bluetooth / Performance |
 | `Super+Alt+C` / `V` / `J` / `E` | Calendar / Notifications / Settings / Power |
 | `Super+Alt+M` / `O` | Monitor / About |
+| `Super+Alt+T` | Personalization |
 | `Super+Alt+K` / `N` / `R` / `U` | Shortcuts / Default apps / Window rules / Backup |
 | `Super+Shift+V` / `Super+.` | Clipboard history / Emoji |
 | `Super+O` | Workspace overview |
@@ -154,7 +155,7 @@ The full list is in [`hypr/keys.lua`](hypr/keys.lua), and you can change any of 
 
 ## Configure
 
-**Most things** are in the Settings screen: profile, language, accent color, wallpaper, night light and idle timers. Screens are in the Monitor screen, saved in `~/.config/atoll/monitors.lua`.
+**Most things** are in two screens: Personalization (profile, theme, accent color and wallpaper) and Settings (language, night light, keyboard and mouse, holidays and idle timers). Screens are in the Monitor screen, saved in `~/.config/atoll/monitors.lua`.
 Atoll ships no wallpapers and starts on a solid color. Add yours with the **+** in Settings: they stay in the gallery, and the lock screen follows the one you pick. Your lock screen picture is set per profile, and falls back to `~/.face`.
 
 **The lock screen** is `~/.config/atoll/hyprlock.conf`. Updates replace it and save your version as `hyprlock.conf.bak`.

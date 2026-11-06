@@ -6,6 +6,17 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-11-06
+
+### Added
+
+- Personalization card (`Super+Alt+T`) with the profile, theme, accent color and wallpaper, moved out of Settings.
+
+### Changed
+
+- Settings keeps language, night light, keyboard and mouse, holidays and idle times.
+- Your own binds in `user.lua` can carry a `description`, which the Shortcuts screen shows.
+
 ## [1.14.1] - 2026-11-06
 
 ### Fixed
@@ -243,7 +254,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.14.1...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.15.0...HEAD
+[1.15.0]: https://github.com/brayanspagnol/atoll/compare/v1.14.1...v1.15.0
 [1.14.1]: https://github.com/brayanspagnol/atoll/compare/v1.14.0...v1.14.1
 [1.14.0]: https://github.com/brayanspagnol/atoll/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/brayanspagnol/atoll/compare/v1.12.1...v1.13.0
