@@ -2,6 +2,10 @@
 # Keeps the shell running: a crash restarts the UI, never the compositor or the apps.
 log="${XDG_STATE_HOME:-$HOME/.local/state}/atoll"
 mkdir -p "$log"
+# Bounded: past 1 MB, only the last 2000 lines stay.
+if [[ -f "$log/shell.log" ]] && (($(wc -c <"$log/shell.log") > 1048576)); then
+    tail -n 2000 "$log/shell.log" >"$log/shell.log.tmp" && mv -f "$log/shell.log.tmp" "$log/shell.log"
+fi
 fails=0
 while :; do
     started=$SECONDS

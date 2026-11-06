@@ -238,6 +238,22 @@ assert.equal(profiles("forget", "wallpaper", wall2).status, 0)
 assert.deepEqual(JSON.parse(fs.readFileSync(home + "/.config/atoll/profiles/a.json")).wallpapers, { "DP-2": "/keep" })
 fs.rmSync(home, { recursive: true })
 
+// atoll-start keeps shell.log bounded. PATH holds only a fake qs and the few tools it needs, so the real shell can't start.
+{
+    const dir = fs.mkdtempSync("/tmp/atoll-test-"), bin = dir + "/bin", state = dir + "/state/atoll"
+    fs.mkdirSync(bin); fs.mkdirSync(state, { recursive: true })
+    for (const tool of ["mkdir", "wc", "tail", "mv"]) fs.symlinkSync(spawnSync("sh", ["-c", `command -v ${tool}`], { encoding: "utf8" }).stdout.trim(), bin + "/" + tool)
+    fs.writeFileSync(bin + "/qs", "#!/bin/sh\necho started\n", { mode: 0o755 })
+    const start = () => assert.equal(spawnSync("/bin/bash", [new URL("../scripts/atoll-start", import.meta.url).pathname], { env: { PATH: bin, HOME: dir, XDG_STATE_HOME: dir + "/state" } }).status, 0)
+    fs.writeFileSync(state + "/shell.log", Array.from({ length: 30000 }, (_, i) => "line " + i + " " + "x".repeat(40)).join("\n") + "\n")
+    start()
+    const lines = fs.readFileSync(state + "/shell.log", "utf8").split("\n").filter(Boolean)
+    assert.deepEqual([lines.length, lines[0].split(" ")[1], lines.at(-2).split(" ")[1], lines.at(-1)], [2001, "28000", "29999", "started"])
+    start() // a small log is left alone
+    assert.equal(fs.readFileSync(state + "/shell.log", "utf8").split("\n").filter(Boolean).length, 2002)
+    fs.rmSync(dir, { recursive: true })
+}
+
 // Settings and restored notifications, on the real QML in a throwaway offscreen instance with its own HOME and D-Bus session.
 const haveQs = ["qs", "dbus-run-session", "notify-send"].every(tool => spawnSync("sh", ["-c", `command -v ${tool}`]).status === 0)
 const runQml = (dir, shellQml, files = {}) => {
