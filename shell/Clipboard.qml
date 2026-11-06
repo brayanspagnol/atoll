@@ -128,7 +128,8 @@ Scope {
                 property var it: ({}) // taken once, so a later change to the list can't retarget this run
                 Component.onCompleted: { it = win.current; running = true }
                 readonly property string out: win.tmp + "/" + win.epoch + "-" + it.id + "." + it.fmt
-                command: it.kind === "image" ? ["sh", "-c", '[ -s "$2" ] || cliphist decode "$1" > "$2"', "sh", it.id, out]
+                // Decoded beside it and renamed when whole: a run killed midway must not leave a partial file to reuse.
+                command: it.kind === "image" ? ["sh", "-c", '[ -s "$2" ] || { cliphist decode "$1" > "$2.$$.part" && mv -f "$2.$$.part" "$2"; }', "sh", it.id, out]
                     : it.pinned ? ["cat", "--", win.pinPath(it)] : ["cliphist", "decode", it.id]
                 // shortcut: shows the first 100k characters only, since laying out megabytes of text stalls the shell.
                 stdout: StdioCollector { onStreamFinished: if (it.kind !== "image") win.full = text.length > 100000 ? text.slice(0, 100000) + "…" : text }
