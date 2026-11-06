@@ -754,6 +754,19 @@ ShellRoot {
     assert(!fs.existsSync(c + "/.config/atoll/user.lua"))
     fs.rmSync(root, { recursive: true })
 }
+// Liking a song copies the cover the player names: a regular file of at most 20 MB, never a device, a pipe or a link.
+{
+    const root = fs.mkdtempSync("/tmp/atoll-test-")
+    const script = fs.readFileSync(new URL("../shell/Likes.qml", import.meta.url), "utf8").match(/\["sh", "-c", '([^']+)'/)[1]
+    const copy = (src, name) => spawnSync("sh", ["-c", script, "sh", src, `${root}/likes/${name}`]).status
+    fs.writeFileSync(root + "/cover.png", "png"); fs.symlinkSync(root + "/cover.png", root + "/link.png"); fs.writeFileSync(root + "/huge.png", ""); fs.truncateSync(root + "/huge.png", 20971521)
+    spawnSync("mkfifo", [root + "/pipe"])
+    assert.equal(copy(root + "/cover.png", "a"), 0); assert.equal(fs.readFileSync(root + "/likes/a", "utf8"), "png")
+    for (const [src, name] of [["/dev/zero", "z"], [root + "/link.png", "l"], [root + "/huge.png", "h"], [root + "/pipe", "p"], [root + "/nowhere", "n"]]) {
+        assert.notEqual(copy(src, name), 0, src); assert(!fs.existsSync(`${root}/likes/${name}`) && !fs.existsSync(`${root}/likes/${name}.part`), src)
+    }
+    fs.rmSync(root, { recursive: true })
+}
 // The Backup page on the real QML: pick a file, review it, replace. user.lua waits for its own yes.
 if (haveQs) {
     const root = fs.mkdtempSync("/tmp/atoll-test-"), home = root + "/home", other = root + "/other", file = root + "/alex.tar.gz"

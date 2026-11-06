@@ -20,7 +20,8 @@ Singleton {
             const kept = dir + "/" + Qt.md5(title + "|" + artist)
             copy.item = { title, artist, art: "file://" + kept }
             copy.fallback = art
-            copy.command = ["sh", "-c", 'mkdir -p "$(dirname "$2")" && cp "$1" "$2"', "sh", art.slice(7), kept]
+            // The player names the path: only a regular file, not a link, and at most 20 MB (head stops there even if it is swapped).
+            copy.command = ["sh", "-c", '[ -f "$1" ] && [ ! -L "$1" ] && mkdir -p "$(dirname "$2")" && timeout 5 head -c 20971521 -- "$1" >"$2.part" && [ "$(stat -c %s -- "$2.part")" -le 20971520 ] && mv -f -- "$2.part" "$2" || { rm -f -- "$2.part"; exit 1; }', "sh", art.slice(7), kept]
             copy.running = true
         } else add({ title, artist, art })
     }
