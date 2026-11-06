@@ -46,6 +46,10 @@ Singleton {
     ]
     readonly property var screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0] ?? null
 
+    // Pages watch these to scroll to a label and mark it; the counter repeats the same request.
+    property string revealLabel: ""
+    property int revealCount: 0
+    function reveal(p, label) { page = p; revealLabel = label; revealCount++ }
     function show(p) { page = p; launcher = false; overview = false; clipboard = false; mediaOpen = false; dockEditor = false; open = true }
     function editDock() { open = false; launcher = false; overview = false; mediaOpen = false; dockEditor = true }
     function toggle(p) { if (open && (!p || page === p)) open = false; else show(p || page) }

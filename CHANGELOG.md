@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.16.0] - 2026-11-06
+
+### Changed
+
+- The control center's screens are a single-column list that scrolls, with a search field on top. While you type it suggests screens and the settings inside them; picking a setting opens its screen, scrolls to it and marks it for a moment.
+
 ## [1.15.1] - 2026-11-06
 
 ### Changed
@@ -260,7 +266,8 @@ All notable changes to this project are documented here. The format follows
 - Lock screen, idle timers, night light and monitor brightness.
 - Installer, uninstaller, automated tests and an original default wallpaper.
 
-[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.15.1...HEAD
+[Unreleased]: https://github.com/brayanspagnol/atoll/compare/v1.16.0...HEAD
+[1.16.0]: https://github.com/brayanspagnol/atoll/compare/v1.15.1...v1.16.0
 [1.15.1]: https://github.com/brayanspagnol/atoll/compare/v1.15.0...v1.15.1
 [1.15.0]: https://github.com/brayanspagnol/atoll/compare/v1.14.1...v1.15.0
 [1.14.1]: https://github.com/brayanspagnol/atoll/compare/v1.14.0...v1.14.1

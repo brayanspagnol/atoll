@@ -1,6 +1,8 @@
 import QtQuick
+import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
+import "finder.js" as F
 import Quickshell.Bluetooth
 import Quickshell.Services.UPower
 import Quickshell.Wayland
@@ -29,6 +31,12 @@ Scope {
         WlrLayershell.keyboardFocus: Ui.open ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
         WlrLayershell.namespace: "atoll-central"
         color: "transparent"
+        // A screen, or an item in one: open it, and for an item scroll there.
+        function go(m) {
+            find.text = ""
+            if (m.item) Ui.reveal(m.page, m.label)
+            else Ui.page = m.page
+        }
         readonly property var status: ({
             som: Audio.sink?.audio ? Math.round(Audio.sink.audio.volume * 100) + "%" : Tr.t("No output"),
             rede: Net.status,
@@ -70,40 +78,89 @@ Scope {
                 ColumnLayout {
                     Layout.preferredWidth: 364; Layout.maximumWidth: 364; Layout.fillHeight: true; Layout.margins: 18
                     spacing: 12
-                    GridLayout {
-                        Layout.fillWidth: true; columns: 2; columnSpacing: 10; rowSpacing: 10
-                        Repeater {
-                            model: Ui.pages
-                            Rectangle {
-                                id: tile
-                                required property var modelData
-                                readonly property bool sel: Ui.page === modelData.id
-                                readonly property color fg: sel ? Theme.accentInk : Theme.ink
-                                Layout.fillWidth: true; Layout.preferredWidth: 1
-                                // As tall as its content: a fixed height clipped the status line.
-                                implicitHeight: tileContent.implicitHeight + 24; radius: 16
-                                color: sel ? Theme.accent : tm.containsMouse ? Theme.raisedHover : Theme.raised
-                                border.width: activeFocus ? 2 : 0; border.color: Theme.ink
-                                activeFocusOnTab: true
-                                Accessible.role: Accessible.Button
-                                Accessible.name: modelData.label + ", " + (win.status[modelData.id] ?? "")
-                                Keys.onSpacePressed: Ui.page = modelData.id
-                                Keys.onReturnPressed: Ui.page = modelData.id
-                                Behavior on color { ColorAnimation { duration: Theme.fast } }
-                                ColumnLayout {
-                                    id: tileContent
-                                    anchors.fill: parent; anchors.margins: 12; anchors.leftMargin: 16; anchors.rightMargin: 16; spacing: 4
-                                    RowLayout {
-                                        Ic { name: tile.modelData.icon; size: 24; color: tile.fg }
-                                        Item { Layout.fillWidth: true }
-                                        Tx { text: tile.modelData.key; mono: true; size: 12; color: tile.fg; opacity: 0.7 }
-                                    }
-                                    Item { Layout.fillHeight: true }
-                                    Tx { text: tile.modelData.label; strong: true; color: tile.fg; Layout.fillWidth: true }
-                                    Tx { text: win.status[tile.modelData.id] ?? ""; size: 13; color: tile.fg; opacity: 0.86; Layout.fillWidth: true }
-                                }
-                                MouseArea { id: tm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Ui.page = tile.modelData.id }
+                    // Search: the screens and what is inside them, as you type.
+                    Rectangle {
+                        Layout.fillWidth: true; implicitHeight: 46; radius: 14
+                        color: Theme.field
+                        border.width: find.activeFocus ? 1.5 : 1
+                        border.color: find.activeFocus ? Theme.accent : Theme.line
+                        Behavior on border.color { ColorAnimation { duration: Theme.fast } }
+                        RowLayout {
+                            anchors.fill: parent; anchors.leftMargin: 14; anchors.rightMargin: 10; spacing: 10
+                            Ic { name: "search"; size: 18; color: Theme.muted }
+                            TextInput {
+                                id: find
+                                Layout.fillWidth: true
+                                color: Theme.ink; selectionColor: Theme.accent; selectedTextColor: Theme.accentInk
+                                font.family: Theme.sans; font.pixelSize: 15
+                                clip: true
+                                Accessible.role: Accessible.EditableText
+                                Accessible.name: Tr.t("Search the control center")
+                                Component.onCompleted: forceActiveFocus()
+                                onTextChanged: nav.currentIndex = text ? 0 : -1
+                                Keys.onEscapePressed: { if (text) text = ""; else Ui.open = false }
+                                Keys.onDownPressed: nav.currentIndex = Math.min(nav.count - 1, nav.currentIndex + 1)
+                                Keys.onUpPressed: nav.currentIndex = Math.max(0, nav.currentIndex - 1)
+                                Keys.onReturnPressed: if (nav.currentItem) win.go(nav.currentItem.modelData)
+                                Keys.onEnterPressed: if (nav.currentItem) win.go(nav.currentItem.modelData)
+                                Tx { visible: !find.text; text: Tr.t("Search the control center"); dim: true; anchors.verticalCenter: parent.verticalCenter }
                             }
+                            Ic {
+                                visible: !!find.text
+                                name: "x"; size: 16; color: Theme.muted
+                                MouseArea { anchors.fill: parent; anchors.margins: -8; cursorShape: Qt.PointingHandCursor; onClicked: find.text = "" }
+                            }
+                        }
+                    }
+                    ListView {
+                        id: nav
+                        Layout.fillWidth: true; Layout.fillHeight: true
+                        clip: true; spacing: 4
+                        boundsBehavior: Flickable.StopAtBounds
+                        // Screens when empty; matches while typing. A new array each time, so it fades in again.
+                        model: find.text.trim() ? F.search(Ui.pages, find.text, Tr.t) : Ui.pages.map(p => ({ page: p.id, label: p.label, icon: p.icon, key: p.key, item: false }))
+                        currentIndex: -1
+                        highlightFollowsCurrentItem: false
+                        ScrollBar.vertical: ScrollBar { policy: nav.contentHeight > nav.height ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff; width: 6 }
+                        populate: Transition {
+                            ParallelAnimation {
+                                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 160; easing.type: Easing.OutCubic }
+                                NumberAnimation { property: "x"; from: -14; duration: 200; easing.type: Easing.OutCubic }
+                            }
+                        }
+                        Tx { anchors.centerIn: parent; visible: nav.count === 0; text: Tr.t("Nothing found."); dim: true }
+                        delegate: Rectangle {
+                            id: row
+                            required property var modelData
+                            required property int index
+                            readonly property bool sel: !modelData.item && Ui.page === modelData.page
+                            readonly property bool cur: ListView.isCurrentItem
+                            readonly property color fg: sel ? Theme.accentInk : Theme.ink
+                            width: ListView.view.width - 8
+                            height: 58; radius: 14
+                            color: sel ? Theme.accent : cur || rm.containsMouse ? Theme.raisedHover : Theme.raised
+                            border.width: cur && !sel ? 1 : activeFocus ? 2 : 0
+                            border.color: activeFocus ? Theme.ink : Theme.accent
+                            scale: rm.pressed ? 0.98 : 1
+                            Behavior on color { ColorAnimation { duration: Theme.fast } }
+                            Behavior on scale { NumberAnimation { duration: 120 } }
+                            activeFocusOnTab: true
+                            Accessible.role: Accessible.Button
+                            Accessible.name: modelData.label + ", " + (modelData.item ? modelData.sub : win.status[modelData.page] ?? "")
+                            Keys.onSpacePressed: win.go(modelData)
+                            Keys.onReturnPressed: win.go(modelData)
+                            RowLayout {
+                                anchors.fill: parent; anchors.leftMargin: 14; anchors.rightMargin: 14; spacing: 12
+                                Ic { name: row.modelData.icon; size: 22; color: row.fg }
+                                ColumnLayout {
+                                    Layout.fillWidth: true; spacing: 1
+                                    Tx { text: row.modelData.label; strong: true; color: row.fg; Layout.fillWidth: true }
+                                    Tx { text: row.modelData.item ? row.modelData.sub : win.status[row.modelData.page] ?? ""; size: 13; color: row.fg; opacity: 0.8; Layout.fillWidth: true }
+                                }
+                                Tx { visible: !!row.modelData.key; text: row.modelData.key; mono: true; size: 12; color: row.fg; opacity: 0.6 }
+                                Ic { visible: row.modelData.item; name: "right"; size: 16; color: row.fg; opacity: 0.6 }
+                            }
+                            MouseArea { id: rm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: win.go(row.modelData) }
                         }
                     }
                     Rowi {
@@ -116,7 +173,6 @@ Scope {
                         Tx { text: Tr.t("Do not disturb"); Layout.fillWidth: true }
                         Swt { a11y: Tr.t("Do not disturb"); checked: Cfg.v.dnd; onToggled: Cfg.v.dnd = checked }
                     }
-                    Item { Layout.fillHeight: true }
                     Tx { text: Tr.t("Esc to close"); dim: true; size: 13; Layout.leftMargin: 12 }
                 }
                 Rectangle { Layout.fillHeight: true; implicitWidth: 1; color: Theme.line }

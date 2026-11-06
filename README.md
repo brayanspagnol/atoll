@@ -19,7 +19,7 @@ wallpaper, and windows keep the rest of the screen.
 
 - **Island:** workspaces, clock, media and status in a floating pill at the top.
 - **Dock:** hides at the bottom edge, so windows get the full height. Hover the edge or press `Super+Z`. The gear opens a full-screen launchpad to choose its apps, from the installed list or any program in your files, and to reorder them.
-- **Control center:** sound, internet, Bluetooth, performance, calendar, notifications, monitor, settings, about and power.
+- **Control center:** sound, internet, Bluetooth, performance, calendar, notifications, monitor, settings, about, power and more, in a scrolling list with a search that finds the screens and the settings inside them.
 - **Music card:** cover art, colors taken from the album, seek bar, repeat, shuffle, likes, volume and output switching.
 - **Notifications and volume:** glass cards that drop from under the island.
 - **Overview:** a strip of workspaces above the current one's windows, with live previews. Drag a window to another workspace. `Super+O`.

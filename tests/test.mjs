@@ -6,7 +6,7 @@ const load = (file, names) => {
     return ctx.x
 }
 const C = load("cal.js", "key,addDays,monthGrid,weekOf,isoWeek,occurs,on,upcoming,validTime")
-const P = load("parse.js", "cpu,mem,net,top,bytes,shQuote,newerVersion,zipLayouts,joinLayouts,xkbCatalog,powerProfiles,inWindow,nmcliRows,modelName,chassisKind,cpuName,duration")
+const P = load("parse.js", "cpu,mem,net,top,bytes,shQuote,newerVersion,zipLayouts,joinLayouts,xkbCatalog,powerProfiles,inWindow,nmcliRows,modelName,chassisKind,cpuName,duration,fold")
 const g = C.monthGrid(2026, 10); assert.equal(g.length, 42); assert.equal(g[0], "2026-11-01"); assert.equal(g[41], "2026-12-12")
 assert.equal(C.monthGrid(2026, 9)[0], "2026-09-27") // October 2026 starts on a Thursday
 assert.deepEqual([C.isoWeek("2026-01-01"), C.isoWeek("2026-11-05"), C.isoWeek("2027-01-03")], [1, 45, 53])
@@ -175,6 +175,20 @@ assert.equal(P.cpuName("13th Gen Intel(R) Core(TM) i5-13420H"), "Intel Core i5-1
 assert.equal(P.cpuName("AMD Ryzen 7 5800H with Radeon Graphics"), "AMD Ryzen 7 5800H")
 assert.equal(P.cpuName("Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz"), "Intel Core i7-8650U")
 assert.deepEqual([P.duration(720), P.duration(12000), P.duration(190000)], ["12 min", "3 h 20 min", "2 d 4 h"])
+// The control center's search: screens and what is inside them, accents ignored, best match first.
+const F = (() => {
+    const ctx = { P }; vm.createContext(ctx)
+    vm.runInContext(fs.readFileSync(new URL("../shell/finder.js", import.meta.url), "utf8").replace(".pragma library", "").replace(/^\.import .*$/m, "") + ";this.x={search,items}", ctx)
+    return ctx.x
+})()
+const pagesForTest = [{ id: "ajustes", label: "Ajustes", icon: "ajustes", key: "Alt+J", kw: "settings" }, { id: "energia", label: "Energia", icon: "energia", key: "Alt+E", kw: "power" }]
+const trPt = k => ({ "Night light": "Luz noturna", "Language": "Idioma", "Shut down": "Desligar", "Suspend": "Suspender" })[k] ?? k
+assert.deepEqual(F.search(pagesForTest, "", trPt).length, 0)
+assert.deepEqual(F.search(pagesForTest, "luz", trPt).map(r => r.label), ["Luz noturna"])
+assert.deepEqual(F.search(pagesForTest, "ENER", trPt)[0], { page: "energia", label: "Energia", icon: "energia", key: "Alt+E", item: false, rank: 0 })
+assert.ok(F.search(pagesForTest, "noturna", trPt).some(r => r.item && r.page === "ajustes")) // a word inside the label
+assert.ok(F.search(pagesForTest, "night", trPt).some(r => r.label === "Luz noturna")) // the English key still finds it
+assert.ok(Object.keys(F.items).every(id => ["som", "rede", "bt", "perf", "cal", "avisos", "monitor", "ajustes", "visual", "atalhos", "apps", "regras", "backup", "energia", "sobre"].includes(id)))
 const kb = P.zipLayouts("br,us", "abnt2,")
 assert.deepEqual(JSON.parse(JSON.stringify(kb)), [{ layout: "br", variant: "abnt2" }, { layout: "us", variant: "" }])
 assert.deepEqual(JSON.parse(JSON.stringify(P.joinLayouts(kb))), { layout: "br,us", variant: "abnt2," })

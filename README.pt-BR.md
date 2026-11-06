@@ -17,7 +17,7 @@ Os prints estão no [README em inglês](README.md#screenshots).
 
 - **Ilha:** áreas de trabalho, relógio, música e status em uma pílula flutuante no topo.
 - **Dock:** se esconde na borda inferior, então as janelas ganham a altura toda. Encoste o mouse na borda ou aperte `Super+Z`. A engrenagem abre um launchpad em tela cheia para escolher os apps, da lista de instalados ou qualquer programa nos seus arquivos, e reordenar.
-- **Central:** som, internet, Bluetooth, desempenho, calendário, avisos, monitor, ajustes, sobre e energia.
+- **Central:** som, internet, Bluetooth, desempenho, calendário, avisos, monitor, ajustes, sobre, energia e mais, numa lista com rolagem e uma busca que acha as telas e os ajustes dentro delas.
 - **Cartão de música:** capa, cores tiradas do álbum, barra de tempo, repetir, aleatório, curtidas, volume e troca de saída.
 - **Avisos e volume:** cartões de vidro que descem de baixo da ilha.
 - **Visão geral:** faixa com as áreas de trabalho acima das janelas da área atual, com prévia ao vivo. Arraste uma janela para outra área. `Super+O`.
