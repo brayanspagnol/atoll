@@ -69,6 +69,11 @@ Singleton {
             property int lockBat: 1
             property int dpmsBat: 2
             property int sleepBat: 3
+            // Weather: { name, admin1, country, latitude, longitude } from the city search; auto finds it by IP instead.
+            property var weatherPlace: null
+            property bool weatherAuto: false
+            property string weatherUnit: "c" // "c" or "f"
+            property bool weatherChip: true
         }
     }
 }

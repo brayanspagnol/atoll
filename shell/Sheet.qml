@@ -13,6 +13,7 @@ PanelWindow {
     screen: modelData
     readonly property bool target: (Quickshell.screens.includes(Ui.sheetScreen) ? Ui.sheetScreen : Ui.screen) === modelData
     readonly property bool mediaOpen: target && Ui.mediaOpen
+    readonly property bool weatherOpen: target && Ui.weatherOpen
     readonly property bool hasToasts: target && Notifs.toasts.length > 0
     readonly property bool volumeOn: target && Osd.shown
     anchors.top: true
@@ -21,7 +22,7 @@ PanelWindow {
     implicitHeight: Math.min(modelData.height - 86, 1200)
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    visible: mediaOpen || hasToasts || volumeOn || panel.height > 0.5
+    visible: mediaOpen || weatherOpen || hasToasts || volumeOn || panel.height > 0.5
     // Pieces only, so the gaps around them stay clickable.
     mask: Region {
         Region { item: capsule; }
@@ -30,13 +31,13 @@ PanelWindow {
     }
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "atoll-sheet"
-    // Never take the keyboard for a notification: only while the music card is open.
-    WlrLayershell.keyboardFocus: mediaOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    // Never take the keyboard for a notification: only while the music or weather card is open.
+    WlrLayershell.keyboardFocus: mediaOpen || weatherOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
     HyprlandFocusGrab {
-        active: win.mediaOpen && win.visible
+        active: (win.mediaOpen || win.weatherOpen) && win.visible
         windows: Ui.sheetIsland ? [win, Ui.sheetIsland] : [win]
-        onCleared: Ui.mediaOpen = false
+        onCleared: { Ui.mediaOpen = false; Ui.weatherOpen = false }
     }
 
     Item {
@@ -45,7 +46,7 @@ PanelWindow {
         height: volume.height + mediaBox.height + (mediaBox.height > 0 && list.height > 0 ? gap : 0) + list.height
         readonly property int gap: 8
         focus: true
-        Keys.onEscapePressed: Ui.mediaOpen = false
+        Keys.onEscapePressed: { Ui.mediaOpen = false; Ui.weatherOpen = false }
 
         Item {
             id: volume
@@ -95,7 +96,7 @@ PanelWindow {
             id: mediaBox
             y: volume.height
             width: parent.width
-            height: media.height
+            height: media.height + weather.height
             radius: Theme.radius
             color: Theme.surface
             border.width: 1
@@ -105,6 +106,13 @@ PanelWindow {
                 id: media
                 width: parent.width
                 open: win.mediaOpen
+            }
+            WeatherCard {
+                id: weather
+                y: media.height
+                width: parent.width
+                maxHeight: win.height - volume.height
+                open: win.weatherOpen
             }
         }
 

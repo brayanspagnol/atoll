@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Weather: the current temperature in the island, and a card with the next hours and 7 days from Open-Meteo. A new Weather screen (`Super+Alt+W`) picks the city by search or, if you turn it on, by IP, the unit (°C or °F) and whether the island shows it.
+
 ## [1.16.3] - 2026-11-06
 
 ### Security

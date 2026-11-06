@@ -68,6 +68,20 @@ PanelWindow {
                 MouseArea { id: cm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Ui.toggle("cal") }
             }
             Rectangle {
+                visible: Weather.shown
+                implicitWidth: weatherRow.implicitWidth + 24; implicitHeight: 44; radius: Theme.radiusSmall
+                color: Ui.weatherOpen || wm.containsMouse ? Theme.raised : "transparent"
+                Accessible.role: Accessible.Button
+                Accessible.name: Tr.t("Weather: %1, %2").arg((Weather.data?.temp ?? "") + "°").arg(Tr.t(Weather.data?.label ?? ""))
+                Accessible.onPressAction: Ui.toggleWeather(win.modelData, win)
+                RowLayout {
+                    id: weatherRow; anchors.centerIn: parent; spacing: 6
+                    Ic { name: Weather.data?.icon ?? ""; size: 18 }
+                    Tx { text: (Weather.data?.temp ?? "") + "°"; strong: true }
+                }
+                MouseArea { id: wm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Ui.toggleWeather(win.modelData, win) }
+            }
+            Rectangle {
                 visible: !!Audio.player?.trackTitle
                 implicitWidth: mediaRow.implicitWidth + 24; implicitHeight: 44; radius: Theme.radiusSmall
                 color: Ui.mediaOpen || mm.containsMouse ? Theme.raised : "transparent"

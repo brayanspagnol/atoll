@@ -14,7 +14,8 @@ const groups = [
     { id: "idle", keys: ["lockAc", "dpmsAc", "sleepAc", "lockBat", "dpmsBat", "sleepBat"], label: "Idle times" },
     { id: "night", keys: ["nightOn", "nightK", "nightAuto", "nightFrom", "nightTo"], label: "Night light" },
     { id: "dnd", keys: ["dnd"], label: "Do not disturb" },
-    { id: "holidays", keys: ["holidays"], label: "Holidays" }
+    { id: "holidays", keys: ["holidays"], label: "Holidays" },
+    { id: "weather", keys: ["weatherPlace", "weatherAuto", "weatherUnit", "weatherChip"], label: "Weather" }
 ]
 const codeFile = name => name === "user.lua" || name.startsWith("shortcuts")
 const lineCount = text => text ? text.replace(/\n$/, "").split("\n").length : 0
@@ -42,6 +43,7 @@ function show(id, p, t, langs, accents, cur) {
         if (p.nightAuto) return arg(t("Automatic, %1 to %2, %3 K"), p.nightFrom, p.nightTo, p.nightK)
         return p.nightOn ? arg(t("On, %1 K"), p.nightK) : t("Off")
     case "dnd": return onOff(v)
+    case "weather": return p.weatherAuto ? t("Automatic by IP") : typeof p.weatherPlace?.name === "string" ? p.weatherPlace.name.slice(0, 80) : t("Not set")
     case "holidays": return !v || v === "auto" ? t("Automatic") : v === "off" ? t("Off") : String(v)
     case "wallpapers": { const n = Object.keys(v ?? {}).length; return n ? arg(t("Own wallpaper on %1 screens"), n) : t("One for all screens") }
     case "photo": case "wallpaper": return v ? t("A picture") : t("None")

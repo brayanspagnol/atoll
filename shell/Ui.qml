@@ -24,6 +24,15 @@ Singleton {
         if (!mediaOpen) { sheetScreen = screen; sheetIsland = island; open = false }
         mediaOpen = !mediaOpen
     }
+    // The weather card drops from the same place as the music card, so only one is open.
+    property bool weatherOpen: false
+    function toggleWeather(screen, island) {
+        if (!weatherOpen) { sheetScreen = screen; sheetIsland = island; open = false; mediaOpen = false }
+        weatherOpen = !weatherOpen
+    }
+    onMediaOpenChanged: if (mediaOpen) weatherOpen = false
+    onOpenChanged: if (open) weatherOpen = false
+    onDockEditorChanged: if (dockEditor) weatherOpen = false
     function toggleDock() { dockPeek = !dockPeek }
     // A dock raised by shortcut goes away on its own; hovering keeps it up.
     Timer { interval: 4000; running: ui.dockPeek; onTriggered: ui.dockPeek = false }
@@ -33,6 +42,7 @@ Singleton {
         { id: "bt", key: "Alt+B", label: "Bluetooth", icon: "bt", kw: "headphones pair " + Tr.t("headphones pair") },
         { id: "perf", key: "Alt+D", label: Tr.t("Performance"), icon: "perf", kw: "cpu memory processes temperature battery " + Tr.t("cpu memory processes temperature battery") },
         { id: "cal", key: "Alt+C", label: Tr.t("Calendar"), icon: "cal", kw: "agenda event date " + Tr.t("agenda event date") },
+        { id: "clima", key: "Alt+W", label: Tr.t("Weather"), icon: "cloudSun", kw: "weather forecast temperature city " + Tr.t("forecast temperature city") },
         { id: "avisos", key: "Alt+V", label: Tr.t("Notifications"), icon: "avisos", kw: "notifications do not disturb " + Tr.t("do not disturb") },
         { id: "monitor", key: "Alt+M", label: Tr.t("Monitor"), icon: "monitor", kw: "monitor display screen resolution rotation mirror " + Tr.t("display resolution rotation mirror") },
         { id: "ajustes", key: "Alt+J", label: Tr.t("Settings"), icon: "ajustes", kw: "settings language keyboard mouse touchpad idle calendar holidays night light " + Tr.t("language keyboard idle") },

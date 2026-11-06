@@ -32,7 +32,7 @@ Scope {
         WlrLayershell.keyboardFocus: Ui.open ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
         WlrLayershell.namespace: "atoll-central"
         color: "transparent"
-        readonly property var files: ({ som: "PgSound.qml", rede: "PgNet.qml", bt: "PgBt.qml", perf: "PgPerf.qml", cal: "PgCal.qml", avisos: "PgNotif.qml", ajustes: "PgSettings.qml", energia: "PgPower.qml", monitor: "PgMonitor.qml", sobre: "PgAbout.qml" , visual: "PgLook.qml", atalhos: "PgShortcuts.qml", apps: "PgApps.qml", regras: "PgRules.qml", backup: "PgBackup.qml" })
+        readonly property var files: ({ som: "PgSound.qml", rede: "PgNet.qml", bt: "PgBt.qml", perf: "PgPerf.qml", cal: "PgCal.qml", avisos: "PgNotif.qml", ajustes: "PgSettings.qml", energia: "PgPower.qml", monitor: "PgMonitor.qml", sobre: "PgAbout.qml" , visual: "PgLook.qml", atalhos: "PgShortcuts.qml", apps: "PgApps.qml", regras: "PgRules.qml", backup: "PgBackup.qml", clima: "PgWeather.qml" })
         // Every label on every screen, read from the screens' own files, so the search finds any button or option.
         property var labels: ({})
         Process {
@@ -53,6 +53,7 @@ Scope {
             bt: !Bluetooth.defaultAdapter?.enabled ? Tr.t("Off") : Tr.t("Connected: %1").arg(Bluetooth.defaultAdapter.devices.values.filter(d => d.connected).length),
             perf: "CPU " + Math.round(Sys.cpu) + "% · " + Math.round(Sys.temp) + " °C",
             cal: Tr.date(new Date(), "MMM d").replace(/\./g, ""),
+            clima: Weather.data ? Weather.data.place + " · " + Weather.data.temp + "°" : Tr.t("Not set"),
             avisos: Notifs.all.length ? Tr.t("Notifications: %1").arg(Notifs.all.length) : Tr.t("All caught up"),
             ajustes: Tr.t("Language, keyboard, idle"),
             visual: Tr.t("Profile, theme, wallpaper"),

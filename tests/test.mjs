@@ -1174,4 +1174,123 @@ ShellRoot {
     fs.rmSync(sc, { recursive: true })
 }
 
+// Weather: Open-Meteo's forecast and geocoding (real answers for São Paulo in fixtures/), ipapi.co, and anything hostile.
+{
+    const W = load("weather.js", "labels,condition,place,same,where,geocode,ipPlace,forecastCommand,geocodeCommand,ipCommand,localDate,forecast")
+    const fixture = name => fs.readFileSync(new URL("fixtures/" + name, import.meta.url), "utf8")
+    assert.deepEqual(plain(W.condition(0, true)), { icon: "sun", label: "Clear sky" }); assert.equal(W.condition(0, false).icon, "moon")
+    assert.equal(W.condition(2, false).icon, "cloudMoon"); assert.equal(W.condition(2, true).icon, "cloudSun"); assert.equal(W.condition(3, false).icon, "cloud")
+    assert.deepEqual([45, 55, 63, 75, 81, 86, 99].map(c => W.condition(c, true).label), ["Fog", "Drizzle", "Rain", "Snow", "Showers", "Snow showers", "Thunderstorm"])
+    for (const odd of [4, -1, "0", null, undefined, 1.5]) assert.deepEqual(plain(W.condition(odd, true)), { icon: "cloud", label: "Unknown weather" })
+    for (const file of fs.readdirSync(new URL("i18n/", shell))) {
+        const dict = JSON.parse(fs.readFileSync(new URL("i18n/" + file, shell), "utf8"))
+        for (const label of W.labels) assert(label in dict, `${file} is missing: ${label}`)
+    }
+
+    const sp = W.forecast(fixture("weather-forecast.json"), "c", "São Paulo")
+    assert.deepEqual([sp.place, sp.unit, sp.temp, sp.feels, sp.humidity, sp.wind, sp.icon, sp.label, sp.high, sp.low], ["São Paulo", "c", 28, 30, 61, 9, "cloudDrizzle", "Drizzle", 29, 19])
+    assert.deepEqual(sp.hours.map(h => h.time.slice(11)), ["13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"]) // from the current hour
+    assert.deepEqual([sp.hours[0].temp, sp.hours[0].icon, sp.hours[1].temp, sp.hours[1].rain, sp.hours[6].icon], [28, "cloudDrizzle", 26, 74, "cloud"]) // now is the current reading; 19h is night
+    assert.deepEqual(sp.days.map(d => d.date.slice(8)), ["06", "07", "08", "09", "10", "11", "12"])
+    assert.deepEqual(sp.days.map(d => d.rain), [100, 92, 94, 14, 8, 29, 91])
+    // The bar: the week runs from 13° to 30°, so the coldest low starts at 0 and the hottest high ends at 1.
+    assert(sp.days.every(d => d.from >= 0 && d.from <= d.to && d.to <= 1))
+    assert.equal(Math.min(...sp.days.map(d => d.from)), 0); assert.equal(Math.max(...sp.days.map(d => d.to)), 1)
+    assert.equal(sp.days[1].to, 1); assert.equal(sp.days[0].from, (19 - 13) / 17)
+    const flat = W.forecast({ current: { time: "2026-01-01T05:45", temperature_2m: 1 }, daily: { time: ["2026-01-01", "2026-01-02"], temperature_2m_max: [5, 5], temperature_2m_min: [5, 5] } }, "f", "X")
+    assert.deepEqual(plain(flat.days.map(d => [d.from, d.to])), [[0, 1], [0, 1]]); assert.equal(flat.unit, "f"); assert.equal(flat.hours.length, 0)
+    const day = Array.from({ length: 24 }, (_, i) => `2026-01-01T${String(i).padStart(2, "0")}:00`)
+    const late = W.forecast({ current: { time: "2026-01-01T22:10", temperature_2m: 3, weather_code: 0, is_day: 0 }, hourly: { time: day, temperature_2m: day.map((_, i) => i) } }, "c", "X")
+    assert.deepEqual(late.hours.map(h => h.temp), [3, 23]); assert.equal(late.hours[0].icon, "moon") // the data ends tonight
+    assert.deepEqual(W.forecast({ current: { time: "2026-01-01T05:45", temperature_2m: 1 }, hourly: { time: day, temperature_2m: day.map((_, i) => i) } }, "c", "X").hours.map(h => h.time.slice(11, 13)), ["05", "06", "07", "08", "09", "10", "11"])
+
+    // °F asks the service for Fahrenheit and mph; every request is curl over HTTPS only, the URL one argument.
+    const here = W.place({ name: "Here", latitude: -23.5, longitude: 46.25 })
+    const fc = W.forecastCommand(here, "f"), cc = W.forecastCommand(here, "c")
+    assert.deepEqual(fc.slice(0, 6), ["curl", "-fsS", "--max-time", "15", "--proto", "=https"]); assert.equal(fc.length, 7)
+    assert(fc[6].startsWith("https://api.open-meteo.com/v1/forecast?latitude=-23.5&longitude=46.25&") && fc[6].endsWith("&temperature_unit=fahrenheit&wind_speed_unit=mph"))
+    assert(!cc[6].includes("fahrenheit") && cc[6].includes("&timezone=auto&forecast_days=7"))
+    assert.equal(W.geocodeCommand("São Paulo & x=1", "pt-BR")[6], "https://geocoding-api.open-meteo.com/v1/search?name=S%C3%A3o%20Paulo%20%26%20x%3D1&count=6&language=pt&format=json")
+    assert(W.geocodeCommand("x", "../en")[6].includes("&language=en&")); assert.deepEqual(plain(W.ipCommand).slice(-1), ["https://ipapi.co/json/"])
+    assert.equal(W.localDate("2026-11-06T15:00").getHours(), 15); assert.equal(W.localDate("2026-11-06").getDate(), 6); assert.equal(W.localDate("15:00"), null)
+
+    // Places: checked like any remote data.
+    const geo = W.geocode(fixture("weather-geocoding.json"))
+    assert.equal(geo.length, 6); assert.deepEqual(plain(geo[0]), { name: "São Paulo", admin1: "São Paulo", country: "Brasil", latitude: -23.5475, longitude: -46.63611 })
+    assert.equal(W.where(geo[0]), "Brasil"); assert.equal(W.where(geo[1]), "Concelho do Sal, Cabo Verde")
+    assert(W.same(geo[0], W.place(geo[0])) && !W.same(geo[0], geo[1]) && !W.same(null, null))
+    for (const bad of [{ name: "A", latitude: 91, longitude: 0 }, { name: "A", latitude: 0, longitude: -180.5 }, { name: "A", latitude: "10", longitude: 0 }, { name: "", latitude: 0, longitude: 0 },
+        { name: 7, latitude: 0, longitude: 0 }, { latitude: 0, longitude: 0 }, { name: "A", latitude: NaN, longitude: 0 }, { name: "A", latitude: Infinity, longitude: 0 }, [], "x", null]) assert.equal(W.place(bad), null, JSON.stringify(bad))
+    const odd = W.place({ name: "  <b>Big</b>\u0000\n" + "x".repeat(200), admin1: { evil: 1 }, country: ["x"], latitude: 90, longitude: -180 })
+    assert.equal(odd.name.length, 80); assert(!/[\u0000\n]/.test(odd.name)); assert.deepEqual([odd.admin1, odd.country], ["", ""])
+    assert.deepEqual(plain(W.geocode('{"results": [{"name": "Ok", "latitude": 1, "longitude": 2}, {"name": "Far", "latitude": 100, "longitude": 2}, 5, null]}')).map(p => p.name), ["Ok"])
+    for (const bad of ["{oops", "[]", "null", '{"results": "x"}', "", '{"results": {"0": {}}}']) assert.deepEqual(plain(W.geocode(bad)), [])
+    assert.deepEqual(plain(W.ipPlace('{"ip": "203.0.113.9", "city": "Lisbon", "region": "Lisbon", "country_name": "Portugal", "latitude": 38.72, "longitude": -9.13}')), { name: "Lisbon", admin1: "Lisbon", country: "Portugal", latitude: 38.72, longitude: -9.13 })
+    for (const bad of ['{"error": true, "reason": "RateLimited"}', '{"city": "", "latitude": 1, "longitude": 1}', '{"city": "X", "latitude": 1}', "<html>", "[1]"]) assert.equal(W.ipPlace(bad), null, bad)
+
+    // A broken or hostile forecast gives nothing, or only its sane parts, never an exception.
+    for (const bad of ["{oops", "[]", "null", "7", '{"current": []}', '{"current": {"temperature_2m": "20", "time": "2026-01-01T00:00"}}', '{"current": {"temperature_2m": 20}}',
+        '{"current": {"temperature_2m": 20, "time": "2026-01-01"}}', '{"current": {"temperature_2m": 1e999, "time": "2026-01-01T00:00"}}']) assert.equal(W.forecast(bad, "c", "X"), null, bad)
+    const junk = W.forecast({ current: { time: "2026-01-01T00:00", temperature_2m: 5, weather_code: "<b>", relative_humidity_2m: "61", wind_speed_10m: null },
+        hourly: { time: day.concat(["x"]), temperature_2m: [1, "2", null, 4, {}, 6, 7, 8, 9, 10] }, daily: { time: Array(30).fill("2026-01-01").concat(["2026-01-01T00:00"]), temperature_2m_max: Array(30).fill(3), temperature_2m_min: Array(30).fill(1), weather_code: "x" } }, "c", { name: 1 })
+    assert.deepEqual([junk.place, junk.humidity, junk.wind, junk.label, junk.days.length], ["", null, null, "Unknown weather", 7])
+    assert.deepEqual(junk.hours.map(h => h.time.slice(11, 13)), ["00", "03", "05", "06", "07", "08", "09"]) // only hours with a number
+    assert.deepEqual(plain(W.forecast({ current: { time: "2026-01-01T00:00", temperature_2m: 5 }, hourly: "x", daily: 3 }, "c", "X")).days, [])
+
+    // The card and the settings page on the real QML, with a fake curl that answers from the fixtures. No network, no Hyprland.
+    if (haveQs) {
+        const wd = fs.mkdtempSync("/tmp/atoll-test-"), bin = wd + "/bin", profileDir = wd + "/home/.config/atoll/profiles"
+        fs.cpSync(new URL("../shell/", import.meta.url), wd, { recursive: true })
+        fs.mkdirSync(bin); fs.mkdirSync(profileDir, { recursive: true })
+        fs.writeFileSync(wd + "/forecast.json", fixture("weather-forecast.json")); fs.writeFileSync(wd + "/geo.json", fixture("weather-geocoding.json"))
+        fs.writeFileSync(bin + "/curl", `#!/bin/sh\nprintf '%s\\037' "$@" >> '${wd}/curl.log'; printf '\\n' >> '${wd}/curl.log'\nfor a; do url=$a; done\ncase "$url" in\n  https://api.open-meteo.com/*) cat '${wd}/forecast.json' ;;\n  https://geocoding-api.open-meteo.com/*) cat '${wd}/geo.json' ;;\n  *) exit 6 ;;\nesac\n`, { mode: 0o755 })
+        fs.writeFileSync(profileDir + "/default.json", JSON.stringify({ weatherPlace: { name: "Elsewhere", latitude: 10, longitude: 20 } }))
+        fs.writeFileSync(wd + "/Ui.qml", `pragma Singleton\nimport Quickshell\nSingleton { property bool open: false; property bool weatherOpen: true; property string revealLabel: ""; property int revealCount: 0; function show(p) { open = true } }\n`)
+        fs.writeFileSync(wd + "/shell.qml", `import QtQuick
+import Quickshell
+ShellRoot {
+    FloatingWindow { implicitWidth: 480; implicitHeight: 900; WeatherCard { id: card; width: 480; open: true; maxHeight: 400 } }
+    FloatingWindow { implicitWidth: 900; implicitHeight: 1200; PgWeather { id: pg; anchors.fill: parent } }
+    property int step: 0
+    function all(item, test, out) { for (const c of item.children) { if (c.visible && test(c)) out.push(c); all(c, test, out) } return out }
+    function say(tag, v) { console.log("RESULT " + tag + " " + JSON.stringify(v)) }
+    Timer {
+        running: true; repeat: true; interval: 500
+        onTriggered: {
+            step++
+            if (step === 3) {
+                say("first", { place: Weather.data?.place, hours: Weather.data?.hours.length, days: Weather.data?.days.length, shown: Weather.shown, height: card.height, rows: all(pg.contentItem, c => c.place !== undefined, []).map(c => c.place.name + (c.selected ? "*" : "")) })
+                all(pg.contentItem, c => c.placeholderText !== undefined, [])[0].text = "São Paulo"
+                pg.find()
+            }
+            if (step === 5) {
+                say("found", pg.results.map(r => r.country))
+                all(pg.contentItem, c => c.place !== undefined && c.clickable, [])[0].clicked()
+            }
+            if (step === 7) Cfg.v.weatherUnit = "f"
+            if (step === 9) {
+                say("after", { saved: Cfg.v.weatherPlace, unit: Weather.data?.unit, results: pg.results.length, rows: all(pg.contentItem, c => c.place !== undefined, []).map(c => c.place.name + (c.selected ? "*" : "")) })
+                Qt.quit()
+            }
+        }
+    }
+}
+`)
+        const { WAYLAND_DISPLAY, DISPLAY, HYPRLAND_INSTANCE_SIGNATURE, ...env } = process.env
+        const run = spawnSync("dbus-run-session", ["--", "qs", "-p", wd + "/shell.qml"], { encoding: "utf8", timeout: 30000, env: { ...env, PATH: [bin, guardBin, env.PATH].join(":"), LANG: "C.UTF-8", LC_ALL: "C.UTF-8", LANGUAGE: "en", QT_QPA_PLATFORM: "offscreen", HOME: wd + "/home", XDG_DATA_HOME: wd + "/home/share", XDG_CONFIG_HOME: wd + "/home/config", XDG_STATE_HOME: wd + "/home/state", XDG_DATA_DIRS: wd + "/data" } })
+        const out = run.stdout + run.stderr
+        const said = Object.fromEntries([...out.matchAll(/RESULT (\w+) (.*)/g)].map(m => [m[1], JSON.parse(m[2])]))
+        assert.deepEqual(out.split("\n").filter(l => /Weather(Card)?\.qml|PgWeather\.qml|weather\.js/.test(l)), [])
+        assert.deepEqual(said.first, { place: "Elsewhere", hours: 7, days: 7, shown: true, height: 400, rows: ["Elsewhere*"] }) // taller than the room: it scrolls
+        assert.deepEqual(said.found, ["Brasil", "Cabo Verde", "Portugal", "São Tomé e Príncipe", "Portugal", "Portugal"])
+        assert.deepEqual(said.after, { saved: { name: "São Paulo", admin1: "São Paulo", country: "Brasil", latitude: -23.5475, longitude: -46.63611 }, unit: "f", results: 0, rows: ["São Paulo*"] })
+        const calls = fs.readFileSync(wd + "/curl.log", "utf8").trim().split("\n").map(l => l.split("\x1f").filter(Boolean))
+        assert(calls.every(c => c.join(" ").startsWith("-fsS --max-time 15 --proto =https https://") && c.length === 6))
+        assert.deepEqual(calls.map(c => c[5].split("?")[0] + (c[5].match(/latitude=[^&]*/)?.[0] ?? "") + (c[5].includes("fahrenheit") ? " F" : "")), [
+            "https://api.open-meteo.com/v1/forecastlatitude=10", "https://geocoding-api.open-meteo.com/v1/search",
+            "https://api.open-meteo.com/v1/forecastlatitude=-23.5475", "https://api.open-meteo.com/v1/forecastlatitude=-23.5475 F"])
+        fs.rmSync(wd, { recursive: true })
+    }
+}
+
 console.log("ok")

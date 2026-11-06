@@ -20,6 +20,7 @@ wallpaper, and windows keep the rest of the screen.
 - **Island:** workspaces, clock, media and status in a floating pill at the top.
 - **Dock:** hides at the bottom edge, so windows get the full height. Hover the edge or press `Super+Z`. The gear opens a full-screen launchpad to choose its apps, from the installed list or any program in your files, and to reorder them.
 - **Control center:** sound, internet, Bluetooth, performance, calendar, notifications, monitor, settings, about, power and more, in a scrolling list with a search that finds the screens and the settings inside them.
+- **Weather:** the temperature in the island, and a card with the next hours and 7 days from Open-Meteo. Pick your city in the Weather screen (`Super+Alt+W`).
 - **Music card:** cover art, colors taken from the album, seek bar, repeat, shuffle, likes, volume and output switching.
 - **Notifications and volume:** glass cards that drop from under the island.
 - **Overview:** a strip of workspaces above the current one's windows, with live previews. Drag a window to another workspace. `Super+O`.
@@ -143,7 +144,7 @@ for `sudo`; everything else stays in your home directory. See `./install.sh --he
 | `Super+N` | Control center |
 | `Super+Alt+A` / `I` / `B` / `D` | Sound / Internet / Bluetooth / Performance |
 | `Super+Alt+C` / `V` / `J` / `E` | Calendar / Notifications / Settings / Power |
-| `Super+Alt+M` / `O` | Monitor / About |
+| `Super+Alt+M` / `O` / `W` | Monitor / About / Weather |
 | `Super+Alt+T` | Personalization |
 | `Super+Alt+K` / `N` / `R` / `U` | Shortcuts / Default apps / Window rules / Backup |
 | `Super+Shift+V` / `Super+.` | Clipboard history / Emoji |
@@ -210,9 +211,11 @@ git pull && ./install.sh   # update; settings, events and likes stay. About can 
 
 ## Privacy
 
-Atoll needs no account and sends no telemetry. Notification history, which can include message text, stays on your computer in `~/.local/state/atoll`, readable only by you; Clear all erases it. Pinned clipboard items are kept there too. Two features use the network. The update check in About asks GitHub for the latest release, only when you click it. And when you open the calendar or Settings, it
+Atoll needs no account and sends no telemetry. Notification history, which can include message text, stays on your computer in `~/.local/state/atoll`, readable only by you; Clear all erases it. Pinned clipboard items are kept there too. Three features use the network. The update check in About asks GitHub for the latest release, only when you click it. And when you open the calendar or Settings, it
 downloads public holidays from [date.nager.at](https://date.nager.at), which sees your IP address and the country and years
-requested. Results stay cached in `~/.cache/atoll/holidays`. Set `holidays` to `off` to turn this off.
+requested. Results stay cached in `~/.cache/atoll/holidays`. Set `holidays` to `off` to turn this off. Once you pick a city, the weather
+comes from [Open-Meteo](https://open-meteo.com), which sees your IP address and the city's coordinates, every 30 minutes; the
+city search sends what you type. Automatic by IP, off unless you turn it on, sends your IP address to [ipapi.co](https://ipapi.co).
 
 ## Troubleshooting
 

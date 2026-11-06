@@ -16,6 +16,7 @@ Os prints estão no [README em inglês](README.md#screenshots).
 ## O que tem
 
 - **Ilha:** áreas de trabalho, relógio, música e status em uma pílula flutuante no topo.
+- **Clima:** a temperatura na ilha e um cartão com as próximas horas e 7 dias, do Open-Meteo. Escolha sua cidade na tela Clima (`Super+Alt+W`).
 - **Dock:** se esconde na borda inferior, então as janelas ganham a altura toda. Encoste o mouse na borda ou aperte `Super+Z`. A engrenagem abre um launchpad em tela cheia para escolher os apps, da lista de instalados ou qualquer programa nos seus arquivos, e reordenar.
 - **Central:** som, internet, Bluetooth, desempenho, calendário, avisos, monitor, ajustes, sobre, energia e mais, numa lista com rolagem e uma busca que acha as telas e os ajustes dentro delas.
 - **Cartão de música:** capa, cores tiradas do álbum, barra de tempo, repetir, aleatório, curtidas, volume e troca de saída.
@@ -90,7 +91,7 @@ Para escolher o Atoll no gerenciador de login, rode também `./install.sh --sess
 | `Super+N` | Central |
 | `Super+Alt+A` / `I` / `B` / `D` | Som / Internet / Bluetooth / Desempenho |
 | `Super+Alt+C` / `V` / `J` / `E` | Calendário / Avisos / Ajustes / Energia |
-| `Super+Alt+M` / `O` | Monitor / Sobre |
+| `Super+Alt+M` / `O` / `W` | Monitor / Sobre / Clima |
 | `Super+Alt+T` | Personalização |
 | `Super+Alt+K` / `N` / `R` / `U` | Atalhos / Apps padrão / Regras de janela / Backup |
 | `Super+Shift+V` / `Super+.` | Área de transferência / Emoji |
@@ -157,9 +158,11 @@ git pull && ./install.sh   # atualiza; ajustes, eventos e curtidas ficam. Sobre 
 
 ## Privacidade
 
-O Atoll não pede conta nem envia telemetria. O histórico de avisos, que pode ter texto de mensagens, fica no seu computador em `~/.local/state/atoll`, legível só por você; Limpar tudo apaga. Dois recursos usam a rede. A busca por atualização em Sobre consulta o GitHub, só quando você clica. E ao abrir o calendário ou os Ajustes, ele baixa feriados de
+O Atoll não pede conta nem envia telemetria. O histórico de avisos, que pode ter texto de mensagens, fica no seu computador em `~/.local/state/atoll`, legível só por você; Limpar tudo apaga. Três recursos usam a rede. A busca por atualização em Sobre consulta o GitHub, só quando você clica. E ao abrir o calendário ou os Ajustes, ele baixa feriados de
 [date.nager.at](https://date.nager.at), que vê seu IP, o país e os anos pedidos. O resultado fica em `~/.cache/atoll/holidays`.
-Para desligar, deixe `holidays` em `off`.
+Para desligar, deixe `holidays` em `off`. Depois que você escolhe uma cidade, o clima vem do
+[Open-Meteo](https://open-meteo.com), que vê seu IP e as coordenadas da cidade, a cada 30 minutos; a busca de cidade envia o que
+você digita. Automático pelo IP, desligado a menos que você ligue, envia seu IP ao [ipapi.co](https://ipapi.co).
 
 ## Problemas comuns
 
