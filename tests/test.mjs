@@ -60,6 +60,55 @@ assert(D.ruleOf({ ...small, mirror: "A" }).includes('mirror = "A"')); assert(D.r
 fs.writeFileSync("/tmp/atoll-monitors.lua", D.configFile([big, { ...small, on: false }], "off", { 1: "A", 10: "B" }))
 assert.equal(spawnSync("luac", ["-p", "/tmp/atoll-monitors.lua"]).status, 0); fs.rmSync("/tmp/atoll-monitors.lua")
 
+// Window rules: what reaches Hyprland is a valid, escaped Lua table, and hypr/rules.lua loads it rule by rule.
+const R = load("rules.js", "blank,escapeRegex,luaString,normalize,hasEffect,spec,parse,upsert,remove,jsonFile,configFile,liveCode,removeCode,openApps")
+const js = v => JSON.parse(JSON.stringify(v))
+assert.equal(R.escapeRegex("org.app(1)+[x]$"), "org\\.app\\(1\\)\\+\\[x\\]\\$")
+assert.equal(R.luaString('a"b\\c\n'), '"a\\"b\\\\c\\010"')
+assert.equal(R.normalize({ class: "  " }), null); assert.equal(R.normalize({ class: "a\nb" }), null); assert.equal(R.normalize(null), null)
+const nr = R.normalize({ class: " mpv ", pin: true, maximize: true, fullscreen: true, size: [40, 300], opacity: 2, workspace: "3", monitor: "DP-1" })
+assert.deepEqual(js(nr), { ...js(R.blank("mpv")), pin: true, float: true, fullscreen: true, workspace: "3" }) // pin floats, fullscreen wins, a workspace beats a screen
+assert.deepEqual(js(R.normalize({ class: "a", size: [420, 640], opacity: 0.856, monitor: "HDMI-A-1" })), { ...js(R.blank("a")), float: true, size: [420, 640], opacity: 0.86, monitor: "HDMI-A-1" })
+assert.equal(R.normalize({ class: "a", monitor: "x; os.exit()", workspace: "0" }).monitor, "")
+assert.equal(R.hasEffect(R.blank("a")), false)
+assert.deepEqual(js(R.parse("{oops")), []); assert.deepEqual(js(R.parse('{"rules": 3}')), [])
+const parsed = R.parse(JSON.stringify({ rules: [{ class: "a", float: true }, { class: "b" }, { class: "a", noFocus: true }, 7] }))
+assert.deepEqual(js(parsed.map(r => r.class + ":" + r.float + r.noFocus)), ["a:falsetrue"]) // the last one for a class wins; one with no effect is dropped
+let rl = R.upsert([], R.normalize({ class: "a", float: true })); rl = R.upsert(rl, R.normalize({ class: "b", center: true })); rl = R.upsert(rl, R.normalize({ class: "a", pin: true }))
+assert.deepEqual(js(rl.map(r => r.class + r.pin)), ["atrue", "bfalse"]); assert.deepEqual(js(R.remove(rl, "a").map(r => r.class)), ["b"])
+assert.deepEqual(js(R.parse(R.jsonFile(rl))), js(rl))
+const odd = R.normalize({ class: 'we"ird\\app.x', float: true, center: true, size: [800, 600], pin: true, maximize: true, opacity: 0.9, noFocus: true, monitor: "eDP-1" })
+const sp = R.spec(odd)
+for (const part of ['class = "^(we\\"ird\\\\\\\\app\\\\.x)$"', 'size = "800 600"', "pin = true", "center = true", 'opacity = "0.9"', "no_initial_focus = true", 'monitor = "eDP-1"', "maximize = true"]) assert(sp.includes(part), part)
+const rdir = fs.mkdtempSync("/tmp/atoll-test-"), rulesLua = new URL("../hypr/rules.lua", import.meta.url).pathname
+const luaRun = (code, home) => spawnSync("lua", ["-e", code], { encoding: "utf8", env: { ...process.env, HOME: home ?? rdir } })
+fs.mkdirSync(rdir + "/.config/atoll", { recursive: true })
+fs.writeFileSync(rdir + "/.config/atoll/rules.lua", R.configFile(R.upsert(rl, odd)))
+assert.equal(spawnSync("luac", ["-p", rdir + "/.config/atoll/rules.lua"]).status, 0)
+for (const code of [R.liveCode(odd), R.removeCode(odd.class)]) { fs.writeFileSync(rdir + "/eval.lua", code); assert.equal(spawnSync("luac", ["-p", rdir + "/eval.lua"]).status, 0, code) }
+// The real hypr/rules.lua, against a stand-in hl that records the specs. Hyprland's regex is RE2; JS's agrees on these.
+const stub = `seen = {}; off = {}; hl = { layer_rule = function() end, window_rule = function(s) assert(type(s) == "table" and s.match, "bad spec"); seen[#seen + 1] = s; return { set_enabled = function(self, on) off[#off + 1] = s.name .. "=" .. tostring(on) end } end }`
+const show = `local out = {}; for k in pairs(atoll_user_rules or {}) do out[#out + 1] = k end; table.sort(out); print("KEYS " .. table.concat(out, ",")); for _, s in ipairs(seen) do if s.name then print("RULE " .. s.name .. " " .. s.match.class) end end; print("OFF " .. table.concat(off, ","))`
+const boot = `${stub}; dofile(${JSON.stringify(rulesLua)}); `
+const loaded = luaRun(boot + show)
+assert.equal(loaded.status, 0, loaded.stderr)
+assert(loaded.stdout.includes('KEYS a,b,we"ird\\app.x\n'), loaded.stdout)
+const userRe = new RegExp(loaded.stdout.split("\n").find(l => l.startsWith('RULE atoll-user: we"ird')).split(" ").pop())
+assert(userRe.test('we"ird\\app.x') && !userRe.test('we"ird\\appXx') && !userRe.test('xwe"ird\\app.x'))
+// Live: replacing a rule switches the old one off, and so does removing one.
+const live = luaRun(boot + `${R.liveCode(R.normalize({ class: "a", noFocus: true }))}; ${R.removeCode("b")}; ${R.removeCode("never")}; ${show}`)
+assert.equal(live.status, 0, live.stderr); assert(live.stdout.includes('KEYS a,we"ird'), live.stdout); assert(live.stdout.includes("OFF atoll-user: a=false,atoll-user: b=false\n"), live.stdout)
+assert.equal(luaRun(`${stub}; ${R.liveCode(odd)}; ${R.removeCode("a")}; ${show}`).status, 0) // before any file was loaded
+// A broken entry loads nothing in its place, and a broken file or none at all is no error.
+fs.writeFileSync(rdir + "/.config/atoll/rules.lua", 'return { 7, { app = "x", rule = "nope" }, { rule = { match = { class = "y" } } }, { app = "z", rule = { match = { class = "^(z)$" }, float = true } } }')
+const broken = luaRun(boot + show)
+assert.equal(broken.status, 0, broken.stderr); assert(broken.stdout.includes("KEYS z\n"), broken.stdout)
+fs.writeFileSync(rdir + "/.config/atoll/rules.lua", "return {{{")
+assert.equal(luaRun(boot + show).status, 0)
+assert.equal(luaRun(boot + show, rdir + "/nobody").status, 0)
+fs.rmSync(rdir, { recursive: true })
+assert.deepEqual(js(R.openApps([{ class: "x", initialClass: "org.X", title: "A", mapped: true, size: [10, 20] }, { class: "org.X", initialClass: "org.X", mapped: true }, { class: "", mapped: true }, { class: "h", mapped: false }])), [{ class: "org.X", title: "A", size: [10, 20] }])
+
 // Scripts take values from settings files, so they must refuse anything that could reach a path or a URL.
 const script = (name, ...args) => spawnSync(new URL("../scripts/" + name, import.meta.url).pathname, args).status
 assert.equal(script("holidays", "../x", "2026"), 2)
