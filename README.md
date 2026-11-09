@@ -5,6 +5,8 @@
   <p>
     <a href="https://github.com/brayanspagnol/atoll/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/brayanspagnol/atoll"></a>
     <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/github/license/brayanspagnol/atoll"></a>
+    <img alt="Platform: Linux" src="https://img.shields.io/badge/platform-Linux-blue">
+    <img alt="Language: QML" src="https://img.shields.io/badge/language-QML-41CD52">
   </p>
   <p><a href="README.pt-BR.md">Leia em português</a></p>
 </div>
