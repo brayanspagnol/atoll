@@ -908,6 +908,226 @@ ShellRoot {
     fs.rmSync(root, { recursive: true })
 }
 
+// Installed apps: parsing what scripts/apps prints, hostile lines included, search, counts and sizes.
+{
+    const I = (() => {
+        const ctx = { P }; vm.createContext(ctx)
+        vm.runInContext(fs.readFileSync(new URL("../shell/installed.js", import.meta.url), "utf8").replace(".pragma library", "").replace(/^\.import .*$/m, "") + ";this.x={parse,counts,filter,size,commandLine}", ctx)
+        return ctx.x
+    })()
+    const tsv = ["editor\tPhoto Editor\tphoto\tsystem\tphoto-editor\t432013312\t", "game\tCorrida Rápida\t\tflatpak\torg.example.Game\t3800000000\t",
+        "term\tTerminal\tkitty\tsystem\tkitty\t9437184\tatoll", "tiny\t\t\tappimage\t/home/u/Tiny.AppImage\t2048\t",
+        "dup\tSame Again\t\tsystem\tphoto-editor\t1\t", // a second line for the same package
+        "bad\tBad\t\tsnap\tx\t1\t", "bad\tBad\t\tsystem\tx\t-5\t", "bad\tBad\t\tsystem\tx\t1e9\t", "bad\tBad\t\tsystem\tx\t12\tmaybe",
+        "bad\tBad\t\tsystem\t\t12\t", "\tBad\t\tsystem\tx\t12\t", "bad\tBad\tsystem\tx\t12", "bad\tBad\t\tsystem\tx\t12\t\textra", "", "garbage"].join("\n")
+    const apps = I.parse(tsv, { editor: "Editor de fotos" })
+    assert.deepEqual(apps.map(a => a.name + ":" + a.size + ":" + a.why), ["Corrida Rápida:3800000000:", "Editor de fotos:432013312:", "Terminal:9437184:atoll", "tiny:2048:"])
+    assert.deepEqual(plain(I.parse(null)), []); assert.deepEqual(plain(I.parse("x\ty")), [])
+    assert.deepEqual(plain(I.counts(apps)), { all: 4, system: 2, flatpak: 1, appimage: 1 })
+    const names = (q, s) => I.filter(apps, q, s).map(a => a.id).join()
+    assert.equal(names("", "all"), "game,editor,term,tiny"); assert.equal(names("RAPIDA", "all"), "game"); assert.equal(names(" fotos ", "all"), "editor")
+    assert.equal(names("", "system"), "editor,term"); assert.equal(names("term", "flatpak"), ""); assert.equal(names("tin", "appimage"), "tiny")
+    assert.deepEqual([I.size(432013312, ","), I.size(3800000000, ","), I.size(9437184, "."), I.size(500)], ["412 MB", "3,5 GB", "9.0 MB", "500 B"])
+    assert.equal(I.commandLine(["sudo", "pacman", "-Rns", "photo-editor"]), "sudo pacman -Rns photo-editor")
+    assert.equal(I.commandLine(["gio", "trash", "--", "/home/u/My App's.AppImage"]), "gio trash -- '/home/u/My App'\\''s.AppImage'")
+
+    // The terminal helper: every value reaches the program as one argument, and nothing in it runs.
+    const Tm = load("term.js", "argv")
+    const td = fs.mkdtempSync("/tmp/atoll-test-")
+    fs.writeFileSync(td + "/xdg-terminal-exec", `#!/bin/sh\nfor a; do printf '%s\\037' "$a"; done > '${td}/term.log'\nexec "$@"\n`, { mode: 0o755 })
+    const argv = Tm.argv(["printf", "%s|", "$(touch " + td + "/pwned)", "a b", "x;y"], "Press Enter to close.")
+    const ran = spawnSync(argv[0], argv.slice(1), { encoding: "utf8", input: "\n", env: { ...process.env, PATH: td + ":" + process.env.PATH } })
+    assert.equal(ran.stdout, `$(touch ${td}/pwned)|a b|x;y|\nPress Enter to close. `); assert(!fs.existsSync(td + "/pwned"))
+    assert.deepEqual(fs.readFileSync(td + "/term.log", "utf8").split("\x1f").slice(0, 4), ["sh", "-c", '"$@"; printf "\\n%s " "$0"; read -r _', "Press Enter to close."])
+    assert.deepEqual(plain(Tm.argv(["claude", "/login"])).slice(4), ["claude", "/login"]) // no hold: the Assistant's login, as before
+    fs.rmSync(td, { recursive: true })
+}
+
+// scripts/apps on a fake system: fake pacman, flatpak and gio first on PATH, desktop files in a throwaway folder.
+// The real package manager is never asked, and nothing real is uninstalled.
+const fakeApps = () => {
+    const root = fs.mkdtempSync("/tmp/atoll-test-")
+    const bin = root + "/bin", home = root + "/home", sys = root + "/data/applications", own = home + "/share/applications"
+    for (const d of [bin, root + "/qsbin", root + "/qi", sys, own, home + "/Apps", home + "/.config/atoll"]) fs.mkdirSync(d, { recursive: true })
+    const desk = (dir, id, body) => fs.writeFileSync(`${dir}/${id}.desktop`, `[Desktop Entry]\nType=Application\n${body}\n`)
+    desk(sys, "photo-editor", "Name=Photo Editor\nIcon=photo-editor\nExec=photo-editor %U")
+    desk(sys, "photo-viewer", "Name=Photo Viewer\nExec=photo-viewer") // the same package's second app
+    desk(own, "photo-editor", "Name=Photo Editor\nIcon=photo-editor\nExec=photo-editor --mine %U") // the person's copy, owned by nobody
+    desk(sys, "term", "Name=Terminal\nExec=kitty")
+    desk(sys, "shell-core", "Name=Shell Core\nExec=qs")
+    desk(sys, "web", "Name=Web\nExec=web %u")
+    desk(sys, "lib-gui", "Name=Lib GUI\nExec=lib-gui")
+    desk(sys, "hidden", "Name=Hidden\nExec=hidden\nNoDisplay=true")
+    desk(sys, "org.example.Game", "Name=Corrida Rápida\nExec=flatpak run org.example.Game\nX-Flatpak=org.example.Game")
+    desk(sys, "org.example.Sys", "Name=Sys Tool\nExec=flatpak run org.example.Sys\nX-Flatpak=org.example.Sys")
+    desk(sys, "org.example.Gone", "Name=Gone\nExec=gone\nX-Flatpak=org.example.Gone") // exported, no longer installed
+    const image = home + "/Apps/My App.AppImage"
+    fs.writeFileSync(image, Buffer.alloc(2048))
+    desk(own, "myapp", `Name=My App\nExec="${image}" %U\n\n[Desktop Action new]\nName=Not the name\nExec=/elsewhere/Other.AppImage`)
+    desk(own, "ghost", `Name=Ghost\nExec=${home}/Apps/missing.AppImage`)
+    fs.writeFileSync(root + "/outside.AppImage", "x"); fs.symlinkSync(root + "/outside.AppImage", home + "/Apps/link.AppImage")
+    fs.writeFileSync(home + "/.config/atoll/apps.json", JSON.stringify({ browser: "web" }))
+    const owners = { [sys + "/photo-editor.desktop"]: "photo-editor", [sys + "/photo-viewer.desktop"]: "photo-editor", [sys + "/term.desktop"]: "kitty",
+        [sys + "/shell-core.desktop"]: "shell-core", [sys + "/web.desktop"]: "web-browser", [sys + "/lib-gui.desktop"]: "libthing", [sys + "/hidden.desktop"]: "hidden-pkg", [root + "/qsbin/qs"]: "shell-core" }
+    fs.writeFileSync(root + "/owners", Object.entries(owners).map(e => e.join("\t")).join("\n") + "\n")
+    const qi = (name, size, req) => fs.writeFileSync(`${root}/qi/${name}`, `Name            : ${name}\nVersion         : 1.0-1\nDescription     : A fake: package\nDepends On      : glibc\nRequired By     : ${req}\nOptional For    : None\nInstalled Size  : ${size}\nInstall Reason  : Explicitly installed\n`)
+    qi("photo-editor", "412.00 MiB", "None"); qi("kitty", "9.00 MiB", "None"); qi("shell-core", "1.50 MiB", "None"); qi("web-browser", "310.00 MiB", "None"); qi("libthing", "2.00 KiB", "other-thing  more-thing")
+    fs.writeFileSync(bin + "/pacman", `#!/bin/sh
+printf '%s\\n' "$*" >> '${root}/pacman.log'
+case "$1" in
+-Qo) shift; [ "$1" = -- ] && shift
+    for f; do p=$(awk -F'\\t' -v f="$f" '$1 == f { print $2 }' '${root}/owners'); if [ -n "$p" ]; then echo "$f is owned by $p 1.0-1"; else echo "error: No package owns $f" >&2; fi; done ;;
+-Qi) shift; [ "$1" = -- ] && shift
+    for p; do cat '${root}/qi/'"$p" || exit 1; echo; done ;;
+*) echo "the fake pacman only reads" >&2; exit 1 ;;
+esac
+`, { mode: 0o755 })
+    fs.writeFileSync(bin + "/flatpak", `#!/bin/sh
+printf '%s\\n' "$*" >> '${root}/flatpak.log'
+case "$1" in
+list) case "$*" in
+    *installation*) printf 'org.example.Sys\\tsystem\\n'; [ -e '${root}/game-gone' ] || printf 'org.example.Game\\tsystem\\norg.example.Game\\tuser\\n' ;;
+    *) [ -e '${root}/game-gone' ] || printf 'org.example.Game\\t3.8\\302\\240GB\\n'; printf 'org.example.Sys\\t12.5 MB\\n' ;;
+    esac ;;
+uninstall) touch '${root}/game-gone' ;;
+*) exit 1 ;;
+esac
+`, { mode: 0o755 })
+    fs.writeFileSync(bin + "/gio", `#!/bin/sh\nfor a; do printf '%s\\037' "$a"; done >> '${root}/gio.log'\necho >> '${root}/gio.log'\n`, { mode: 0o755 })
+    fs.writeFileSync(root + "/qsbin/qs", "#!/bin/sh\n", { mode: 0o755 })
+    return { root, home, image, own }
+}
+{
+    const { root, home, image, own } = fakeApps()
+    const env = { ...clean, PATH: [root + "/qsbin", root + "/bin", process.env.PATH].join(":"), HOME: home, XDG_DATA_HOME: home + "/share", XDG_CONFIG_HOME: home + "/config", XDG_DATA_DIRS: root + "/data" }
+    const apps = (...args) => spawnSync(new URL("../scripts/apps", import.meta.url).pathname, args, { encoding: "utf8", env })
+    const listed = apps("list")
+    assert.equal(listed.status, 0, listed.stderr)
+    assert.deepEqual(listed.stdout.split("\n").filter(Boolean).sort(), [
+        "lib-gui\tLib GUI\t\tsystem\tlibthing\t2048\trequired",
+        `myapp\tMy App\t\tappimage\t${image}\t2048\t`,
+        "org.example.Game\tCorrida Rápida\t\tflatpak\torg.example.Game\t3800000000\t",
+        "org.example.Sys\tSys Tool\t\tflatpak\torg.example.Sys\t12500000\t",
+        "photo-editor\tPhoto Editor\tphoto-editor\tsystem\tphoto-editor\t432013312\t", // one line for the package, its own app's name
+        "shell-core\tShell Core\t\tsystem\tshell-core\t1572864\tatoll", // owns qs
+        "term\tTerminal\t\tsystem\tkitty\t9437184\tatoll",
+        "web\tWeb\t\tsystem\tweb-browser\t325058560\tdefault"
+    ])
+    const calls = fs.readFileSync(root + "/pacman.log", "utf8").trim().split("\n")
+    assert.deepEqual(calls.map(c => c.split(" ")[0]), ["-Qo", "-Qi"]) // one call each, for everything
+    assert.equal(calls[1], "-Qi -- kitty libthing photo-editor shell-core web-browser")
+
+    const cmd = (...args) => { const r = apps("uninstall-cmd", ...args); return r.status + ":" + r.stdout }
+    assert.equal(cmd("system", "photo-editor"), "0:sudo\npacman\n-Rns\nphoto-editor\n")
+    for (const pkg of ["kitty", "shell-core", "web-browser", "libthing"]) assert.equal(cmd("system", pkg), "3:", pkg) // protected
+    for (const pkg of ["a;b", "a b", "../x", "photo-editor\nkitty", "-rf", "", "Photo", "$(id)"]) assert.equal(cmd("system", pkg), "2:", JSON.stringify(pkg))
+    assert.equal(cmd("system", "glibc"), "1:"); assert.equal(cmd("system", "hidden-pkg"), "1:") // not an app in the list
+    assert.equal(cmd("flatpak", "org.example.Game"), "0:flatpak\nuninstall\n--user\n--noninteractive\norg.example.Game\n") // the user's copy first
+    assert.equal(cmd("flatpak", "org.example.Sys"), "0:flatpak\nuninstall\n--system\n--noninteractive\norg.example.Sys\n")
+    for (const ref of ["org.ex;rm", "../x", "-x", "a b", "org.example.Game\nx"]) assert.equal(cmd("flatpak", ref), "2:", JSON.stringify(ref))
+    assert.equal(cmd("flatpak", "org.example.Gone"), "1:")
+    assert.equal(cmd("appimage", image), `0:gio\ntrash\n--\n${image}\n${own}/myapp.desktop\n`)
+    for (const ref of [`${home}/Apps/../Apps/My App.AppImage`, root + "/outside.AppImage", home + "/Apps/link.AppImage", home + "/Apps/missing.AppImage", image + "\n", "relative/My App.AppImage", home + "/.config/atoll/apps.json"])
+        assert.equal(cmd("appimage", ref), "2:", JSON.stringify(ref))
+    assert.equal(cmd("snap", "x"), "2:"); assert.equal(cmd("", ""), "2:")
+
+    assert.equal(apps("uninstall", "system", "photo-editor").status, 2) // sudo belongs in a terminal
+    assert.equal(apps("uninstall", "flatpak", "org.ex;rm").status, 2)
+    assert.equal(apps("uninstall", "appimage", image).status, 0)
+    assert.deepEqual(fs.readFileSync(root + "/gio.log", "utf8").split("\n")[0].split("\x1f"), ["trash", "--", image, own + "/myapp.desktop", ""])
+    assert.equal(apps("uninstall", "flatpak", "org.example.Game").status, 0)
+    assert(fs.readFileSync(root + "/flatpak.log", "utf8").includes("uninstall --user --noninteractive org.example.Game\n"))
+    assert(!apps("list").stdout.includes("org.example.Game"))
+    assert(fs.readFileSync(root + "/pacman.log", "utf8").split("\n").every(c => !c || /^-Q[oi] /.test(c)), "the fake pacman was only read")
+
+    // The lists the script keeps by hand still match their sources.
+    const script = fs.readFileSync(new URL("../scripts/apps", import.meta.url), "utf8"), installer = fs.readFileSync(new URL("../install.sh", import.meta.url), "utf8")
+    const words = (text, name) => text.match(new RegExp(`^${name}=\\(([^)]*)\\)`, "m"))[1].split(/\s+/).filter(Boolean)
+    assert.deepEqual(words(script, "types"), [...A.allTypes()])
+    for (const p of words(installer, "packages")) assert(words(script, "needed").includes(p), p)
+    fs.rmSync(root, { recursive: true })
+}
+
+// The Installed page: rows, filters and the dialog with the exact command, on the fake system.
+if (haveQs) {
+    const { root, image, own } = fakeApps()
+    fs.cpSync(new URL("../shell/", import.meta.url), root, { recursive: true })
+    const scripts = root + "/home/.local/share/atoll/scripts"
+    fs.mkdirSync(scripts, { recursive: true })
+    for (const s of ["apps", "open-app"]) fs.cpSync(new URL("../scripts/" + s, import.meta.url), scripts + "/" + s)
+    // The terminal only says what it was asked to run: sudo never runs here.
+    fs.writeFileSync(root + "/bin/xdg-terminal-exec", `#!/bin/sh\nfor a; do printf '%s\\037' "$a"; done > '${root}/term.log'\n`, { mode: 0o755 })
+    const page = runQml(root, `import QtQuick
+import Quickshell
+ShellRoot {
+    property int step: 0
+    FloatingWindow { implicitWidth: 1100; implicitHeight: 900; PgInstalled { id: pg; anchors.fill: parent } }
+    function all(item, test, out) { for (const c of item.children) { if (c.visible && test(c)) out.push(c); all(c, test, out) } return out }
+    function say(tag, v) { console.log("RESULT " + tag + " " + JSON.stringify(v)) }
+    function btn(item, a11y) { return all(item, c => c.a11y === a11y, [])[0] }
+    function rows() {
+        return all(pg.contentItem, c => c.app !== undefined && c.meta !== undefined, [])
+            .map(r => r.app.name + "|" + r.meta + "|" + (btn(r, "Uninstall: " + r.app.name) ? "button" : lock(r)))
+    }
+    function lock(row) { // the lock and the text beside it
+        const ic = all(row, c => c.name === "lock", [])[0]
+        return ic ? "lock " + all(ic.parent, c => typeof c.text === "string", [])[0].text : ""
+    }
+    function dialog() {
+        const text = re => all(pg, c => typeof c.text === "string" && re.test(c.text) && c.a11y === undefined, [])[0]?.text ?? null
+        return { title: text(/^Uninstall .*\\?$/), frees: text(/^Frees /), command: all(pg, c => c.mono === true, [])[0]?.text ?? null,
+            buttons: all(pg, c => c.a11y !== undefined && (c.text === "Cancel" || c.variant === "solid"), []).map(c => c.text), focus: btn(pg, "Cancel")?.focus ?? false }
+    }
+    Timer {
+        running: true; repeat: true; interval: 400
+        onTriggered: {
+            step++
+            if (step === 6) {
+                say("rows", rows())
+                say("chips", all(pg.contentItem, c => c.on !== undefined && c.modelData, []).map(c => c.modelData.label.arg(pg.counts[c.modelData.id]) + (c.on ? "*" : "")))
+                pg.source = "flatpak"
+            }
+            if (step === 7) {
+                say("flatpaks", rows())
+                pg.source = "all"
+                all(pg.contentItem, c => c.placeholderText === "Search app", [])[0].text = "RAPIDA"
+            }
+            if (step === 8) {
+                say("search", rows())
+                all(pg.contentItem, c => c.placeholderText === "Search app", [])[0].text = ""
+                btn(pg.contentItem, "Uninstall: Photo Editor").clicked()
+            }
+            if (step === 10) { say("system", dialog()); btn(pg, "Cancel").clicked() }
+            if (step === 11) { say("closed", pg.target === null); btn(pg.contentItem, "Uninstall: My App").clicked() }
+            if (step === 13) { say("appimage", dialog()); btn(pg, "Cancel").clicked(); btn(pg.contentItem, "Uninstall: Corrida Rápida").clicked() }
+            if (step === 15) { say("flatpak", dialog()); all(pg, c => c.variant === "solid", [])[0].clicked() }
+            if (step === 20) { say("after", { rows: rows().length, closed: pg.target === null, failed: pg.failed }); btn(pg.contentItem, "Uninstall: Photo Editor").clicked() }
+            if (step === 22) all(pg, c => c.variant === "solid", [])[0].clicked()
+            if (step === 25) { say("terminal", { closed: pg.target === null, busy: pg.busy }); Qt.quit() }
+        }
+    }
+}
+`, { "Ui.qml": `pragma Singleton\nimport Quickshell\nSingleton { property bool open: true; property var screen; property string revealLabel: ""; property int revealCount: 0 }\n` }, [root + "/bin"])
+    assert.deepEqual(page.log.split("\n").filter(l => /(PgInstalled|Page|Btn|Fld)\.qml|QQuickItem|TypeError|ReferenceError/.test(l)), [])
+    assert.deepEqual(page.rows, [
+        "Corrida Rápida|Flatpak · 3.5 GB|button", "Photo Editor|System · 412 MB|button", "Web|System · 310 MB|lock Change the default first",
+        "Sys Tool|Flatpak · 11.9 MB|button", "Terminal|System · 9.0 MB · Atoll needs it|lock Protected",
+        "Shell Core|System · 1.5 MB|button", // here the real qs is not the fake shell-core's
+        "Lib GUI|System · 2.0 KB|lock Other packages need it", "My App|AppImage · 2.0 KB|button" // largest first, then by name
+    ])
+    assert.deepEqual(page.chips, ["All 8*", "System 5", "Flatpak 2", "AppImage 1"])
+    assert.deepEqual(page.flatpaks.length, 2); assert.deepEqual(page.search, ["Corrida Rápida|Flatpak · 3.5 GB|button"])
+    assert.deepEqual(page.system, { title: "Uninstall Photo Editor?", frees: "Frees 412 MB", command: "sudo pacman -Rns photo-editor", buttons: ["Cancel", "Open terminal and uninstall"], focus: true })
+    assert.equal(page.closed, true)
+    assert.deepEqual(page.appimage, { title: "Uninstall My App?", frees: "Frees 2.0 KB", command: `gio trash -- '${image}' ${own}/myapp.desktop`, buttons: ["Cancel", "Uninstall"], focus: true })
+    assert.deepEqual(page.flatpak, { title: "Uninstall Corrida Rápida?", frees: "Frees 3.5 GB", command: "flatpak uninstall --user --noninteractive org.example.Game", buttons: ["Cancel", "Uninstall"], focus: true })
+    assert.deepEqual(page.after, { rows: 7, closed: true, failed: false })
+    assert.deepEqual(page.terminal, { closed: true, busy: false })
+    assert.deepEqual(fs.readFileSync(root + "/term.log", "utf8").split("\x1f"), ["sh", "-c", '"$@"; printf "\\n%s " "$0"; read -r _', "Press Enter to close.", "sudo", "pacman", "-Rns", "photo-editor", ""])
+    assert(fs.readFileSync(root + "/pacman.log", "utf8").split("\n").every(c => !c || /^-Q[oi] /.test(c)))
+    fs.rmSync(root, { recursive: true })
+}
+
 // Backup: export, then import on "another computer", each with its own throwaway HOME.
 {
     const root = fs.mkdtempSync("/tmp/atoll-test-")

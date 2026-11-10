@@ -9,6 +9,7 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - Assistant: `Super+A`, or the mascot Lagu in the island, stretches the island into a bar where you ask about your computer. The steps it takes, its answer and visual cards (a ring, bars and up to three buttons that open a screen or an app) drop in below, and it asks before changing files. It uses the Claude Code, Cursor or Codex command line already logged in on this computer, so there are no API keys to paste. While it works with the bar closed, Lagu in the island shows it, then says when it is done. A new Assistant screen (`Super+Alt+G`) picks which one answers and shows how to install the others.
+- Installed apps: a screen under Applications lists the apps from the system, Flatpak and AppImage, largest first, with search and a filter per source, and uninstalls them. The dialog shows the exact command first. A system package opens a terminal with `sudo pacman -Rns` ready, so you type your password there and never in Atoll; Flatpak and AppImage apps go without a password, the AppImage file and its launcher to the trash. Apps Atoll needs, your default apps and packages that others depend on are protected.
 
 ### Fixed
 

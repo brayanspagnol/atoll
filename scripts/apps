@@ -1,0 +1,213 @@
+#!/usr/bin/env bash
+# Installed apps for Atoll's Installed page, and how each one is uninstalled. Nothing is cached.
+#   apps list                            one line per app: desktop id, name, icon, source (system|flatpak|appimage), ref
+#                                        (package, Flatpak app id or AppImage path), size in bytes, and why it is protected
+#                                        (atoll|default|required), empty if it is not. Tab separated.
+#   apps uninstall-cmd SOURCE REF        the exact command, one argument per line.
+#                                        Exit 2: not a valid name; 1: not an installed app; 3: protected.
+#   apps uninstall flatpak|appimage REF  runs that command. System packages need sudo: the shell runs theirs in a
+#                                        terminal, where the person types the password.
+set -u
+here=$(dirname -- "$(readlink -f -- "$0")")
+
+# shell/apps.js's MIME types (tests check they match): the app the system opens one of them with is a default.
+types=(x-scheme-handler/https x-scheme-handler/http text/html inode/directory text/plain image/png image/jpeg image/webp
+    image/gif video/mp4 video/x-matroska video/webm audio/mpeg audio/flac audio/ogg x-scheme-handler/mailto)
+# What Atoll runs on: install.sh's packages (tests check), the terminal it falls back to, and the base system.
+needed=(hyprland quickshell hyprlock hypridle hyprsunset xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
+    polkit-gnome networkmanager bluez bluez-utils pipewire wireplumber libnotify cliphist wl-clipboard
+    grim slurp jq brightnessctl ttf-jetbrains-mono-nerd papirus-icon-theme qt6-svg curl noto-fonts noto-fonts-cjk
+    noto-fonts-emoji playerctl zenity xdg-utils kitty xdg-terminal-exec base glibc systemd linux pacman sudo bash)
+S=$'\037' # between fields inside the script: unlike a tab, read keeps empty ones
+
+# Names start with a letter or digit, so none reads as an option.
+valid_pkg() { [[ $1 =~ ^[a-z0-9@_+][a-z0-9@._+-]*$ ]]; }
+valid_flatpak() { [[ $1 =~ ^[A-Za-z0-9_][A-Za-z0-9._-]*$ ]]; }
+# A regular file in HOME named by its real path: no links, no "..", no line breaks.
+valid_appimage() {
+    [[ $1 != *$'\n'* && ${1,,} == *.appimage && $1 == "$HOME"/* && -f $1 && ! -L $1 ]] &&
+        [[ $(realpath -e -- "$1" 2>/dev/null) == "$1" ]]
+}
+
+dirs() {
+    local IFS=: d
+    for d in "${XDG_DATA_HOME:-$HOME/.local/share}" ${XDG_DATA_DIRS:-/usr/local/share:/usr/share}; do
+        [[ -d $d/applications ]] && printf '%s\n' "$d/applications"
+    done
+}
+
+# "app" id name icon kind(file|flatpak|appimage) ref file, for the first file of each visible id, in XDG order;
+# "alt" id file for the later files of an id, which may belong to the package when the first is a user's copy.
+# shortcut: only top-level .desktop files, as in open-app; add subfolders if a real app needs it.
+# shortcut: an Exec with escapes inside quotes is read as written; no AppImage launcher seen uses them.
+entries() {
+    local files=() d
+    shopt -s nullglob
+    while read -r d; do files+=("$d"/*.desktop); done < <(dirs)
+    ((${#files[@]})) || return 0
+    awk -v OFS="$S" '
+        function flush(   id, exe, kind) {
+            if (file == "") return
+            id = file; sub(/.*\//, "", id); sub(/\.desktop$/, "", id)
+            if (id in seen) { print "alt", id, file; return }
+            seen[id] = 1
+            if (type != "Application" || hide) return
+            exe = exec
+            if (exe ~ /^"/) { exe = substr(exe, 2); sub(/".*/, "", exe) } else sub(/[ \t].*/, "", exe)
+            kind = flat != "" ? "flatpak" : tolower(exe) ~ /\.appimage$/ ? "appimage" : "file"
+            print "app", id, name, icon, kind, kind == "flatpak" ? flat : kind == "appimage" ? exe : file, file
+        }
+        FNR == 1 { flush(); file = FILENAME; sec = 0; type = name = icon = exec = flat = ""; hide = 0 }
+        { sub(/\r$/, "") }
+        /^\[/ { sec = $0 == "[Desktop Entry]"; next }
+        !sec || !index($0, "=") { next }
+        {
+            key = substr($0, 1, index($0, "=") - 1); sub(/[ \t]+$/, "", key)
+            val = substr($0, index($0, "=") + 1); sub(/^[ \t]+/, "", val); gsub(/[\t\037]/, " ", val)
+        }
+        key == "Type" { type = val }
+        key == "Name" { name = val }
+        key == "Icon" { icon = val }
+        key == "Exec" { exec = val }
+        key == "X-Flatpak" { flat = val }
+        (key == "NoDisplay" || key == "Hidden") && val == "true" { hide = 1 }
+        END { flush() }
+    ' "${files[@]}"
+}
+
+# 2 when the id is the package's name, 1 when its last part is (org.gnome.Nautilus for nautilus), else 0.
+fit() { local id=${1,,} p=${2,,}; [[ $id == "$p" ]] && echo 2 || { [[ ${id##*.} == "$p" ]] && echo 1 || echo 0; }; }
+
+list() {
+    local k id name icon kind ref file p pkg n why
+    local -a rows bins=()
+    local -A dflt owner pkgof size req strong main score keep flat fsize
+    # The apps Atoll or the system opens things with; slow (xdg-mime), so it runs while pacman does.
+    local state
+    exec {state}< <("$here/open-app" --state "${types[@]}" 2>/dev/null)
+    mapfile -t rows < <(entries)
+    for p in "${needed[@]}"; do strong[$p]=1; done
+
+    if command -v pacman >/dev/null; then
+        local -a paths=() pkgs
+        for k in "${rows[@]}"; do
+            IFS=$S read -r kind id name icon p ref file <<<"$k"
+            [[ $kind == alt ]] && paths+=("$name") # an alt line's third field is its file
+            [[ $kind == app && $p == file ]] && paths+=("$ref")
+        done
+        for p in qs hyprctl Hyprland; do p=$(command -v "$p") && bins+=("$(readlink -f -- "$p")"); done
+        # One call for every file: "PATH is owned by PKG VERSION"; unowned files only complain on stderr.
+        while IFS=$S read -r file pkg; do owner[$file]=$pkg; done < <(
+            ((${#paths[@]} + ${#bins[@]})) && LC_ALL=C pacman -Qo -- "${paths[@]}" "${bins[@]}" 2>/dev/null |
+                sed -nE "s/^(.*) is owned by ([^ ]+) [^ ]+\$/\\1$S\\2/p")
+        for p in "${bins[@]}"; do [[ -n ${owner[$p]:-} ]] && strong[${owner[$p]}]=1; done
+        for k in "${rows[@]}"; do
+            IFS=$S read -r kind id name icon p ref file <<<"$k"
+            if [[ $kind == app && $p == file && -n ${owner[$ref]:-} ]]; then pkgof[$id]=${owner[$ref]}
+            elif [[ $kind == alt && -z ${pkgof[$id]:-} && -n ${owner[$name]:-} ]]; then pkgof[$id]=${owner[$name]}; fi
+        done
+        if ((${#pkgof[@]})); then
+            # Sizes in pacman's binary units; Required By is "None" when nothing depends on the package.
+            while IFS=$S read -r pkg n p; do size[$pkg]=$n; req[$pkg]=$p; done < <(
+                mapfile -t pkgs < <(printf '%s\n' "${pkgof[@]}" | sort -u)
+                LC_ALL=C pacman -Qi -- "${pkgs[@]}" 2>/dev/null | awk -F' *: ' -v OFS="$S" '
+                    $1 == "Name" { n = $2 }
+                    $1 == "Required By" { r[n] = $2 != "None" }
+                    $1 == "Installed Size" {
+                        split($2, a, " ")
+                        s[n] = a[1] * (a[2] == "KiB" ? 1024 : a[2] == "MiB" ? 1048576 : a[2] == "GiB" ? 1073741824 : a[2] == "TiB" ? 1099511627776 : 1)
+                    }
+                    END { for (n in s) print n, sprintf("%.0f", s[n]), r[n] + 0 }')
+        fi
+    fi
+
+    if command -v flatpak >/dev/null; then
+        # Sizes come rounded, in decimal units ("1.2 GB").
+        while IFS=$S read -r id n; do flat[$id]=1; fsize[$id]=$n; done < <(
+            LC_ALL=C flatpak list --app --columns=application,size 2>/dev/null | awk -F'\t' -v OFS="$S" '{
+                s = $2; gsub(/\302\240/, " ", s); split(s, a, " ")
+                print $1, sprintf("%.0f", a[1] * (a[2] == "kB" ? 1e3 : a[2] == "MB" ? 1e6 : a[2] == "GB" ? 1e9 : a[2] == "TB" ? 1e12 : 1))
+            }')
+    fi
+
+    # The "entry" lines that follow are of no use here, and slow: stop there.
+    while IFS=$'\t' read -r k _ id && [[ $k != entry ]]; do
+        [[ ($k == atoll || $k == default) && -n $id ]] && dflt[$id]=1
+    done <&"$state"
+    exec {state}<&-
+
+    # One line per package, Flatpak or AppImage: the app whose id fits the package best, else the first.
+    for k in "${rows[@]}"; do
+        IFS=$S read -r kind id name icon p ref file <<<"$k"
+        [[ $kind == app ]] || continue
+        case $p in
+            file) ref=${pkgof[$id]:-}; [[ -n $ref && -n ${size[$ref]:-} ]] || continue; p=system ;;
+            flatpak) [[ -n ${flat[$ref]:-} ]] || continue ;;
+            appimage) [[ -f $ref ]] || continue ;;
+        esac
+        [[ -n ${dflt[$id]:-} ]] && keep[$p$S$ref]=1
+        n=$(fit "$id" "${ref##*/}")
+        if [[ -z ${main[$p$S$ref]:-} || $n -gt ${score[$p$S$ref]} ]]; then main[$p$S$ref]=$id$S$name$S$icon; score[$p$S$ref]=$n; fi
+    done
+    for k in "${!main[@]}"; do
+        p=${k%%"$S"*} ref=${k#*"$S"}
+        IFS=$S read -r id name icon <<<"${main[$k]}"
+        case $p in
+            system) n=${size[$ref]} ;;
+            flatpak) n=${fsize[$ref]:-0} ;;
+            appimage) n=$(stat -c %s -- "$ref") ;;
+        esac
+        why=""
+        if [[ $p == system && -n ${strong[$ref]:-} ]]; then why=atoll
+        elif [[ -n ${keep[$k]:-} ]]; then why=default
+        elif [[ $p == system && ${req[$ref]:-0} == 1 ]]; then why=required; fi
+        printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$id" "$name" "$icon" "$p" "$ref" "$n" "$why"
+    done
+}
+
+uninstall_cmd() {
+    local source=${1:-} ref=${2:-} row why k
+    case $source in
+        system) valid_pkg "$ref" ;;
+        flatpak) valid_flatpak "$ref" ;;
+        appimage) valid_appimage "$ref" ;;
+        *) false ;;
+    esac || { echo "not a valid ${source:-source}: $ref" >&2; return 2; }
+    # Through the list, so what it protects is refused here too. ENVIRON: awk -v would read backslashes as escapes.
+    row=$(list | A=$source B=$ref awk -F'\t' '$4 == ENVIRON["A"] && $5 == ENVIRON["B"] { print; exit }')
+    [[ -n $row ]] || { echo "not an installed app: $ref" >&2; return 1; }
+    why=${row##*$'\t'}
+    [[ -z $why ]] || { echo "protected ($why): $ref" >&2; return 3; }
+    case $source in
+        system) printf '%s\n' sudo pacman -Rns "$ref" ;;
+        flatpak)
+            # A copy for the user goes first, as flatpak itself picks it first; the system one may ask polkit.
+            k=$(LC_ALL=C flatpak list --app --columns=application,installation 2>/dev/null |
+                A=$ref awk -F'\t' '$1 == ENVIRON["A"] { w = w ? w : $2; if ($2 == "user") w = "user" } END { print w }')
+            [[ $k == user || $k == system ]] || { echo "not an installed app: $ref" >&2; return 1; }
+            printf '%s\n' flatpak uninstall "--$k" --noninteractive "$ref" ;;
+        appimage)
+            # With its launchers in the person's own folder; those elsewhere belong to the system.
+            printf '%s\n' gio trash -- "$ref"
+            while IFS=$S read -r k _ _ _ why row file; do
+                [[ $k == app && $why == appimage && $row == "$ref" && $file == "${XDG_DATA_HOME:-$HOME/.local/share}"/applications/* && $file != *$'\n'* ]] &&
+                    printf '%s\n' "$file"
+            done < <(entries) ;;
+    esac
+    return 0 # the last launcher checked may not have matched
+}
+
+case "${1:-}" in
+    list) list ;;
+    uninstall-cmd) uninstall_cmd "${2:-}" "${3:-}" ;;
+    uninstall)
+        [[ ${2:-} == flatpak || ${2:-} == appimage ]] || { echo "only flatpak and appimage: system packages need sudo in a terminal" >&2; exit 2; }
+        cmd=$(uninstall_cmd "$2" "${3:-}") || exit
+        mapfile -t argv <<<"$cmd"
+        exec "${argv[@]}"
+        ;;
+    *)
+        echo "usage: apps list | uninstall-cmd SOURCE REF | uninstall flatpak|appimage REF" >&2
+        exit 2
+        ;;
+esac
