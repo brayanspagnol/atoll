@@ -55,7 +55,7 @@ Item {
         return { rows, map }
     }
 
-    onShownChanged: if (shown) { leave.stop(); grow.restart() } else { grow.stop(); leave.restart() }
+    onShownChanged: if (shown) { leave.stop(); grow.restart(); field.forceActiveFocus() } else { grow.stop(); leave.restart() }
     SequentialAnimation {
         id: grow
         ParallelAnimation {

@@ -3,7 +3,8 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
 
-// The assistant, grown out of the island. Super+A or the island's mascot. Lazy: costs nothing while closed.
+// The assistant, grown out of the island. Super+A or the island's mascot.
+// Built once and kept hidden: creating the window and its panel on the click made the opening stutter.
 Scope {
     id: ask
     // Outlives Ui.askOpen by the closing animation; the window must exist to play it.
@@ -15,10 +16,9 @@ Scope {
     }
     Timer { id: closing; interval: 220; onTriggered: ask.alive = false }
 
-    LazyLoader {
-    active: ask.alive && !!Ui.screen
     PanelWindow {
         id: win
+        visible: ask.alive && !!Ui.screen
         screen: Quickshell.screens.includes(Ui.askScreen) ? Ui.askScreen : Ui.screen
         anchors { top: true; bottom: true; left: true; right: true }
         exclusionMode: ExclusionMode.Ignore
@@ -42,6 +42,5 @@ Scope {
             anchors.fill: parent
             Component.onCompleted: shown = Qt.binding(() => Ui.askOpen)
         }
-    }
     }
 }
