@@ -521,7 +521,7 @@ ShellRoot {
         const dir = fs.mkdtempSync("/tmp/atoll-test-")
         fs.cpSync(new URL("../shell/", import.meta.url), dir, { recursive: true })
         fs.mkdirSync(dir + "/bin"); fs.mkdirSync(dir + "/home/.local/share/atoll", { recursive: true })
-        fs.writeFileSync(dir + "/bin/hyprctl", `#!/bin/sh\nprintf '%s\\037' "$@" >> '${dir}/hyprctl.log'; printf '\\036' >> '${dir}/hyprctl.log'\nexit 0\n`, { mode: 0o755 })
+        fs.writeFileSync(dir + "/bin/hyprctl", `#!/bin/sh\ncall=$(printf '%s\\037' "$@"); printf '%s\\036' "$call" >> '${dir}/hyprctl.log'\nexit 0\n`, { mode: 0o755 })
         fs.symlinkSync("/old-wallpaper", dir + "/home/.local/share/atoll/current-wallpaper")
         if (profile) fs.writeFileSync(dir + "/profile.json", JSON.stringify(profile))
         fs.writeFileSync(dir + "/Profiles.qml", `pragma Singleton\nimport Quickshell\nSingleton { property string path: "${dir}/profile.json" }\n`)
@@ -1190,7 +1190,7 @@ if (haveQs) {
     const liveBinds = S.active(S.effective(defs, [{ id: "terminal", keys: "SUPER + SHIFT + Return" }], null)).map(e => ({ modmask: 64 + (e.keys.includes("SHIFT") ? 1 : 0) + (e.keys.includes("ALT") ? 8 : 0) + (e.keys.includes("CTRL") ? 4 : 0) + (e.keys.includes("SUPER") ? 0 : -64), key: e.keys.split(" + ").pop(), description: "atoll:" + e.id, submap: "" }))
         .concat([{ modmask: 65, key: "X", description: "", dispatcher: "exec", arg: "foot", submap: "" }, { modmask: 65, key: "C", description: "atoll:custom-1", submap: "" }]) // as after the save below
     fs.writeFileSync(sc + "/binds.json", JSON.stringify(liveBinds))
-    fs.writeFileSync(sc + "/bin/hyprctl", `#!/bin/sh\nprintf '%s\\037' "$@" >> '${sc}/hyprctl.log'; printf '\\036' >> '${sc}/hyprctl.log'\n[ "$1 $2" = "-j binds" ] && cat '${sc}/binds.json'\nexit 0\n`, { mode: 0o755 })
+    fs.writeFileSync(sc + "/bin/hyprctl", `#!/bin/sh\ncall=$(printf '%s\\037' "$@"); printf '%s\\036' "$call" >> '${sc}/hyprctl.log'\n[ "$1 $2" = "-j binds" ] && cat '${sc}/binds.json'\nexit 0\n`, { mode: 0o755 })
     const qmlRoot = `import QtQuick
 import Quickshell
 ShellRoot {
