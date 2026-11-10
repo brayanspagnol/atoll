@@ -79,6 +79,10 @@ Singleton {
             property bool focusPomodoro: false
             property bool focusHide: true
             property var focusAllow: []
+            // Lagu, the assistant: which AI command-line tool it drives, whether file edits wait for a yes, and the island chip.
+            property string aiProvider: "claude" // "claude", "cursor" or "codex"
+            property bool aiAsk: true
+            property bool aiChip: true
         }
     }
 }

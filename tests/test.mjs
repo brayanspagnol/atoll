@@ -259,7 +259,7 @@ const haveQs = ["qs", "dbus-run-session", "notify-send"].every(tool => spawnSync
 // A hyprctl that refuses everything, first on PATH: without it a test could reach the user's running Hyprland.
 const guardBin = fs.mkdtempSync("/tmp/atoll-test-bin-")
 fs.writeFileSync(guardBin + "/hyprctl", "#!/bin/sh\necho 'hyprctl is disabled in tests' >&2\nexit 1\n", { mode: 0o755 })
-const runQml = (dir, shellQml, files = {}) => {
+const runQml = (dir, shellQml, files = {}, bins = []) => { // bins: a test's own fakes, first on PATH
     fs.writeFileSync(dir + "/shell.qml", shellQml)
     for (const [name, text] of Object.entries(files)) fs.writeFileSync(dir + "/" + name, text)
     const { WAYLAND_DISPLAY, DISPLAY, HYPRLAND_INSTANCE_SIGNATURE, ...base } = process.env
@@ -267,7 +267,7 @@ const runQml = (dir, shellQml, files = {}) => {
     const dirs = base.PATH.split(":")
     const real = dirs.findIndex(d => /^\/(usr\/)?(local\/)?s?bin$/.test(d) && fs.existsSync(d + "/hyprctl"))
     if (real >= 0) dirs.splice(real, 0, guardBin); else dirs.push(guardBin)
-    const env = { ...base, PATH: dirs.join(":") }
+    const env = { ...base, PATH: bins.concat(dirs).join(":") }
     const run = spawnSync("dbus-run-session", ["--", "qs", "-p", dir + "/shell.qml"], { encoding: "utf8", timeout: 30000, env: { ...env, LANG: "C.UTF-8", LC_ALL: "C.UTF-8", LANGUAGE: "en", QT_QPA_PLATFORM: "offscreen", HOME: dir + "/home", XDG_DATA_HOME: dir + "/home/share", XDG_CONFIG_HOME: dir + "/home/config", XDG_STATE_HOME: dir + "/home/state", XDG_DATA_DIRS: dir + "/data" } })
     return Object.fromEntries([...(run.stdout + run.stderr).matchAll(/RESULT (\w+) (.*)/g)].map(m => [m[1], JSON.parse(m[2])]))
 }
@@ -1401,6 +1401,176 @@ ShellRoot {
     const said = Object.fromEntries([...out.matchAll(/RESULT (\w+) (.*)/g)].map(m => [m[1], JSON.parse(m[2])]))
     assert.deepEqual(said.lagu, { count: 36, sizes: [24, 120], faces: 8, unknown: "idle", name: "Lagu" })
     fs.rmSync(root, { recursive: true })
+}
+
+// Lagu, the assistant: real Claude Code and Cursor output (sanitized, in fixtures/), the commands it runs, and hostile cards.
+{
+    const A = load("assistant.js", "pages,labels,allowed,disallowed,allowable,argv,loginArgs,parse,failure,card,system")
+    const fixture = name => fs.readFileSync(new URL("fixtures/" + name, import.meta.url), "utf8")
+    const events = (provider, text) => plain([].concat(...text.split("\n").map(l => A.parse(provider, l))))
+    const ui = fs.readFileSync(new URL("../shell/Ui.qml", import.meta.url), "utf8")
+    const uiPages = [...ui.matchAll(/\{ id: "(\w+)", key:/g)].map(m => m[1])
+    for (const p of A.pages) assert(uiPages.includes(p), p)
+    for (const file of fs.readdirSync(new URL("i18n/", shell))) {
+        const dict = JSON.parse(fs.readFileSync(new URL("i18n/" + file, shell), "utf8"))
+        for (const label of A.labels) assert(label in dict, `${file} is missing: ${label}`)
+    }
+    const s1 = "00000000-0000-4000-8000-000000000001", s10 = "00000000-0000-4000-8000-000000000010"
+    assert.deepEqual(events("claude", fixture("claude-ok.jsonl")), [{ kind: "session", id: s1 }, { kind: "text", text: "ok" }, { kind: "done", text: "ok", denials: [] }])
+    const load1 = "The load average is 1.32 over the last minute, 1.92 over 5 minutes, and 2.80 over 15 minutes, so the load is dropping."
+    assert.deepEqual(events("claude", fixture("claude-tool.jsonl")), [{ kind: "session", id: s1 }, { kind: "step", label: "Running a command", detail: "uptime" },
+        { kind: "text", text: load1 }, { kind: "done", text: load1, denials: [] }])
+    const denied = events("claude", fixture("claude-denied.jsonl"))
+    assert.deepEqual(denied.map(e => e.kind + " " + (e.label ?? e.id ?? "") + " " + (e.detail ?? "")), [`session ${s10} `, "step Running a command df -h > out.txt", "step Editing a file note.txt", "text  ", "done  "])
+    assert.deepEqual(denied.at(-1).denials, [{ tool: "Bash", input: "df -h > out.txt", spec: "Bash(df -h > out.txt)" }, { tool: "Write", input: "/home/user/note.txt", spec: "Write" }])
+    // Not logged in: the made-up assistant message is skipped, the result says it once.
+    assert.deepEqual(events("claude", fixture("claude-login.jsonl")).slice(1), [{ kind: "error", text: "Not logged in · Please run /login", login: true }])
+    assert.deepEqual(events("cursor", fixture("cursor-ok.jsonl")).map(e => e.kind + ":" + (e.text ?? e.id)), ["session:00000000-0000-4000-8000-000000000025", "text:ok", "done:ok"])
+    assert.deepEqual(events("cursor", fixture("cursor-tool.jsonl")).map(e => e.kind + ":" + (e.label ?? e.text ?? e.id) + (e.detail ? ":" + e.detail : "")).slice(1),
+        ["text:I will read a.txt first.", "step:Reading a file:a.txt", "text:a.txt says hello file; ask mode cannot run uptime > up.txt.", "done:I will read a.txt first.a.txt says hello file; ask mode cannot run uptime > up.txt."])
+    // Cursor says it is not logged in only on stderr, and exits 1.
+    assert.deepEqual(plain(A.failure(fixture("cursor-login.txt"))).login, true); assert.equal(A.failure("segfault\n").login, false)
+    // Shapes from Cursor's and Codex's docs, not seen on this machine.
+    assert.deepEqual(events("cursor", '{"type":"tool_call","subtype":"started","tool_call":{"shellToolCall":{"args":{"command":"qs -c atoll ipc call ui toggle perf"}}}}'), [{ kind: "step", label: "Controlling the desktop", detail: "qs -c atoll ipc call ui toggle perf" }])
+    assert.deepEqual(events("codex", ['{"type":"thread.started","thread_id":"0199a213-81c0-7800-8aa1-bbab2a035a53"}', '{"type":"turn.started"}',
+        '{"type":"item.started","item":{"id":"item_1","type":"command_execution","command":"bash -lc ls","status":"in_progress"}}',
+        '{"type":"item.completed","item":{"id":"item_2","type":"agent_message","text":"Done."}}', '{"type":"turn.completed","usage":{"input_tokens":1}}', '{"type":"turn.failed","error":{"message":"Not logged in"}}'].join("\n")),
+        [{ kind: "session", id: "0199a213-81c0-7800-8aa1-bbab2a035a53" }, { kind: "step", label: "Running a command", detail: "bash -lc ls" }, { kind: "text", text: "Done." }, { kind: "done", text: "", denials: [] }, { kind: "error", text: "Not logged in", login: true }])
+    // Garbage, partial or hostile lines: no events, never an exception.
+    for (const provider of ["claude", "cursor", "codex", "other"]) {
+        for (const bad of ["", "{", "null", "[]", "7", '"x"', '{"type":5}', '{"type":"assistant","message":{"content":"x"}}', '{"type":"assistant","message":{"content":[null,7,{"type":"tool_use"},{"type":"text","text":3}]}}',
+            '{"type":"system","subtype":"init","session_id":"../../etc; rm"}', '{"type":"thread.started","thread_id":{"a":1}}', '{"type":"tool_call","subtype":"started","tool_call":null}', '{"type":"assistant","message":null}',
+            '{"type":"item.completed","item":"x"}'])
+            assert.deepEqual(events(provider, bad), [], provider + " " + bad)
+        assert.deepEqual(plain(A.parse(provider, null)), []); assert.deepEqual(plain(A.parse(provider, { type: "result" })), [])
+    }
+    // Claude: a subagent's text and a failed request's made-up message are not the answer.
+    for (const bad of ['{"type":"assistant","message":{"content":[{"type":"text","text":"x"}]},"parent_tool_use_id":"toolu_9"}', '{"type":"assistant","message":{"content":[{"type":"text","text":"x"}]},"error":"rate_limit"}']) assert.deepEqual(events("claude", bad), [])
+    // Denials that must not be allowed from a click: wildcards, privilege, several lines; odd input never breaks the list.
+    const odd = plain(A.parse("claude", JSON.stringify({ type: "result", result: "x", permission_denials: [{ tool_name: "Bash", tool_input: { command: "rm *" } },
+        { tool_name: "Bash", tool_input: { command: "sudo pacman -Syu" } }, { tool_name: "Bash", tool_input: { command: "a\nb" } }, { tool_name: "Agent", tool_input: {} },
+        { tool_name: "Bash", tool_input: { command: "ls\u001b[31m" } }, 7, { tool_name: 3 }, { tool_name: "WebFetch", tool_input: { url: "https://x.example/\u0000" } }] })))[0].denials
+    assert.deepEqual(odd.map(d => d.spec), ["", "", "", "", "", "WebFetch"])
+    assert(!odd.some(d => /[\u0000\u001b]/.test(d.input) && d.tool !== "Bash"))
+    // A tool call's detail is one line of plain text.
+    assert.deepEqual(events("claude", JSON.stringify({ type: "assistant", message: { content: [{ type: "tool_use", name: "Read", input: { file_path: "/home/user/.config/x\u0007y\n.txt" } }, { type: "tool_use", name: "Mystery" }] } })),
+        [{ kind: "step", label: "Reading a file", detail: "x y .txt" }, { kind: "step", label: "Using a tool", detail: "Mystery" }])
+
+    // The commands: arrays, the prompt one element after --, read-only unless the profile says otherwise, never privileged.
+    const nasty = `say "hi" '$(rm -rf ~)' \`id\`; echo $HOME\n--dangerously-skip-permissions`
+    const c = plain(A.argv("claude", { prompt: nasty, session: "", allow: [], ask: true, system: "SYS" }))
+    assert.deepEqual([c[0], c.at(-2), c.at(-1)], ["claude", "--", nasty]); assert(c.every(a => typeof a === "string"))
+    assert.equal(c[c.indexOf("--permission-mode") + 1], "dontAsk"); assert.equal(c[c.indexOf("--append-system-prompt") + 1], "SYS")
+    assert(!c.includes("--resume") && !c.includes("--dangerously-skip-permissions") && !c.includes("bypassPermissions"))
+    assert.equal(plain(A.argv("claude", { prompt: "x", ask: false }))[c.indexOf("--permission-mode") + 1], "acceptEdits")
+    const allowedPart = c.slice(c.indexOf("--allowedTools") + 1, c.indexOf("--disallowedTools")), deniedPart = c.slice(c.indexOf("--disallowedTools") + 1, c.indexOf("--append-system-prompt"))
+    assert.deepEqual(allowedPart, plain(A.allowed)); assert.deepEqual(deniedPart, plain(A.disallowed))
+    for (const cmd of ["sudo", "su", "pkexec"]) { assert(deniedPart.includes(`Bash(${cmd}:*)`)); assert(!allowedPart.some(a => a.includes(cmd + " ") || a.includes("(" + cmd + ":"))) }
+    for (const rule of allowedPart) {
+        assert(rule !== "Bash" && !/^(Write|Edit)/.test(rule) && !rule.includes("Bash(*"), rule)
+        if (rule.includes("hyprctl") || rule.includes("nmcli")) assert(!rule.includes("*") && !/eval|keyword|exec|reload|kill/.test(rule), rule) // exact forms only
+    }
+    assert(allowedPart.includes("Bash(hyprctl dispatch 'hl.dsp.focus({ workspace = 3 })')") && allowedPart.includes("Bash(qs -c atoll ipc call ui:*)"))
+    // Approved once: only sane specs reach the list, and only for that turn.
+    const once = plain(A.argv("claude", { prompt: "Continue.", session: s10, allow: ["Write", "Bash(df -h > out.txt)", "Bash", "Bash(rm *)", "Bash(sudo rm -rf /)", "Edit(*)", 7, "Bash(a\nb)", "Bash()", "--dangerously-skip-permissions"] }))
+    assert.deepEqual(once.slice(once.indexOf("--allowedTools") + 1, once.indexOf("--disallowedTools")).slice(allowedPart.length), ["Write", "Bash(df -h > out.txt)"])
+    assert.deepEqual(once.slice(once.indexOf("--resume"), once.indexOf("--resume") + 2), ["--resume", s10])
+    assert(!plain(A.argv("claude", { prompt: "x", session: "../x; rm -rf ~" })).includes("--resume"))
+    const cu = plain(A.argv("cursor", { prompt: nasty, system: "SYS" }))
+    assert.deepEqual(cu.slice(0, 5).concat(cu.slice(-2)), ["cursor-agent", "-p", "--output-format", "stream-json", "--trust", "--", "SYS\n\n---\n\n" + nasty])
+    assert(cu.includes("--mode") && !cu.some(a => /^(-f|--force|--yolo)$/.test(a)))
+    const cu2 = plain(A.argv("cursor", { prompt: "go", session: "abc-1", ask: false }))
+    assert(!cu2.includes("--mode") && !cu2.includes("--force") && cu2.at(-1) === "go" && cu2[cu2.indexOf("--resume") + 1] === "abc-1")
+    const cx = plain(A.argv("codex", { prompt: "go", system: "S" }))
+    assert.equal(cx[cx.indexOf("--sandbox") + 1], "read-only"); assert(!cx.some(a => /yolo|bypass|danger/.test(a)))
+    assert.equal(plain(A.argv("codex", { prompt: "go", ask: false })).at(cx.indexOf("--sandbox") + 1), "workspace-write")
+    assert.deepEqual(plain(A.argv("nope", { prompt: "x" })), []); assert.deepEqual(plain(A.loginArgs("cursor")), ["cursor-agent", "login"])
+    // What the model is told matches what exists: every screen, the focus IPC, and the hyprctl forms it may run.
+    const sys = A.system()
+    for (const p of A.pages) assert(sys.includes(p), p)
+    const focusQml = fs.readFileSync(new URL("../shell/Focus.qml", import.meta.url), "utf8")
+    assert(focusQml.includes('target: "focus"') && /function start\(minutes: int\)/.test(focusQml) && sys.includes("ipc call focus start"))
+    for (const m of sys.matchAll(/hyprctl dispatch '[^']+'/g)) assert(allowedPart.includes(`Bash(${m[0]})`), m[0])
+    assert(sys.includes("Lagu") && sys.includes("Never use sudo"))
+
+    // Cards: one block, checked field by field; anything else is dropped, and actions never run commands.
+    const good = A.card('Memory is fine.\n```atoll-card\n{"title": "Memory", "subtitle": "9 of 16 GB", "ring": {"value": 0.57, "label": "57%"}, "bars": [{"label": "Swap", "value": 0.1, "text": "0.8 GB"}], "actions": [{"label": "Open", "page": "perf"}, {"label": "Monitor", "app": "org.gnome.SystemMonitor"}]}\n```\nBye.')
+    assert.deepEqual(plain(good), { text: "Memory is fine.\n\nBye.", card: { title: "Memory", subtitle: "9 of 16 GB", ring: { value: 0.57, label: "57%" }, bars: [{ label: "Swap", value: 0.1, text: "0.8 GB" }],
+        actions: [{ label: "Open", page: "perf" }, { label: "Monitor", app: "org.gnome.SystemMonitor" }] } })
+    const hostile = plain(A.card("x\n```atoll-card\n" + JSON.stringify({ title: "T".repeat(300) + "\u0000", subtitle: 5, ring: { value: 2, label: "x" }, cmd: "rm -rf ~",
+        bars: Array.from({ length: 9 }, (_, i) => ({ label: "b" + i, value: i / 10, text: "t", exec: "x" })).concat([{ label: "nan", value: "0.5" }]),
+        actions: [{ label: "Run", cmd: "rm -rf ~" }, { label: "Exec", app: "../../bin/sh" }, { label: "Sh", app: "-e foo" }, { label: "Sp", app: "a b" }, { label: "Page", page: "nope" },
+            { label: "Both", page: "perf", app: "kitty", command: "x" }, { label: "", page: "perf" }, { label: "K", app: "kitty" }, { label: "W", page: "clima" }, { label: "Fourth", page: "som" }] }) + "\n```"))
+    assert.equal(hostile.text, "x"); assert.equal(hostile.card.title.length, 80); assert.equal(hostile.card.subtitle, ""); assert.equal(hostile.card.ring, null)
+    assert.deepEqual(hostile.card.bars.map(b => b.label), ["b0", "b1", "b2", "b3", "b4", "b5"]); assert(hostile.card.bars.every(b => !("exec" in b)))
+    assert.deepEqual(hostile.card.actions, [{ label: "Both", page: "perf" }, { label: "K", app: "kitty" }, { label: "W", page: "clima" }])
+    assert.deepEqual(Object.keys(hostile.card).sort(), ["actions", "bars", "ring", "subtitle", "title"])
+    for (const bad of ["```atoll-card\n{oops\n```", "```atoll-card\n[1]\n```", "```atoll-card\n{\"subtitle\": \"no title\"}\n```", "```atoll-card\n{\"title\": 7}\n```", "```atoll-card\n{\"title\": \"  \"}\n```"])
+        assert.deepEqual(plain(A.card("hi " + bad)), { text: "hi", card: null }, bad)
+    const two = plain(A.card('a\n```atoll-card\n{"title":"One"}\n```\nb\n```atoll-card\n{"title":"Two"}\n```'))
+    assert.deepEqual([two.text, two.card.title], ["a\n\nb", "One"])
+    assert.deepEqual(plain(A.card(null)), { text: "", card: null }); assert.deepEqual(plain(A.card("no card")), { text: "no card", card: null })
+    assert.equal(plain(A.card('```atoll-card\n{"title":"T","actions":[{"label":"New","page":"lagu"}]}\n```', ["lagu"])).card.actions[0].page, "lagu") // the live page list
+
+    // Assistant.qml against a fake claude that prints the fixtures and logs its argv. Never the real tool.
+    if (haveQs) {
+        const ad = fs.mkdtempSync("/tmp/atoll-test-"), bin = ad + "/bin"
+        fs.cpSync(new URL("../shell/", import.meta.url), ad, { recursive: true })
+        fs.mkdirSync(bin)
+        for (const f of ["claude-ok.jsonl", "claude-tool.jsonl", "claude-denied.jsonl", "claude-login.jsonl"]) fs.writeFileSync(ad + "/" + f, fixture(f))
+        fs.writeFileSync(bin + "/claude", `#!/bin/sh\nfor a; do printf '%s\\037' "$a"; done >> '${ad}/argv.log'; printf '\\036' >> '${ad}/argv.log'\nfor a; do last=$a; done\npwd > '${ad}/cwd.log'\ncase "$last" in\n  Continue.) cat '${ad}/claude-ok.jsonl' ;;\n  "check disk") cat '${ad}/claude-denied.jsonl' ;;\n  hang) exec sleep 20 ;;\n  login) cat '${ad}/claude-login.jsonl'; exit 1 ;;\n  *) cat '${ad}/claude-tool.jsonl' ;;\nesac\n`, { mode: 0o755 })
+        for (const tool of ["cursor-agent", "codex"]) fs.writeFileSync(bin + "/" + tool, "#!/bin/sh\nexit 1\n", { mode: 0o755 }) // the real ones must never run here
+        const ids = JSON.stringify(uiPages)
+        const out = runQml(ad, `import QtQuick
+import Quickshell
+ShellRoot {
+    property int step: 0
+    property var moods: []
+    Connections { target: Assistant; function onMoodChanged() { moods.push(Assistant.mood) } }
+    function say(tag, v) { console.log("RESULT " + tag + " " + JSON.stringify(v)) }
+    function shown() { return Assistant.items.map(i => i.kind + "|" + i.text + "|" + i.detail + (i.login ? "|login" : "")) }
+    Timer {
+        running: true; repeat: true; interval: 250
+        onTriggered: {
+            step++
+            if (step === 4) {
+                say("providers", { claude: Assistant.providers.find(p => p.id === "claude"), provider: Assistant.provider })
+                Assistant.ask("   ")
+                Assistant.ask("how is my load?")
+                Assistant.ask("ignored while busy")
+            }
+            if (step === 10) { say("tool", { items: shown(), mood: Assistant.mood, busy: Assistant.busy, session: Assistant.session, moods }); moods = [] }
+            if (step === 28) { say("rested", Assistant.mood); Assistant.ask("check disk") }
+            if (step === 34) {
+                say("denied", { last: Assistant.items[Assistant.items.length - 1], mood: Assistant.mood, pending: Assistant.pending, session: Assistant.session })
+                Assistant.allow()
+            }
+            if (step === 40) { say("allowed", { items: shown().slice(-1), mood: Assistant.mood, pending: Assistant.pending.length }); Assistant.ask("hang") }
+            if (step === 44) { const n = Assistant.items.length; Assistant.ask("again"); say("hanging", { busy: Assistant.busy, mood: Assistant.mood, same: Assistant.items.length === n }); Assistant.stop() }
+            if (step === 46) { say("stopped", { busy: Assistant.busy, mood: Assistant.mood }); Assistant.reset(); Assistant.ask("login") }
+            if (step === 52) { say("login", { items: shown(), mood: Assistant.mood, busy: Assistant.busy }); Qt.quit() }
+        }
+    }
+}
+`, { "Ui.qml": `pragma Singleton\nimport Quickshell\nSingleton { readonly property var pages: ${ids}.map(id => ({ id })) }\n` }, [bin])
+        const load1 = "The load average is 1.32 over the last minute, 1.92 over 5 minutes, and 2.80 over 15 minutes, so the load is dropping."
+        assert.equal(out.providers?.provider, "claude"); assert.deepEqual([out.providers.claude.installed, out.providers.claude.bin], [true, bin + "/claude"])
+        assert.deepEqual(out.tool, { items: ["user|how is my load?|", "step|Running a command|uptime", "text|" + load1 + "|"], mood: "done", busy: false, session: s1, moods: ["thinking", "working", "thinking", "done"] })
+        assert.equal(out.rested, "idle") // done goes back to idle by itself
+        assert.deepEqual(out.denied.last.denials, [{ tool: "Bash", input: "df -h > out.txt", spec: "Bash(df -h > out.txt)" }, { tool: "Write", input: "/home/user/note.txt", spec: "Write" }])
+        assert.deepEqual([out.denied.last.kind, out.denied.mood, out.denied.pending.length, out.denied.session], ["denied", "waiting", 2, s10])
+        assert.deepEqual(out.allowed, { items: ["text|ok|"], mood: "done", pending: 0 })
+        assert.deepEqual(out.hanging, { busy: true, mood: "thinking", same: true }); assert.deepEqual(out.stopped, { busy: false, mood: "idle" })
+        assert.deepEqual(out.login, { items: ["user|login|", "error|You are not logged in to Claude Code.||login"], mood: "error", busy: false })
+        const calls = fs.readFileSync(ad + "/argv.log", "utf8").split("\x1e").filter(Boolean).map(l => l.split("\x1f").slice(0, -1))
+        assert.deepEqual(calls.map(c => c.at(-1)), ["how is my load?", "check disk", "Continue.", "hang", "login"])
+        assert(!calls[0].includes("--resume") && calls[1][calls[1].indexOf("--resume") + 1] === s1 && calls[2][calls[2].indexOf("--resume") + 1] === s10 && !calls[4].includes("--resume"))
+        const extra = c => c.slice(c.indexOf("--allowedTools") + 1, c.indexOf("--disallowedTools")).slice(A.allowed.length)
+        assert.deepEqual(calls.map(extra), [[], [], ["Bash(df -h > out.txt)", "Write"], [], []]) // allowed for that one turn only
+        assert(calls.every(c => c[c.indexOf("--permission-mode") + 1] === "dontAsk"))
+        assert.equal(fs.readFileSync(ad + "/cwd.log", "utf8").trim(), ad + "/home")
+        fs.rmSync(ad, { recursive: true })
+    }
 }
 
 console.log("ok")
