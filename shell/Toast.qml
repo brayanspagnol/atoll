@@ -35,10 +35,10 @@ Frost {
         height: 3; radius: 1.5
         color: Theme.line
         Rectangle {
-            property real left: 1
-            width: parent.width * left; height: parent.height; radius: 1.5
+            property real share: 1 // "left" would clash with the anchor line of the same name
+            width: parent.width * share; height: parent.height; radius: 1.5
             color: Theme.accent
-            NumberAnimation on left {
+            NumberAnimation on share {
                 running: !!c.modelData.countdown
                 paused: running && hover.hovered
                 from: 1; to: 0

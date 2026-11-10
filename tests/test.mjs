@@ -2054,4 +2054,28 @@ ShellRoot {
     fs.rmSync(it, { recursive: true })
 }
 
+// Every file of the shell compiles: a type error in one (a property clashing with a built-in, say) stops the whole shell from loading.
+if (haveQs) {
+    const dir = fs.mkdtempSync("/tmp/atoll-test-")
+    fs.cpSync(new URL("../shell", import.meta.url), dir, { recursive: true })
+    const files = fs.readdirSync(dir).filter(f => /^[A-Z]\w*\.qml$/.test(f) && f !== "shell.qml")
+    const out = runQml(dir, `import QtQuick
+import Quickshell
+ShellRoot {
+    Component.onCompleted: {
+        const bad = []
+        for (const f of ${JSON.stringify(files)}) {
+            const c = Qt.createComponent(Qt.resolvedUrl(f))
+            // Offscreen has no layer shell, so windows of that type are the one error that is expected here.
+            if (c.status === Component.Error && !/No PanelWindow backend/.test(c.errorString())) bad.push(f + ": " + c.errorString().trim())
+        }
+        console.log("RESULT compile " + JSON.stringify(bad))
+        Qt.quit()
+    }
+}
+`)
+    assert.deepEqual(out.compile, [], out.log)
+    fs.rmSync(dir, { recursive: true })
+}
+
 console.log("ok")
