@@ -35,7 +35,6 @@ Singleton {
     readonly property color hover: t.hover
     readonly property color line: t.line
     readonly property color lineStrong: t.lineStrong
-    readonly property color rim: t.rim
     readonly property color sheen: t.sheen
     readonly property color field: t.field
     readonly property color ink: t.ink

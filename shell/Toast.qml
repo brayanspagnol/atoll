@@ -12,7 +12,8 @@ Frost {
     readonly property string iconSource: Notifs.iconOf(modelData)
     implicitHeight: lay.implicitHeight + 28
     radius: 24
-    border.color: critical ? Theme.danger : Theme.lineStrong
+    border.width: critical ? 1 : 0
+    border.color: Theme.danger
     transformOrigin: Item.Top
     // Here, not in the list's add transition: a second arrival interrupts that one and would strand the card.
     NumberAnimation on opacity { from: 0; to: 1; duration: 180 }

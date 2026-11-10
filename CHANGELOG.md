@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Choosing a workspace now hides an open scratchpad, which used to stay on top and make the switch look like it did nothing.
+
+### Changed
+
+- Floating panels (island, dock, control center, cards, launcher, clipboard) no longer have an outline. Critical notifications keep their red one.
+
 ## [1.17.0] - 2026-11-06
 
 ### Added

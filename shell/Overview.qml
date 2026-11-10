@@ -152,7 +152,6 @@ Scope {
                 implicitWidth: clockRow.implicitWidth + 36; implicitHeight: 46; radius: 23
                 opacity: win.p
                 color: Theme.surface
-                border.width: 1; border.color: Theme.lineStrong
                 SystemClock { id: clock; precision: SystemClock.Minutes }
                 RowLayout {
                     id: clockRow

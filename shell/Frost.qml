@@ -1,12 +1,10 @@
 import QtQuick
 
-// Floating glass. The blur comes from the Hyprland layer rule in hypr/look.lua; this only adds tint, rim and sheen.
+// Floating glass. The blur comes from the Hyprland layer rule in hypr/look.lua; this only adds tint and sheen.
 Rectangle {
     id: frost
     radius: Theme.radius
     color: Theme.surface
-    border.width: 1
-    border.color: Theme.rim
     Rectangle {
         anchors.fill: parent
         anchors.margins: 1

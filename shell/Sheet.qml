@@ -102,9 +102,6 @@ PanelWindow {
             height: media.height + weather.height
             radius: Theme.radius
             color: Theme.surface
-            border.width: 1
-            border.color: Theme.lineStrong
-            contentUnderBorder: true
             MediaCard {
                 id: media
                 width: parent.width
@@ -126,9 +123,6 @@ PanelWindow {
             height: focusCard.height
             radius: Theme.radius
             color: Theme.surface
-            border.width: 1
-            border.color: Theme.lineStrong
-            contentUnderBorder: true
             FocusCard {
                 id: focusCard
                 width: parent.width

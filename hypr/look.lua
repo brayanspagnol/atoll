@@ -13,6 +13,7 @@ hl.config({
         kb_layout = "us", repeat_rate = 25, repeat_delay = 600,
         follow_mouse = 1, float_switch_override_focus = 1,
     },
+    binds = { hide_special_on_workspace_change = true }, -- otherwise an open scratchpad covers the workspace just chosen
     misc = { vrr = 0, middle_click_paste = true, disable_hyprland_logo = true, disable_splash_rendering = true, key_press_enables_dpms = true, mouse_move_enables_dpms = true, allow_session_lock_restore = true },
 })
 hl.curve("out", { type = "bezier", points = { { 0.16, 1 }, { 0.3, 1 } } })

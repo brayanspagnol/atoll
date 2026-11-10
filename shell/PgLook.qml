@@ -89,7 +89,7 @@ Page {
                         Rectangle {
                             required property var modelData
                             width: (halves.width - halves.spacing * (card.looks.length - 1)) / card.looks.length; height: halves.height
-                            radius: 7; color: modelData.surface; border.width: 1; border.color: modelData.rim
+                            radius: 7; color: modelData.surface
                             Column {
                                 anchors { fill: parent; margins: 8 }
                                 spacing: 5
