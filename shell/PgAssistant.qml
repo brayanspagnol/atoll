@@ -65,7 +65,7 @@ Page {
                     readonly property bool ok: !!modelData.installed
                     readonly property bool needsLogin: ok && modelData.loggedIn === false
                     readonly property var how: pg.install[modelData.id] ?? null
-                    readonly property string status: !ok ? Tr.t("Not installed") : needsLogin ? Tr.t("Needs login") : Tr.t("Connected")
+                    readonly property string status: !ok ? Tr.t("Not installed") : needsLogin ? Tr.t("Needs login") : Tr.t("Available")
                     Layout.fillWidth: true; spacing: 0
                     Rectangle { visible: prov.index > 0; Layout.fillWidth: true; Layout.leftMargin: 14; Layout.rightMargin: 14; implicitHeight: 1; color: Theme.line }
                     Rectangle {

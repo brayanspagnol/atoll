@@ -83,6 +83,7 @@
  "Automatic by IP": "按 IP 自动定位",
  "Automatic follows the night light schedule when it is on, otherwise it is light from 07:00 to 19:00. The lock screen and apps keep their own colors.": "自动模式在夜间模式定时开启时跟随其时间表，否则在 07:00 至 19:00 使用浅色。锁屏和应用保留各自的颜色。",
  "Automatic, %1 to %2, %3 K": "自动，%1 至 %2，%3 K",
+ "Available": "可用",
  "Back": "返回",
  "Back to the music": "返回音乐",
  "Backup": "备份",

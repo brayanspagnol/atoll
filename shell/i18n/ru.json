@@ -83,6 +83,7 @@
  "Automatic by IP": "Автоматически по IP",
  "Automatic follows the night light schedule when it is on, otherwise it is light from 07:00 to 19:00. The lock screen and apps keep their own colors.": "Автоматическая тема следует расписанию ночного света, когда оно включено; иначе она светлая с 07:00 до 19:00. Экран блокировки и приложения сохраняют свои цвета.",
  "Automatic, %1 to %2, %3 K": "Автоматически, с %1 до %2, %3 K",
+ "Available": "Доступен",
  "Back": "Назад",
  "Back to the music": "Назад к музыке",
  "Backup": "Резервная копия",

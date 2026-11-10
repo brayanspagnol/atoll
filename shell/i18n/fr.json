@@ -83,6 +83,7 @@
  "Automatic by IP": "Automatique par IP",
  "Automatic follows the night light schedule when it is on, otherwise it is light from 07:00 to 19:00. The lock screen and apps keep their own colors.": "Automatique suit l’horaire de l’éclairage nocturne quand il est activé ; sinon, il est clair de 07:00 à 19:00. L’écran de verrouillage et les applis gardent leurs propres couleurs.",
  "Automatic, %1 to %2, %3 K": "Automatique, de %1 à %2, %3 K",
+ "Available": "Disponible",
  "Back": "Retour",
  "Back to the music": "Retour à la musique",
  "Backup": "Sauvegarde",
