@@ -34,6 +34,7 @@ Scope {
         mask: Region {
             Region { item: panel.barItem }
             Region { item: panel.bodyItem }
+            Region { item: panel.menuOpen ? panel.menuItem : null }
         }
         // A click anywhere else closes it.
         HyprlandFocusGrab {

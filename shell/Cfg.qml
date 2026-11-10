@@ -85,6 +85,9 @@ Singleton {
             // Lagu, the assistant: which AI command-line tool it drives, and whether file edits wait for a yes.
             property string aiProvider: "claude" // "claude", "cursor" or "codex"
             property bool aiAsk: true
+            // The model per tool ({ claude: "opus" }) and Claude's effort; "" or missing is the tool's own default. Checked in Assistant.qml.
+            property var aiModel: ({})
+            property string aiEffort: ""
             // The island's pinned items, in order: ids from pins.js. Read it through Cfg.island, which checks it.
             property var island: Pins.ids
         }

@@ -146,6 +146,31 @@ Page {
 
     ColumnLayout {
         Layout.fillWidth: true; Layout.topMargin: 10; spacing: 2
+        // For the tool picked above; a change applies from the next question, in the same conversation.
+        Line {
+            visible: !!Assistant.provider
+            label: Tr.t("Model")
+            hint: Tr.t("Applies from the next question.")
+            Cmb {
+                a11y: Tr.t("Model")
+                textRole: "name"
+                model: Assistant.modelChoices
+                currentIndex: Math.max(0, model.findIndex(c => c.id === Assistant.model))
+                onActivated: i => Assistant.setModel(model[i].id)
+            }
+        }
+        Line {
+            visible: Assistant.provider === "claude"
+            label: Tr.t("Effort")
+            hint: Tr.t("More effort thinks longer before answering.")
+            Cmb {
+                a11y: Tr.t("Effort")
+                textRole: "name"
+                model: Assistant.effortChoices
+                currentIndex: Math.max(0, model.findIndex(c => c.id === Assistant.effort))
+                onActivated: i => Assistant.setEffort(model[i].id)
+            }
+        }
         Line {
             label: Tr.t("Ask before changing files")
             hint: Tr.t("Opening apps and screens never asks.")

@@ -1679,7 +1679,7 @@ ShellRoot {
 
 // Lagu, the assistant: real Claude Code and Cursor output (sanitized, in fixtures/), the commands it runs, and hostile cards.
 {
-    const A = load("assistant.js", "pages,labels,allowed,disallowed,allowable,argv,loginArgs,parse,failure,card,system")
+    const A = load("assistant.js", "pages,labels,allowed,disallowed,allowable,argv,loginArgs,parse,failure,card,system,modelOk,effortOk,efforts,models,restore,remember")
     const fixture = name => fs.readFileSync(new URL("fixtures/" + name, import.meta.url), "utf8")
     const events = (provider, text) => plain([].concat(...text.split("\n").map(l => A.parse(provider, l))))
     const ui = fs.readFileSync(new URL("../shell/Ui.qml", import.meta.url), "utf8")
@@ -1786,6 +1786,55 @@ ShellRoot {
     assert.deepEqual(plain(A.card(null)), { text: "", card: null }); assert.deepEqual(plain(A.card("no card")), { text: "no card", card: null })
     assert.equal(plain(A.card('```atoll-card\n{"title":"T","actions":[{"label":"New","page":"lagu"}]}\n```', ["lagu"])).card.actions[0].page, "lagu") // the live page list
 
+    // Model and effort: only names a tool takes reach the command, each as one argument before the prompt; anything else is left out.
+    const after = (c, flag) => c.includes(flag) ? c[c.indexOf(flag) + 1] : null
+    const withModel = plain(A.argv("claude", { prompt: "x", session: s1, model: "opus", effort: "xhigh" }))
+    assert.deepEqual([after(withModel, "--model"), after(withModel, "--effort"), after(withModel, "--resume"), withModel.at(-1)], ["opus", "xhigh", s1, "x"])
+    assert(withModel.indexOf("--model") < withModel.indexOf("--"))
+    for (const good of ["sonnet", "claude-opus-4-8", "gpt-5.2", "claude-opus-4-8[context=1m,effort=high,fast=false]", "o3:latest"]) assert(A.modelOk(good), good)
+    for (const bad of ["opus; rm", "--dangerously-skip-permissions", "-m", "opus\n", "a b", "$(id)", "`id`", "a/b", "", "x".repeat(65), 7, null, "ópus"]) {
+        assert(!A.modelOk(bad), String(bad))
+        for (const provider of ["claude", "cursor", "codex"]) {
+            const cmd = plain(A.argv(provider, { prompt: "x", model: bad, effort: bad }))
+            assert(!cmd.includes("--model") && !cmd.includes("-m") && !cmd.includes("--effort"), provider + " " + bad)
+        }
+    }
+    assert.deepEqual(plain(A.efforts), ["low", "medium", "high", "xhigh", "max"])
+    for (const bad of ["", "LOW", "max ", "--max", "huge", 3]) assert(!A.effortOk(bad), String(bad))
+    assert(!plain(A.argv("claude", { prompt: "x", model: "", effort: "" })).some(a => a === "--model" || a === "--effort"))
+    const cuModel = plain(A.argv("cursor", { prompt: "x", session: "abc-1", model: "gpt-5.2", effort: "max" }))
+    assert.deepEqual([after(cuModel, "--model"), after(cuModel, "--resume"), cuModel.includes("--effort")], ["gpt-5.2", "abc-1", false]) // effort is Claude's only
+    const cxModel = plain(A.argv("codex", { prompt: "x", session: "abc-1", model: "gpt-5.2", effort: "max" }))
+    assert.deepEqual([after(cxModel, "-m"), cxModel.indexOf("-m") < cxModel.indexOf("resume"), cxModel.includes("--effort")], ["gpt-5.2", true, false])
+    // Cursor's model list: "id - Name" lines; a hostile id is skipped, invisible characters go.
+    assert.deepEqual(plain(A.models("Available models\n\nauto - Auto (default)\ngpt-5.2 - GPT-5.2\nbad;id - Evil\n--x - Flag\ngrok-4.7-low-fast - Grok 4.7  Low Fast​​\ngpt-5.2 - Again\n\nTip: use --model <id>\n")),
+        [{ id: "auto", name: "Auto (default)" }, { id: "gpt-5.2", name: "GPT-5.2" }, { id: "grok-4.7-low-fast", name: "Grok 4.7  Low Fast" }])
+    assert.deepEqual(plain(A.models(null)), [])
+
+    // The history: whatever the file holds, only checked conversations come back, newest first, at most 30, never an exception.
+    const conv = (id, updated, more) => ({ id, provider: "claude", model: "opus", title: "Q " + id, updated, items: [{ kind: "user", text: "Q " + id }, { kind: "text", text: "A" }], ...more })
+    for (const bad of ["", "{", "null", "7", '"x"', "{}", "[null, 7, \"x\", []]"]) assert.deepEqual(plain(A.restore(bad)), [], bad)
+    const messy = plain(A.restore(JSON.stringify([conv("a", 1), conv("../etc; rm", 9), conv("b", 3, { provider: "evil" }), conv("c", 2, { model: "x; rm", title: 7 }), conv("d", 4, { items: [{ kind: "nope" }] }),
+        conv("e", 5, { items: [{ kind: "user", text: "\u0000" + "u".repeat(9000) }, { kind: "card", card: { title: "T", cmd: "rm", actions: [{ label: "x", cmd: "rm" }] } }, { kind: "card", card: { title: "" } },
+            { kind: "denied", denials: [{ tool: "Bash", input: "rm -rf ~", spec: "Bash(rm -rf ~)" }, 7] }, { kind: "step", text: "Running a command", detail: "a\nb" }, { kind: "error", text: "x", login: "yes" }] }),
+        conv("a", 0), 42])))
+    assert.deepEqual(messy.map(c => c.id), ["e", "c", "a"])
+    assert.deepEqual([messy[1].model, messy[1].title], ["", "Q c"]) // a bad model goes, a missing title comes from the first question
+    const e = messy[0].items
+    assert.deepEqual(e.map(i => i.kind), ["user", "card", "denied", "step", "error"])
+    assert.equal(e[0].text.length, 8000); assert(!e[0].text.includes("\u0000"))
+    assert.deepEqual(e[1].card, { title: "T", subtitle: "", ring: null, bars: [], actions: [] })
+    assert.deepEqual(e[2].denials, [{ tool: "Bash", input: "rm -rf ~", spec: "" }]) // read back only, never allowed again from here
+    assert.deepEqual([e[3].detail, e[4].login], ["a b", false])
+    assert.deepEqual(Object.keys(messy[0]).sort(), ["id", "items", "model", "provider", "title", "updated"])
+    const many = Array.from({ length: 40 }, (_, i) => conv("s" + i, i + 1))
+    assert.deepEqual(plain(A.restore(JSON.stringify(many))).map(c => c.id), many.slice(10).reverse().map(c => c.id))
+    let list = plain(A.restore(JSON.stringify(many)))
+    list = plain(A.remember(list, conv("s5", 100, { title: "x".repeat(200), items: Array.from({ length: 50 }, (_, i) => ({ kind: "user", text: "q" + i })) })))
+    assert.deepEqual([list.length, list[0].id, list[0].title.length, list[0].items.length, list[0].items[0].text, list.filter(c => c.id === "s5").length], [30, "s5", 80, 40, "q10", 1])
+    assert.deepEqual(plain(A.remember(list, conv("../x", 1))).map(c => c.id), list.map(c => c.id)) // a bad one changes nothing
+    assert.deepEqual(plain(A.remember(list, conv("new", 200))).map(c => c.id).slice(0, 2), ["new", "s5"])
+
     // Assistant.qml against a fake claude that prints the fixtures and logs its argv. Never the real tool.
     if (haveQs) {
         const ad = fs.mkdtempSync("/tmp/atoll-test-"), bin = ad + "/bin"
@@ -1793,7 +1842,11 @@ ShellRoot {
         fs.mkdirSync(bin)
         for (const f of ["claude-ok.jsonl", "claude-tool.jsonl", "claude-denied.jsonl", "claude-login.jsonl"]) fs.writeFileSync(ad + "/" + f, fixture(f))
         fs.writeFileSync(bin + "/claude", `#!/bin/sh\nfor a; do printf '%s\\037' "$a"; done >> '${ad}/argv.log'; printf '\\036' >> '${ad}/argv.log'\nfor a; do last=$a; done\npwd > '${ad}/cwd.log'\ncase "$last" in\n  Continue.) cat '${ad}/claude-ok.jsonl' ;;\n  "check disk") cat '${ad}/claude-denied.jsonl' ;;\n  hang) exec sleep 20 ;;\n  login) cat '${ad}/claude-login.jsonl'; exit 1 ;;\n  *) cat '${ad}/claude-tool.jsonl' ;;\nesac\n`, { mode: 0o755 })
-        for (const tool of ["cursor-agent", "codex"]) fs.writeFileSync(bin + "/" + tool, "#!/bin/sh\nexit 1\n", { mode: 0o755 }) // the real ones must never run here
+        // The real ones must never run here. The fake Cursor lists models (one hostile) and logs what it was asked.
+        fs.writeFileSync(bin + "/codex", "#!/bin/sh\nexit 1\n", { mode: 0o755 })
+        fs.writeFileSync(bin + "/cursor-agent", `#!/bin/sh\nfor a; do printf '%s\\037' "$a"; done >> '${ad}/cursor.log'; printf '\\036' >> '${ad}/cursor.log'\n[ "$1" = --list-models ] && printf 'Available models\\n\\nauto - Auto (default)\\nfoo-1 - Foo One\\nbad;rm - Bad\\n' && exit 0\necho 'boom' >&2; exit 1\n`, { mode: 0o755 })
+        fs.mkdirSync(ad + "/home/.config/atoll/profiles", { recursive: true })
+        fs.writeFileSync(ad + "/home/.config/atoll/profiles/default.json", JSON.stringify({ aiModel: { claude: "sonnet", cursor: "--force" }, aiEffort: "max" }))
         const ids = JSON.stringify(uiPages)
         const out = runQml(ad, `import QtQuick
 import Quickshell
@@ -1814,7 +1867,9 @@ ShellRoot {
                 Assistant.ask("ignored while busy")
             }
             if (step === 10) { say("tool", { items: shown(), mood: Assistant.mood, busy: Assistant.busy, session: Assistant.session, moods }); moods = [] }
+            if (step === 27) { Assistant.setModel("opus"); Assistant.setEffort(""); Assistant.setModel("x; rm"); Assistant.setEffort("huge") } // mid-conversation: from the next message
             if (step === 28) { say("rested", Assistant.mood); Assistant.ask("check disk") }
+            if (step === 33) { Cfg.v.aiModel = { claude: "opus; rm -rf ~" }; Cfg.v.aiEffort = "--dangerously-skip-permissions" } // a hostile profile
             if (step === 34) {
                 say("denied", { last: Assistant.items[Assistant.items.length - 1], mood: Assistant.mood, pending: Assistant.pending, session: Assistant.session })
                 Assistant.allow()
@@ -1843,6 +1898,90 @@ ShellRoot {
         assert.deepEqual(calls.map(extra), [[], [], ["Bash(df -h > out.txt)", "Write"], [], []]) // allowed for that one turn only
         assert(calls.every(c => c[c.indexOf("--permission-mode") + 1] === "dontAsk"))
         assert.equal(fs.readFileSync(ad + "/cwd.log", "utf8").trim(), ad + "/home")
+        // The profile's model and effort, changed between messages of one conversation; a hostile value never reaches the command.
+        const flag = (c, f) => c.includes(f) ? c[c.indexOf(f) + 1] : null
+        assert.deepEqual(calls.map(c => [flag(c, "--model"), flag(c, "--effort")]), [["sonnet", "max"], ["opus", null], [null, null], [null, null], [null, null]])
+        assert(calls.every(c => !c.some(a => /rm -rf|dangerously|huge/.test(a)) && c.indexOf("--model") < c.indexOf("--")))
+        // The history: what Atoll had, in a file only this user can read.
+        const state = ad + "/home/.local/state/atoll", saved = JSON.parse(fs.readFileSync(state + "/assistant.json", "utf8"))
+        assert.deepEqual([fs.statSync(state).mode & 0o777, fs.statSync(state + "/assistant.json").mode & 0o777], [0o700, 0o600])
+        const s20 = "00000000-0000-4000-8000-000000000020"
+        assert.deepEqual(saved.map(c => [c.id, c.provider, c.title]), [[s20, "claude", "login"], [s1, "claude", "how is my load?"]]) // s10 came back as s1: kept once
+        assert.deepEqual(saved[1].items.filter(i => i.kind === "user").map(i => i.text), ["how is my load?", "check disk", "hang"])
+        assert(saved.every(c => Object.keys(c).sort().join() === "id,items,model,provider,title,updated" && c.updated > 1e12))
+        assert(saved[1].items.find(i => i.kind === "denied").denials.every(d => d.spec === ""))
+
+        // A new shell: the history comes back (hostile entries dropped), the list and the menu in the real bar, and a past
+        // conversation continued with its own tool and session; switching tool then starts a new one.
+        fs.writeFileSync(state + "/assistant.json", JSON.stringify(saved.concat([{ id: "c-1", provider: "cursor", model: "", title: "From Cursor", updated: 1, items: [{ kind: "user", text: "From Cursor" }, { kind: "text", text: "Hi" }] },
+            { id: "../../x", provider: "claude", title: "bad", updated: 5, items: [{ kind: "user", text: "x" }] }, "junk"])))
+        fs.rmSync(ad + "/argv.log")
+        const out2 = runQml(ad, `import QtQuick
+import Quickshell
+ShellRoot {
+    FloatingWindow { implicitWidth: 1100; implicitHeight: 900; AskPanel { id: panel; anchors.fill: parent; span: 1100; shown: true } }
+    property int step: 0
+    function all(item, test, out) { for (const c of item.children) { if (c.visible && test(c)) out.push(c); all(c, test, out) } return out }
+    function say(tag, v) { console.log("RESULT " + tag + " " + JSON.stringify(v)) }
+    function rows() { return all(panel, c => c.pick !== undefined && c.sub !== undefined, []).sort((a, b) => a.y - b.y) }
+    function choices() { return panel.menuOpen ? all(panel, c => c.picked !== undefined && c.on !== undefined, []) : [] }
+    function choose(text) { choices().find(c => c.text === text).picked() }
+    function pill() { return all(panel, c => c.text !== undefined && c.text.startsWith(Assistant.info(Assistant.provider)?.name ?? "?"), [])[0]?.text ?? "" }
+    Timer {
+        running: true; repeat: true; interval: 250
+        onTriggered: {
+            step++
+            if (step === 4) { say("reloaded", { ids: Assistant.history.map(h => h.id), provider: Assistant.provider, pill: pill() }); panel.past = true }
+            if (step === 7) {
+                say("past", { rows: rows().map(r => r.modelData.title + " | " + r.sub.replace(/ · [^·]+$/, "")), a11y: all(panel, c => c.a11y?.startsWith("Remove"), []).length })
+                rows()[2].pick()
+            }
+            if (step === 9) {
+                say("opened", { session: Assistant.session, provider: Assistant.provider, items: Assistant.items.map(i => i.kind + ":" + i.text), past: panel.past })
+                panel.openMenu()
+            }
+            if (step === 12) {
+                say("cursorMenu", { rows: choices().map(c => c.text + (c.on ? "*" : "")) })
+                choose("Foo One")
+                Assistant.ask("go on")
+            }
+            if (step === 16) {
+                say("continued", { items: Assistant.items.map(i => i.kind), session: Assistant.session, pill: pill(), ids: Assistant.history.map(h => h.id) })
+                Cfg.v.aiProvider = "claude"
+            }
+            if (step === 17) {
+                say("stale", { stale: panel.stale, note: all(panel, c => c.text !== undefined && /^This conversation was with/.test(c.text), []).map(c => c.text) })
+                panel.openMenu()
+            }
+            if (step === 18) { say("claudeMenu", { rows: choices().map(c => c.text + (c.on ? "*" : "")) }); choose("Haiku"); panel.openMenu() }
+            if (step === 19) { choose("Low"); say("picked", { model: Assistant.model, effort: Assistant.effort, pill: pill(), menu: panel.menuOpen }); Assistant.ask("fresh") }
+            if (step === 25) {
+                say("fresh", { items: Assistant.items.map(i => i.kind), session: Assistant.session, ids: Assistant.history.map(h => h.id) })
+                panel.past = true
+            }
+            if (step === 27) { all(panel, c => c.a11y === "Remove “login” from the history", [])[0].clicked() }
+            if (step === 28) { say("forgot", { ids: Assistant.history.map(h => h.id), rows: rows().length }); Qt.quit() }
+        }
+    }
+}
+`, { "Ui.qml": `pragma Singleton\nimport Quickshell\nSingleton { property bool askOpen: true; property string page: ""; readonly property var pages: ${ids}.map(id => ({ id })); function show(p) { page = p } }\n` }, [bin])
+        assert.deepEqual(out2.log.split("\n").filter(l => /(AskPanel|Assistant|Lagu)\.qml|assistant\.js|TypeError|ReferenceError/.test(l)), [])
+        assert.deepEqual(out2.reloaded, { ids: [s20, s1, "c-1"], provider: "claude", pill: "Claude Code" })
+        assert.deepEqual(out2.past, { rows: ["login | Claude Code", "how is my load? | Claude Code", "From Cursor | Cursor"], a11y: 3 })
+        assert.deepEqual(out2.opened, { session: "c-1", provider: "cursor", items: ["user:From Cursor", "text:Hi"], past: false })
+        assert.deepEqual(out2.cursorMenu, { rows: ["Default*", "Foo One", "Assistant settings"] }) // no effort for Cursor; the hostile id skipped
+        assert.deepEqual(out2.continued, { items: ["user", "text", "user", "error"], session: "c-1", pill: "Cursor · Foo One", ids: ["c-1", s20, s1] })
+        const cursorCalls = fs.readFileSync(ad + "/cursor.log", "utf8").split("\x1e").filter(Boolean).map(l => l.split("\x1f").slice(0, -1))
+        assert.deepEqual(cursorCalls.map(c => [c[0], flag(c, "--model"), flag(c, "--resume"), c.at(-1)]), [["--list-models", null, null, "--list-models"], ["-p", "foo-1", "c-1", "go on"]])
+        assert.deepEqual(out2.stale, { stale: true, note: ["This conversation was with Cursor. Your next question starts a new one with Claude Code."] })
+        assert.deepEqual(out2.claudeMenu.rows, ["Default*", "Opus", "Sonnet", "Haiku", "Fable", "Default*", "Low", "Medium", "High", "Extra high", "Max", "Assistant settings"])
+        assert.deepEqual(out2.picked, { model: "haiku", effort: "low", pill: "Claude Code · Haiku", menu: false })
+        assert.deepEqual(out2.fresh, { items: ["user", "step", "text"], session: s1, ids: [s1, "c-1", s20] }) // a new conversation, no --resume
+        const fresh = fs.readFileSync(ad + "/argv.log", "utf8").split("\x1e").filter(Boolean).map(l => l.split("\x1f").slice(0, -1))
+        assert.deepEqual(fresh.map(c => [flag(c, "--model"), flag(c, "--effort"), c.includes("--resume"), c.at(-1)]), [["haiku", "low", false, "fresh"]])
+        assert.deepEqual(out2.forgot, { ids: [s1, "c-1"], rows: 2 })
+        assert.deepEqual(JSON.parse(fs.readFileSync(state + "/assistant.json", "utf8")).map(c => c.id), [s1, "c-1"])
+        assert.equal(fs.statSync(state + "/assistant.json").mode & 0o777, 0o600)
         fs.rmSync(ad, { recursive: true })
     }
 }
@@ -1874,7 +2013,16 @@ Singleton {
     property var items: ${JSON.stringify(items)}
     property string session: "s1"
     property var pending: [{ tool: "Edit", input: {} }]
+    property string sessionProvider: "claude"
+    property var history: []
+    property string model: ""
+    property string effort: ""
+    property string modelName: ""
+    property var modelChoices: [{ id: "", name: "Default" }]
+    property var effortChoices: [{ id: "", name: "Default" }]
     property var calls: []
+    function info(id) { return providers.find(p => p.id === id) ?? null }
+    function listModels() {}
     function note(c) { calls = calls.concat([c]) }
     function ask(text) { note("ask " + text) }
     function stop() { note("stop") }

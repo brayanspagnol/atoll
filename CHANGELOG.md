@@ -9,12 +9,15 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - Assistant: `Super+A`, or the mascot Lagu in the island, stretches the island into a bar where you ask about your computer. The steps it takes, its answer and visual cards (a ring, bars and up to three buttons that open a screen or an app) drop in below, and it asks before changing files. It uses the Claude Code, Cursor or Codex command line already logged in on this computer, so there are no API keys to paste. While it works with the bar closed, Lagu in the island shows it, then says when it is done. A new Assistant screen (`Super+Alt+G`) picks which one answers and shows how to install the others.
+- Assistant: the pill that says who answers opens a menu to pick the model (Opus, Sonnet, Haiku or Fable for Claude Code, the models your account has for Cursor, or the tool's default) and, for Claude Code, the effort (Low to Max). The Assistant screen has the same two choices. A change applies from the next message, in the same conversation.
+- Assistant: History, in the bar, lists the conversations Atoll had, newest first, with search. Open one to read it again and keep going with the same tool and session; the trash button takes it off the list. The last 30 are kept in `~/.local/state/atoll/assistant.json`, readable only by you.
 - Island: right-click an item to unpin it from the top, open its screen or choose what stays. An unpinned item shrinks away and a toast offers Undo for 6 seconds. The clock and workspaces always stay, and a low battery, a running focus timer and a busy assistant still show while they last.
 - On top screen, under Applications: a live preview of the island, the pinned items to reorder (drag, the arrow buttons or `Alt+Up`/`Alt+Down`) or unpin, the others to pin, and Reset to default.
 - Installed apps: a screen under Applications lists the apps from the system, Flatpak and AppImage, largest first, with search and a filter per source, and uninstalls them. The dialog shows the exact command first. A system package opens a terminal with `sudo pacman -Rns` ready, so you type your password there and never in Atoll; Flatpak and AppImage apps go without a password, the AppImage file and its launcher to the trash. Apps Atoll needs, your default apps and packages that others depend on are protected.
 
 ### Fixed
 
+- Lagu in the island is centered in its button; it sat low.
 - Choosing a workspace now hides an open scratchpad, which used to stay on top and make the switch look like it did nothing.
 
 ### Changed

@@ -6,7 +6,8 @@ import "assistant.js" as A
 import "term.js" as T
 
 // Lagu's brain: runs the AI command-line tool the person already uses (see assistant.js) and keeps the conversation
-// for the island and the page. Nothing is saved but the profile keys; a new shell starts a new conversation.
+// for the island and the page. Its own conversations are kept in ~/.local/state/atoll/assistant.json (see assistant.js),
+// so they can be read again and continued; the tools' own session files are never read.
 Singleton {
     id: root
     // { id, name, bin, installed }; bin is the full path once found.
@@ -19,11 +20,36 @@ Singleton {
         const ok = providers.filter(p => p.installed)
         return (ok.find(p => p.id === Cfg.v.aiProvider) ?? ok[0])?.id ?? ""
     }
+    // The model and effort the profile picked for the tool in use, checked again in A.argv; "" is the tool's default.
+    readonly property string model: { const m = Cfg.v.aiModel; return A.modelOk(m?.[provider]) ? m[provider] : "" }
+    readonly property string effort: provider === "claude" && A.effortOk(Cfg.v.aiEffort) ? Cfg.v.aiEffort : ""
+    // Cursor's models for this account, listed once per shell when first asked for: [{ id, name }].
+    property var cursorModels: []
+    function listModels() { if (!cursorModels.length && !lister.running && info("cursor")?.installed) lister.running = true }
+    function setModel(m) {
+        if (!provider || m !== "" && !A.modelOk(m)) return
+        const all = Cfg.v.aiModel && typeof Cfg.v.aiModel === "object" && !Array.isArray(Cfg.v.aiModel) ? Cfg.v.aiModel : {}
+        Cfg.v.aiModel = Object.assign({}, all, { [provider]: m })
+    }
+    function setEffort(e) { if (e === "" || A.effortOk(e)) Cfg.v.aiEffort = e }
+    // What the menus offer for the tool in use: [{ id, name }], "" first for the tool's default. Claude takes these aliases
+    // for its latest models; Cursor lists its own (its "auto" is the default already); Codex has no list here.
+    readonly property var modelChoices: {
+        const known = provider === "claude" ? [{ id: "opus", name: "Opus" }, { id: "sonnet", name: "Sonnet" }, { id: "haiku", name: "Haiku" }, { id: "fable", name: "Fable" }]
+            : provider === "cursor" ? cursorModels.filter(c => c.id !== "auto") : []
+        const all = [{ id: "", name: Tr.t("Default") }].concat(known)
+        return model && !all.some(c => c.id === model) ? all.concat([{ id: model, name: model }]) : all
+    }
+    readonly property var effortChoices: [{ id: "", name: Tr.t("Default") }, { id: "low", name: Tr.t("Low") }, { id: "medium", name: Tr.t("Medium") },
+        { id: "high", name: Tr.t("High") }, { id: "xhigh", name: Tr.t("Extra high") }, { id: "max", name: Tr.t("Max") }]
+    readonly property string modelName: model ? (modelChoices.find(c => c.id === model)?.name ?? model) : ""
     property bool busy: false
     property string mood: "idle" // idle, thinking, working, waiting, done, error; the UI sets listening and sleeping itself
     // { kind: user, step, text, card, denied or error, text, detail, card, denials, login }
     property var items: []
     property string session: ""
+    property string sessionProvider: "" // the tool the session belongs to; another tool cannot resume it
+    property var history: [] // past conversations, newest first: { id, provider, model, title, updated, items }
     property var pending: [] // the last turn's denials: { tool, input, spec }
 
     function info(id) { return providers.find(p => p.id === id) ?? null }
@@ -43,6 +69,8 @@ Singleton {
         add("user", { text: prompt })
         pending = []
         if (!provider) return fail(Tr.t("No AI command-line tool is installed."))
+        // The tool changed since this conversation began: it goes on in a new one, and the old one stays in the history.
+        if (session && sessionProvider !== provider) { items = items.slice(-1); session = ""; sessionProvider = "" }
         run(prompt, [])
     }
     // The denied tools, allowed for one more turn of the same conversation.
@@ -60,7 +88,29 @@ Singleton {
         busy = false
         mood = "idle"
     }
-    function reset() { stop(); items = []; session = ""; pending = []; mood = "idle" }
+    // A new conversation. The one before is already in the history: it is kept each time a turn ends.
+    function reset() { stop(); items = []; session = ""; sessionProvider = ""; pending = []; mood = "idle" }
+    // A past conversation, read back. The next question continues it with its own tool, picked again if still installed.
+    function open(id) {
+        const c = history.find(h => h.id === id)
+        if (!c) return
+        reset()
+        items = c.items
+        session = c.id
+        sessionProvider = c.provider
+        if (info(c.provider)?.installed) Cfg.v.aiProvider = c.provider
+    }
+    // Out of Atoll's list only; the tool's own session is left alone.
+    function forget(id) { history = history.filter(h => h.id !== id); save() }
+    function keep() {
+        if (!session) return
+        const said = items.find(i => i.kind === "user")
+        history = A.remember(history, { id: session, provider: sessionProvider, model, title: said?.text ?? "", updated: Date.now(), items })
+        save()
+    }
+    function save() { store.setText(JSON.stringify(history)) }
+    onBusyChanged: if (!busy) keep()
+    onProviderChanged: if (provider === "cursor") listModels()
     // The person logs in themselves, in a terminal; only fixed arguments reach the command.
     function login(id) {
         const p = info(id), args = A.loginArgs(id)
@@ -70,7 +120,7 @@ Singleton {
 
     function run(prompt, allowSpecs) {
         const p = info(provider)
-        const cmd = A.argv(provider, { prompt, session, allow: allowSpecs, ask: Cfg.v.aiAsk, system: A.system(Ui.pages.map(x => x.id)) })
+        const cmd = A.argv(provider, { prompt, session, allow: allowSpecs, ask: Cfg.v.aiAsk, system: A.system(Ui.pages.map(x => x.id)), model, effort })
         cmd[0] = p.bin
         proc.who = provider
         proc.stopped = false
@@ -84,7 +134,12 @@ Singleton {
         proc.running = true
     }
     function take(e) {
-        if (e.kind === "session") session = e.id
+        if (e.kind === "session") {
+            // A resumed conversation can come back under a new id: it is the same conversation, kept once.
+            if (session && e.id !== session) history = history.filter(h => h.id !== session)
+            session = e.id
+            sessionProvider = proc.who
+        }
         else if (e.kind === "step") { add("step", { text: Tr.t(e.label), detail: e.detail }); mood = "working" }
         else if (e.kind === "text") { show(e.text); mood = "thinking" }
         else if (e.kind === "error") { proc.ended = true; fail(e.login ? Tr.t("You are not logged in to %1.").arg(info(proc.who)?.name ?? proc.who) : e.text || Tr.t("The assistant stopped with an error."), e.login) }
@@ -153,6 +208,26 @@ Singleton {
             }
         }
     }
+    Process {
+        id: lister
+        command: [root.info("cursor")?.bin ?? "cursor-agent", "--list-models"]
+        workingDirectory: Quickshell.env("HOME")
+        stdout: StdioCollector { onStreamFinished: root.cursorModels = A.models(text) }
+    }
+
+    // The history is private, so its folder and file are for this user only. The file is made 600 before the first write,
+    // and an atomic write keeps the mode of the file it replaces.
+    FileView {
+        id: store
+        path: Quickshell.env("HOME") + "/.local/state/atoll/assistant.json"
+        blockLoading: true
+        printErrors: false
+        atomicWrites: true
+    }
     Connections { target: Cfg; function onReadyChanged() { root.refresh() } }
-    Component.onCompleted: refresh()
+    Component.onCompleted: {
+        Quickshell.execDetached(["sh", "-c", 'umask 077 && mkdir -p "$1" && chmod 700 "$1" && touch "$1/assistant.json" && chmod 600 "$1/assistant.json"', "sh", Quickshell.env("HOME") + "/.local/state/atoll"])
+        history = A.restore(store.text())
+        refresh()
+    }
 }

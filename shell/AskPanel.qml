@@ -22,6 +22,43 @@ Item {
     readonly property bool ready: Assistant.providers.some(p => p.installed)
     readonly property var current: Assistant.providers.find(p => p.id === Assistant.provider) ?? null
     property var expanded: ({}) // runs of steps opened past their last three, by key
+    readonly property Item menuItem: menu
+    property bool menuOpen: false // the model and effort menu, under the pill that says who answers
+    property bool past: false // the past conversations in place of this one
+    property string pastQuery: ""
+    readonly property var pastShown: {
+        const q = pastQuery.trim().toLowerCase()
+        return (Assistant.history ?? []).filter(h => !q || h.title.toLowerCase().includes(q))
+    }
+    // The conversation on screen belongs to another tool than the one that would answer now.
+    readonly property bool stale: !!Assistant.session && !!Assistant.sessionProvider && Assistant.sessionProvider !== Assistant.provider
+
+    function openMenu() {
+        const at = who.mapToItem(panel, who.width, who.height)
+        menu.x = Math.max(8, at.x - menu.width)
+        menu.y = at.y + 10
+        Assistant.listModels()
+        menuOpen = true
+        menu.first().forceActiveFocus()
+    }
+    function closeMenu() { menuOpen = false; who.forceActiveFocus() }
+    function openPast(id) {
+        Assistant.open(id)
+        past = false
+        expanded = {}
+        list.stick = true
+        field.forceActiveFocus()
+    }
+    // "5 min ago", "Yesterday", "Nov 3"
+    function ago(ms) {
+        const min = Math.floor((Date.now() - ms) / 60000)
+        if (min < 1) return Tr.t("Just now")
+        if (min < 60) return Tr.t("%1 min ago").arg(min)
+        if (min < 24 * 60) return Tr.t("%1 h ago").arg(Math.floor(min / 60))
+        if (min < 48 * 60) return Tr.t("Yesterday")
+        if (min < 7 * 24 * 60) return Tr.t("%1 days ago").arg(Math.floor(min / 1440))
+        return Tr.date(new Date(ms), "MMM d").replace(/\./g, "")
+    }
 
     function send() {
         const q = field.text.trim()
@@ -59,7 +96,7 @@ Item {
         return { rows, map }
     }
 
-    onShownChanged: if (shown) { leave.stop(); grow.restart(); field.forceActiveFocus() } else { grow.stop(); leave.restart() }
+    onShownChanged: if (shown) { leave.stop(); grow.restart(); field.forceActiveFocus() } else { grow.stop(); leave.restart(); menuOpen = false }
     // Opening: the bar appears exactly over the island and cross-fades with it, then grows; the conversation
     // waits until the bar has nearly settled, so nothing outruns its background.
     SequentialAnimation {
@@ -460,25 +497,46 @@ Item {
                     text: panel.ready ? Tr.t("Ask anything about this computer…") : Tr.t("No assistant installed yet")
                 }
             }
-            // Who answers; opens the Assistant screen.
+            // The past conversations, in place of this one.
+            Rectangle {
+                id: pastBtn
+                visible: panel.ready
+                function swap() { panel.past = !panel.past; search.text = ""; if (panel.past && search.visible) search.forceActiveFocus(); else if (!panel.past) field.forceActiveFocus() }
+                implicitWidth: 36; implicitHeight: 36; radius: 18
+                color: panel.past ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, hm.containsMouse ? 0.3 : 0.2) : hm.containsMouse ? Theme.raisedHover : "transparent"
+                Behavior on color { ColorAnimation { duration: Theme.fast } }
+                border.width: activeFocus ? 2 : 0; border.color: Theme.ink
+                activeFocusOnTab: true
+                Accessible.role: Accessible.Button
+                Accessible.name: Tr.t("History")
+                Accessible.checkable: true
+                Accessible.checked: panel.past
+                Accessible.onPressAction: swap()
+                Keys.onSpacePressed: swap()
+                Keys.onReturnPressed: swap()
+                Ic { anchors.centerIn: parent; name: "history"; size: 18; color: panel.past ? Theme.accent : Theme.muted }
+                MouseArea { id: hm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: pastBtn.swap() }
+            }
+            // Who answers, and with which model; opens the model and effort menu.
             Rectangle {
                 id: who
                 visible: !!panel.current
                 implicitWidth: whoRow.implicitWidth + 20; implicitHeight: 30; radius: 15
-                color: wm.containsMouse ? Theme.raisedHover : Theme.raised
+                color: wm.containsMouse || panel.menuOpen ? Theme.raisedHover : Theme.raised
                 border.width: activeFocus ? 2 : 0; border.color: Theme.ink
                 activeFocusOnTab: true
-                Accessible.role: Accessible.Button
-                Accessible.name: Tr.t("Answered by %1").arg(panel.current?.name ?? "")
-                Accessible.onPressAction: Ui.show("ia")
-                Keys.onSpacePressed: Ui.show("ia")
-                Keys.onReturnPressed: Ui.show("ia")
+                Accessible.role: Accessible.ButtonMenu
+                Accessible.name: Tr.t("Answered by %1").arg(whoText.text)
+                Accessible.onPressAction: panel.openMenu()
+                Keys.onSpacePressed: panel.openMenu()
+                Keys.onReturnPressed: panel.openMenu()
                 RowLayout {
                     id: whoRow; anchors.centerIn: parent; spacing: 6
                     Rectangle { implicitWidth: 8; implicitHeight: 8; radius: 4; color: panel.current?.installed ? Theme.good : Theme.muted }
-                    Tx { text: panel.current?.name ?? ""; size: 13; dim: true }
+                    Tx { id: whoText; text: (panel.current?.name ?? "") + (Assistant.modelName ? " · " + Assistant.modelName : ""); size: 13; dim: true; Layout.maximumWidth: 260 }
+                    Ic { name: "down"; size: 14; color: Theme.muted }
                 }
-                MouseArea { id: wm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Ui.show("ia") }
+                MouseArea { id: wm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: panel.menuOpen ? panel.closeMenu() : panel.openMenu() }
             }
             // Send, or stop while it works.
             Rectangle {
@@ -538,11 +596,25 @@ Item {
             Pill { text: Tr.t("Set up the assistant"); variant: "solid"; onClicked: Ui.show("ia") }
         }
 
+        // The conversation, or the past ones: the two cross-fade and slide a little while the space between them
+        // resizes to the one coming in. mix goes from 0 (the conversation) to 1 (the history).
+        Item {
+            id: stage
+            property real mix: panel.past ? 1 : 0
+            Behavior on mix { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
+            readonly property real roomFor: Math.max(160, panel.height - body.y - foot.height - 60)
+            width: parent.width
+            height: (list.count > 0 ? list.height : 0) * (1 - mix) + pastView.height * mix
+            visible: height > 0
+            clip: mix > 0 && mix < 1
+
         ListView {
             id: list
             width: parent.width
-            height: Math.min(contentHeight, Math.max(120, panel.height - body.y - foot.height - 60))
-            visible: count > 0
+            height: Math.min(contentHeight, stage.roomFor - (panel.stale ? 30 : 0))
+            visible: count > 0 && stage.mix < 1
+            opacity: 1 - stage.mix
+            transform: Translate { y: -16 * stage.mix }
             clip: true
             spacing: 10
             cacheBuffer: 4000
@@ -594,10 +666,100 @@ Item {
             }
         }
 
+        // Past conversations, newest first: open one to read it and go on, or take it off the list.
+        Frost {
+            id: pastView
+            width: parent.width
+            height: pastCol.implicitHeight + 32
+            radius: 28
+            visible: stage.mix > 0
+            opacity: stage.mix
+            transform: Translate { y: 16 * (1 - stage.mix) }
+            ColumnLayout {
+                id: pastCol
+                x: 16; y: 16; width: parent.width - 32; spacing: 8
+                RowLayout {
+                    Layout.fillWidth: true; Layout.leftMargin: 12; spacing: 12
+                    Tx { text: Tr.t("History"); size: 18; strong: true; Layout.fillWidth: true; Accessible.role: Accessible.Heading; Accessible.name: text }
+                    Fld {
+                        id: search
+                        visible: (Assistant.history?.length ?? 0) > 3
+                        Layout.preferredWidth: 260
+                        placeholderText: Tr.t("Search conversations")
+                        Accessible.name: Tr.t("Search conversations")
+                        onTextChanged: panel.pastQuery = text
+                        Keys.onEscapePressed: panel.past = false
+                    }
+                }
+                Tx {
+                    visible: !panel.pastShown.length
+                    Layout.fillWidth: true; Layout.leftMargin: 12; Layout.bottomMargin: 6
+                    text: (Assistant.history?.length ?? 0) ? Tr.t("No conversation matches.") : Tr.t("No conversations yet. They are kept here once Lagu answers.")
+                    dim: true; wrapMode: Text.Wrap
+                }
+                ListView {
+                    id: pastList
+                    visible: count > 0
+                    Layout.fillWidth: true
+                    implicitHeight: Math.min(contentHeight, stage.roomFor - 90)
+                    clip: true
+                    spacing: 2
+                    boundsBehavior: Flickable.StopAtBounds
+                    interactive: contentHeight > height
+                    Accessible.role: Accessible.List
+                    Accessible.name: Tr.t("History")
+                    ScrollBar.vertical: ScrollBar { policy: pastList.contentHeight > pastList.height ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff; width: 6 }
+                    model: ScriptModel { values: panel.pastShown; objectProp: "id" }
+                    delegate: Rectangle {
+                        id: pr
+                        required property var modelData
+                        readonly property string sub: [Assistant.info(modelData.provider)?.name ?? modelData.provider, modelData.model, panel.ago(modelData.updated)].filter(s => s).join(" · ")
+                        function pick() { panel.openPast(modelData.id) }
+                        width: ListView.view.width; height: 60; radius: 16
+                        color: prm.containsMouse || activeFocus ? Theme.raised : modelData.id === Assistant.session ? Theme.hover : "transparent"
+                        border.width: activeFocus ? 2 : 0; border.color: Theme.ink
+                        activeFocusOnTab: true
+                        Accessible.role: Accessible.Button
+                        Accessible.name: modelData.title + ", " + sub
+                        Accessible.onPressAction: pick()
+                        Keys.onReturnPressed: pick()
+                        Keys.onSpacePressed: pick()
+                        Keys.onDeletePressed: Assistant.forget(modelData.id)
+                        MouseArea { id: prm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: pr.pick() }
+                        RowLayout {
+                            anchors.fill: parent; anchors.leftMargin: 14; anchors.rightMargin: 8; spacing: 12
+                            Ic { name: "chat"; size: 18; color: Theme.muted }
+                            ColumnLayout {
+                                Layout.fillWidth: true; spacing: 0
+                                Tx { text: pr.modelData.title; strong: true; Layout.fillWidth: true }
+                                Tx { text: pr.sub; dim: true; size: 13; Layout.fillWidth: true }
+                            }
+                            Btn {
+                                variant: "quiet"; icon: "trash"; iconSize: 16; implicitWidth: 36; implicitHeight: 36; radius: 18
+                                a11y: Tr.t("Remove “%1” from the history").arg(pr.modelData.title)
+                                onClicked: Assistant.forget(pr.modelData.id)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        }
+
+        // The conversation on screen was with another tool than the one picked now.
+        Tx {
+            visible: panel.stale && !panel.past
+            width: parent.width
+            horizontalAlignment: Text.AlignHCenter
+            text: Tr.t("This conversation was with %1. Your next question starts a new one with %2.")
+                .arg(Assistant.info(Assistant.sessionProvider)?.name ?? "").arg(panel.current?.name ?? "")
+            dim: true; size: 13; wrapMode: Text.Wrap
+        }
+
         // A fresh start, once there is something to clear.
         Frost {
             id: foot
-            visible: panel.ready && (Assistant.items?.length ?? 0) > 0
+            visible: panel.ready && !panel.past && (Assistant.items?.length ?? 0) > 0
             anchors.horizontalCenter: parent.horizontalCenter
             width: footRow.implicitWidth + 28; height: 40; radius: 20
             RowLayout {
@@ -606,8 +768,110 @@ Item {
                 Btn {
                     variant: "quiet"; implicitHeight: 30; radius: 15
                     icon: "plus"; text: Tr.t("New conversation")
-                    onClicked: { Assistant.reset(); panel.expanded = {}; field.forceActiveFocus() }
+                    onClicked: { Assistant.reset(); panel.expanded = {}; panel.past = false; field.forceActiveFocus() }
                 }
+            }
+        }
+    }
+
+    // ── The model and effort menu, under the pill ───────────────────────────
+    // Drawn in this window, not a popup: the window's own click-outside grab would take a popup's clicks as outside.
+
+    // A click anywhere else on the bar or the conversation closes it first.
+    MouseArea { anchors.fill: parent; z: 9; enabled: panel.menuOpen; onClicked: panel.closeMenu() }
+    component Choice: Rectangle {
+        id: ch
+        property string text: ""
+        property string icon: ""
+        property bool on: false
+        signal picked()
+        implicitHeight: 40; radius: 12
+        color: cm.containsMouse || activeFocus ? Theme.raised : "transparent"
+        border.width: activeFocus ? 2 : 0; border.color: Theme.ink
+        activeFocusOnTab: visible
+        Accessible.role: Accessible.MenuItem
+        Accessible.name: text
+        Accessible.checkable: !icon
+        Accessible.checked: on
+        Accessible.onPressAction: picked()
+        Keys.onReturnPressed: picked()
+        Keys.onEnterPressed: picked()
+        Keys.onSpacePressed: picked()
+        Keys.onDownPressed: nextItemInFocusChain(true).forceActiveFocus()
+        Keys.onUpPressed: nextItemInFocusChain(false).forceActiveFocus()
+        RowLayout {
+            anchors.fill: parent; anchors.leftMargin: 12; anchors.rightMargin: 12; spacing: 10
+            Ic { name: ch.icon || "check"; size: 16; color: ch.icon ? Theme.muted : Theme.accent; opacity: ch.icon || ch.on ? 1 : 0 }
+            Tx { text: ch.text; strong: ch.on; Layout.fillWidth: true }
+        }
+        MouseArea { id: cm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ch.picked() }
+    }
+    Rectangle {
+        id: menu
+        function first() { return modelList.itemAtIndex(Math.max(0, Assistant.modelChoices.findIndex(c => c.id === Assistant.model))) ?? settingsRow }
+        z: 10
+        width: 300
+        height: menuCol.implicitHeight + 16
+        radius: 20
+        color: Theme.glassStrong
+        border.width: 1; border.color: Theme.line
+        transformOrigin: Item.TopRight
+        scale: panel.menuOpen ? 1 : 0.92
+        opacity: panel.menuOpen ? 1 : 0
+        visible: opacity > 0
+        Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
+        Behavior on opacity { NumberAnimation { duration: 140 } }
+        Accessible.role: Accessible.PopupMenu
+        Accessible.name: panel.current?.name ?? ""
+        Keys.onEscapePressed: panel.closeMenu()
+        MouseArea { anchors.fill: parent } // clicks between rows stay in the menu
+        ColumnLayout {
+            id: menuCol
+            x: 8; y: 8; width: parent.width - 16
+            spacing: 2
+            Tx { text: Tr.t("Model"); size: 12; strong: true; dim: true; Layout.leftMargin: 12; Layout.topMargin: 4; Layout.bottomMargin: 2 }
+            ListView {
+                id: modelList
+                Layout.fillWidth: true
+                implicitHeight: Math.min(contentHeight, 40 * 7.5) // a long list (Cursor's) scrolls, with half a row showing it does
+                clip: true
+                spacing: 2
+                boundsBehavior: Flickable.StopAtBounds
+                interactive: contentHeight > height
+                ScrollBar.vertical: ScrollBar { policy: modelList.contentHeight > modelList.height ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff; width: 6 }
+                model: Assistant.modelChoices
+                delegate: Choice {
+                    required property var modelData
+                    required property int index
+                    width: ListView.view.width
+                    text: modelData.name
+                    on: modelData.id === Assistant.model
+                    onActiveFocusChanged: if (activeFocus) ListView.view.positionViewAtIndex(index, ListView.Contain)
+                    onPicked: { Assistant.setModel(modelData.id); panel.closeMenu() }
+                }
+            }
+            Tx {
+                visible: Assistant.provider === "cursor" && !Assistant.cursorModels.length
+                text: Tr.t("Loading the models…"); size: 13; dim: true; Layout.leftMargin: 12
+            }
+            Tx { visible: Assistant.provider === "claude"; text: Tr.t("Effort"); size: 12; strong: true; dim: true; Layout.leftMargin: 12; Layout.topMargin: 8; Layout.bottomMargin: 2 }
+            Repeater {
+                model: Assistant.provider === "claude" ? Assistant.effortChoices : []
+                Choice {
+                    required property var modelData
+                    Layout.fillWidth: true
+                    text: modelData.name
+                    on: modelData.id === Assistant.effort
+                    onPicked: { Assistant.setEffort(modelData.id); panel.closeMenu() }
+                }
+            }
+            Rectangle { Layout.fillWidth: true; Layout.leftMargin: 8; Layout.rightMargin: 8; Layout.topMargin: 4; Layout.bottomMargin: 4; implicitHeight: 1; color: Theme.line }
+            Choice {
+                id: settingsRow
+                Layout.fillWidth: true
+                icon: "ajustes"
+                text: Tr.t("Assistant settings")
+                onPicked: { panel.menuOpen = false; Ui.show("ia") }
             }
         }
     }

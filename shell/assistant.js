@@ -40,15 +40,23 @@ function allowable(spec) {
 }
 
 const sessionOk = s => typeof s === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(s)
+// A model name as the tools take it: an alias (opus), a full name (claude-opus-4-8, gpt-5.2) or Cursor's parameterized
+// form (claude-opus-4-8[context=1m,effort=high]). It starts with a letter or digit, so it can never read as a flag.
+const modelOk = s => typeof s === "string" && /^[A-Za-z0-9][A-Za-z0-9._:\[\]=,-]{0,63}$/.test(s)
+// Claude Code's --effort levels; "" is the tool's default.
+const efforts = ["low", "medium", "high", "xhigh", "max"]
+const effortOk = s => efforts.includes(s)
 // The system text goes in front of the first message for the tools without a flag for it.
 const first = (o, sys) => o.session ? o.prompt : sys + "\n\n---\n\n" + o.prompt
-// o: { prompt, session, allow: [spec], ask: bool, system }. ask false lets Claude edit files without asking.
+// o: { prompt, session, allow: [spec], ask: bool, system, model, effort }. ask false lets Claude edit files without asking.
+// model and effort that are not valid are left out, so the tool uses its own default.
 function argv(provider, o) {
     o = o || {}
     const prompt = String(o.prompt ?? "")
     const sys = typeof o.system === "string" ? o.system : system()
     const resume = sessionOk(o.session) ? o.session : ""
     const opt = Object.assign({}, o, { prompt, session: resume })
+    const model = modelOk(o.model) ? o.model : ""
     if (provider === "claude") {
         const extra = (Array.isArray(o.allow) ? o.allow : []).filter(allowable)
         // --restricted ignores the person's own Claude settings (their allow rules, hooks, default mode) and keeps file
@@ -58,17 +66,18 @@ function argv(provider, o) {
             "--add-dir", "/usr/share/applications",
             "--permission-mode", o.ask === false ? "acceptEdits" : "dontAsk", "--permission-prompts", "none",
             "--allowedTools"].concat(allowed, extra, ["--disallowedTools"], disallowed,
-            ["--append-system-prompt", sys], resume ? ["--resume", resume] : [], ["--", prompt])
+            ["--append-system-prompt", sys], model ? ["--model", model] : [], effortOk(o.effort) ? ["--effort", o.effort] : [],
+            resume ? ["--resume", resume] : [], ["--", prompt])
     }
     // Cursor has no per-run allow list: ask mode is read-only; agent mode edits files and runs only the commands the
     // person allowed in Cursor's own settings. Never --force, which runs every command.
     if (provider === "cursor")
         return ["cursor-agent", "-p", "--output-format", "stream-json", "--trust"].concat(o.ask === false ? [] : ["--mode", "ask"],
-            resume ? ["--resume", resume] : [], ["--", first(opt, sys)])
+            model ? ["--model", model] : [], resume ? ["--resume", resume] : [], ["--", first(opt, sys)])
     // shortcut: codex is unverified, written from its docs (codex exec --json, read-only sandbox); test it on a real install.
     if (provider === "codex")
         return ["codex", "exec", "--json", "--skip-git-repo-check", "--sandbox", o.ask === false ? "workspace-write" : "read-only"]
-            .concat(resume ? ["resume", resume] : [], ["--", first(opt, sys)])
+            .concat(model ? ["-m", model] : [], resume ? ["resume", resume] : [], ["--", first(opt, sys)])
     return []
 }
 // The login command, run by the person in a terminal.
@@ -203,7 +212,11 @@ function card(text, ids) {
     const rest = all.replace(cardRe, "").replace(/\n{3,}/g, "\n\n").trim()
     let c = null
     try { c = found ? JSON.parse(found[1]) : null } catch (e) {}
-    if (!isObject(c) || !label(c.title, 80)) return { text: rest, card: null }
+    return { text: rest, card: checkCard(c, ids) }
+}
+// A card's fields, checked one by one; null when it has no title.
+function checkCard(c, ids) {
+    if (!isObject(c) || !label(c.title, 80)) return null
     const known = Array.isArray(ids) ? ids : pages
     const out = { title: label(c.title, 80), subtitle: label(c.subtitle, 160), ring: null, bars: [], actions: [] }
     if (isObject(c.ring) && unit(c.ring.value)) out.ring = { value: c.ring.value, label: label(c.ring.label, 20) }
@@ -215,7 +228,57 @@ function card(text, ids) {
         if (typeof a.page === "string" && known.includes(a.page)) out.actions.push({ label: label(a.label, 40), page: a.page })
         else if (a.page === undefined && typeof a.app === "string" && a.app.length <= 120 && /^[A-Za-z0-9][A-Za-z0-9._+-]*$/.test(a.app)) out.actions.push({ label: label(a.label, 40), app: a.app })
     }
-    return { text: rest, card: out }
+    return out
+}
+
+// What `cursor-agent --list-models` prints ("id - Name" per line), as [{ id, name }]. Lines that are not that are skipped.
+function models(text) {
+    const out = []
+    for (const line of str(text).split("\n")) {
+        const m = /^(\S+) - (.+)$/.exec(line.trim())
+        if (m && modelOk(m[1]) && out.length < 400 && !out.some(o => o.id === m[1])) out.push({ id: m[1], name: oneLine(m[2].replace(/[​-‏⁠﻿]/g, ""), 80) })
+    }
+    return out
+}
+
+// The conversations Atoll had, kept in ~/.local/state/atoll/assistant.json: [{ id, provider, model, title, updated, items }],
+// newest first. The file can hold anything, so every field is checked again on the way in and on the way out.
+const historyMax = 30
+const kinds = ["user", "step", "text", "card", "denied", "error"]
+function historyItem(it) {
+    if (!isObject(it) || !kinds.includes(it.kind)) return null
+    const out = { kind: it.kind, text: clean(it.text, 8000), detail: oneLine(it.detail, 200), card: null, denials: [], login: it.login === true }
+    if (it.kind === "card") { out.card = checkCard(it.card); if (!out.card) return null }
+    // Read back only: nothing in it can be allowed again from here.
+    if (it.kind === "denied") out.denials = (Array.isArray(it.denials) ? it.denials : []).filter(isObject).slice(0, 10)
+        .map(d => ({ tool: oneLine(d.tool, 60), input: clean(typeof d.input === "string" ? d.input : "", 500), spec: "" }))
+    return out
+}
+function conversation(c) {
+    if (!isObject(c) || !sessionOk(c.id) || !["claude", "cursor", "codex"].includes(c.provider)) return null
+    const items = (Array.isArray(c.items) ? c.items : []).slice(-40).map(historyItem).filter(i => i)
+    const updated = typeof c.updated === "number" && isFinite(c.updated) && c.updated > 0 ? Math.floor(c.updated) : 0
+    const said = items.find(i => i.kind === "user")
+    const title = oneLine(c.title, 80) || oneLine(said ? said.text : "", 80)
+    if (!items.length || !title) return null
+    return { id: c.id, provider: c.provider, model: modelOk(c.model) ? c.model : "", title, updated, items }
+}
+// The file's text to the list: anything broken is dropped, never an exception.
+function restore(text) {
+    let d = null
+    try { d = JSON.parse(str(text)) } catch (e) {}
+    const out = []
+    for (const c of Array.isArray(d) ? d : []) {
+        const ok = conversation(c)
+        if (ok && !out.some(o => o.id === ok.id)) out.push(ok)
+    }
+    return out.sort((a, b) => b.updated - a.updated).slice(0, historyMax)
+}
+// The list with this conversation first, in place of the one with its id; at most 30.
+function remember(list, c) {
+    const ok = conversation(c)
+    const rest = (Array.isArray(list) ? list : []).filter(o => o && (!ok || o.id !== ok.id))
+    return (ok ? [ok] : []).concat(rest).slice(0, historyMax)
 }
 
 // The instructions added to the tool's own system prompt.
