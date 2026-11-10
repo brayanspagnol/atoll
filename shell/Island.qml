@@ -16,6 +16,8 @@ PanelWindow {
     anchors.top: true
     margins.top: 14
     implicitWidth: pill.implicitWidth
+    onImplicitWidthChanged: Ui.setIslandWidth(modelData.name, implicitWidth)
+    Component.onCompleted: Ui.setIslandWidth(modelData.name, implicitWidth)
     implicitHeight: 56
     exclusiveZone: 64
     color: "transparent"
@@ -79,10 +81,11 @@ PanelWindow {
         // The assistant's bar grows from here and takes the island's place while open.
         opacity: Ui.askOpen && (Quickshell.screens.includes(Ui.askScreen) ? Ui.askScreen : Ui.screen) === win.modelData ? 0 : 1
         // Coming back, it waits for the bar to shrink into it, so the two never stack.
+        // The bar shrinks into exactly this shape; then the two cross-fade, so the swap can't be seen.
         Behavior on opacity {
             SequentialAnimation {
-                PauseAnimation { duration: pill.opacity < 0.5 ? 300 : 0 }
-                NumberAnimation { duration: 200; easing.type: Easing.InOutCubic }
+                PauseAnimation { duration: pill.opacity < 0.5 ? 400 : 0 }
+                NumberAnimation { duration: 180; easing.type: Easing.InOutQuad }
             }
         }
         RowLayout {

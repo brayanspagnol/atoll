@@ -12,6 +12,7 @@ Item {
     // The screen's width, from the window: right after the window shows again its own width can still be 0,
     // and a bar sized from that grew to nothing.
     property real span: 0
+    property real islandWidth: 430 // the island on this screen: where the bar starts and ends
     readonly property real barWidth: Math.min(1000, Math.max(width, span) - 80)
     readonly property real listWidth: Math.min(760, barWidth - 40)
     // The visible pieces, for the window's input mask, and the text field.
@@ -59,12 +60,23 @@ Item {
     }
 
     onShownChanged: if (shown) { leave.stop(); grow.restart(); field.forceActiveFocus() } else { grow.stop(); leave.restart() }
-    // The bar grows first; the conversation waits until the bar has nearly settled, so nothing outruns its background.
+    // Opening: the bar appears exactly over the island and cross-fades with it, then grows; the conversation
+    // waits until the bar has nearly settled, so nothing outruns its background.
     SequentialAnimation {
         id: grow
+        PropertyAction { target: bar; property: "width"; value: panel.islandWidth }
+        PropertyAction { target: bar; property: "y"; value: 14 }
+        PropertyAction { target: bar; property: "height"; value: 56 }
         ParallelAnimation {
-            NumberAnimation { target: bar; property: "opacity"; to: 1; duration: 160; easing.type: Easing.OutCubic }
-            NumberAnimation { target: bar; property: "width"; from: 430; to: panel.barWidth; duration: 650; easing.type: Easing.OutBack; easing.overshoot: 1.1 }
+            NumberAnimation { target: bar; property: "opacity"; to: 1; duration: 160; easing.type: Easing.InOutQuad }
+            SequentialAnimation {
+                PauseAnimation { duration: 60 }
+                ParallelAnimation {
+                    NumberAnimation { target: bar; property: "width"; to: panel.barWidth; duration: 620; easing.type: Easing.OutBack; easing.overshoot: 1.1 }
+                    NumberAnimation { target: bar; property: "y"; to: 12; duration: 400; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: bar; property: "height"; to: 60; duration: 400; easing.type: Easing.OutCubic }
+                }
+            }
             SequentialAnimation {
                 PauseAnimation { duration: 300 }
                 NumberAnimation { target: barRow; property: "opacity"; to: 1; duration: 240; easing.type: Easing.OutCubic }
@@ -79,19 +91,24 @@ Item {
         }
         ScriptAction { script: { bar.width = Qt.binding(() => panel.barWidth); panel.settled = true } }
     }
-    // The reverse, unhurried: the conversation lifts away, then the bar shrinks back into the island and fades.
+    // Closing, the same way back: the conversation lifts away, the bar shrinks into the island's exact shape,
+    // and only then do the two cross-fade (Island.qml waits for it).
     ParallelAnimation {
         id: leave
         NumberAnimation { target: body; property: "opacity"; to: 0; duration: 200; easing.type: Easing.InOutCubic }
         NumberAnimation { target: bodyShift; property: "y"; to: -12; duration: 240; easing.type: Easing.InOutCubic }
-        NumberAnimation { target: barRow; property: "opacity"; to: 0; duration: 180; easing.type: Easing.InOutCubic }
+        NumberAnimation { target: barRow; property: "opacity"; to: 0; duration: 160; easing.type: Easing.InOutCubic }
         SequentialAnimation {
-            PauseAnimation { duration: 80 }
-            NumberAnimation { target: bar; property: "width"; to: 430; duration: 360; easing.type: Easing.InOutCubic }
+            PauseAnimation { duration: 60 }
+            ParallelAnimation {
+                NumberAnimation { target: bar; property: "width"; to: panel.islandWidth; duration: 360; easing.type: Easing.InOutCubic }
+                NumberAnimation { target: bar; property: "y"; to: 14; duration: 360; easing.type: Easing.InOutCubic }
+                NumberAnimation { target: bar; property: "height"; to: 56; duration: 360; easing.type: Easing.InOutCubic }
+            }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 240 }
-            NumberAnimation { target: bar; property: "opacity"; to: 0; duration: 200; easing.type: Easing.InOutCubic }
+            PauseAnimation { duration: 400 }
+            NumberAnimation { target: bar; property: "opacity"; to: 0; duration: 180; easing.type: Easing.InOutQuad }
         }
     }
 
@@ -410,7 +427,7 @@ Item {
         id: bar
         anchors.horizontalCenter: parent.horizontalCenter
         y: 12
-        width: 430; height: 60; radius: 30
+        width: 430; height: 60; radius: height / 2
         opacity: 0
         MouseArea { anchors.fill: parent; onClicked: field.forceActiveFocus() }
         RowLayout {

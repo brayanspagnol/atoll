@@ -20,6 +20,9 @@ Singleton {
     property bool mediaOpen: false
     property var sheetScreen: null
     property var sheetIsland: null
+    // Each screen's island width, by output name: the assistant's bar grows out of it and shrinks back into it.
+    property var islandWidths: ({})
+    function setIslandWidth(name, w) { if (name && islandWidths[name] !== w) islandWidths = Object.assign({}, islandWidths, { [name]: w }) }
     function toggleMedia(screen, island) {
         if (!mediaOpen) { sheetScreen = screen; sheetIsland = island; open = false }
         mediaOpen = !mediaOpen

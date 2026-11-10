@@ -18,7 +18,7 @@ Scope {
     // and the assistant closed right after opening.
     property bool grabReady: false
     Timer { id: grabLater; interval: 250; onTriggered: ask.grabReady = true }
-    Timer { id: closing; interval: 480; onTriggered: ask.alive = false } // a little longer than AskPanel's leave
+    Timer { id: closing; interval: 620; onTriggered: ask.alive = false } // a little longer than AskPanel's leave
 
     PanelWindow {
         id: win
@@ -45,6 +45,7 @@ Scope {
             id: panel
             anchors.fill: parent
             span: win.screen ? win.screen.width : 0
+            islandWidth: Ui.islandWidths[win.screen?.name ?? ""] ?? 430
             Component.onCompleted: shown = Qt.binding(() => Ui.askOpen)
         }
     }
