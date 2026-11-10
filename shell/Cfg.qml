@@ -2,12 +2,15 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "pins.js" as Pins
 
 Singleton {
     id: root
     property alias v: adapter
     // False until the first profile has loaded (or turned out missing): until then v holds only the defaults.
     property bool ready: false
+    // What the island shows after the clock (pins.js), checked: the file can hold anything.
+    readonly property var island: Pins.valid(adapter.island)
     FileView {
         id: file
         path: Profiles.path
@@ -24,6 +27,7 @@ Singleton {
             completing = true
             const fresh = JSON.parse(defaults)
             for (const key in fresh) if (saved?.[key] === undefined) adapter[key] = fresh[key]
+            if (saved && saved.island === undefined) adapter.island = Pins.migrate(saved)
             completing = false
             writeAdapter()
             root.ready = true
@@ -73,16 +77,16 @@ Singleton {
             property var weatherPlace: null
             property bool weatherAuto: false
             property string weatherUnit: "c" // "c" or "f"
-            property bool weatherChip: true
             // Focus mode. Minutes: 25, 50, 60, or 0 for until turned off. focusAllow: app names whose notifications still show.
             property int focusMinutes: 25
             property bool focusPomodoro: false
             property bool focusHide: true
             property var focusAllow: []
-            // Lagu, the assistant: which AI command-line tool it drives, whether file edits wait for a yes, and the island chip.
+            // Lagu, the assistant: which AI command-line tool it drives, and whether file edits wait for a yes.
             property string aiProvider: "claude" // "claude", "cursor" or "codex"
             property bool aiAsk: true
-            property bool aiChip: true
+            // The island's pinned items, in order: ids from pins.js. Read it through Cfg.island, which checks it.
+            property var island: Pins.ids
         }
     }
 }

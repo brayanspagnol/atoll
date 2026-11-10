@@ -38,7 +38,22 @@ function labelsFrom(text, files) {
     return out
 }
 
+// The list with no search: the screens in order, a group's screens right under its card (groups: Ui.groups), where the first of them is.
+// nth and last place a group's screen inside the card.
+function tree(pages, groups) {
+    const out = []
+    for (const p of pages) {
+        if (!p.group) { out.push({ page: p.id, label: p.label, icon: p.icon, key: p.key, item: false }); continue }
+        if (out.some(r => r.group === p.group)) continue
+        const g = groups[p.group], kids = pages.filter(o => o.group === p.group)
+        out.push({ head: true, group: p.group, page: "", label: g.label, icon: g.icon, key: g.key, item: false, count: kids.length })
+        kids.forEach((k, i) => out.push({ page: k.id, label: k.label, icon: k.icon, key: "", item: false, group: p.group, nth: i, last: i === kids.length - 1 }))
+    }
+    return out
+}
+
 // pages: Ui.pages, already translated. tr: Tr.t. extra: more labels per screen (labelsFrom). Screens first, then what is inside them, best match first.
+// A screen in a group (parent) is found by the group's name too, and says which group it is in.
 function search(pages, query, tr, extra) {
     const q = P.fold(String(query).trim())
     if (!q) return []
@@ -51,15 +66,16 @@ function search(pages, query, tr, extra) {
     }
     const out = []
     for (const p of pages) {
-        const s = score(p.label, p.kw || "")
-        if (s >= 0) out.push({ page: p.id, label: p.label, icon: p.icon, key: p.key, item: false, rank: s })
+        const s = score(p.label, (p.kw || "") + " " + (p.parent || ""))
+        if (s >= 0) out.push(Object.assign({ page: p.id, label: p.label, icon: p.icon, key: p.key, item: false, rank: s }, p.parent ? { sub: p.parent } : {}))
+        const where = p.parent ? p.parent + " › " + p.label : p.label
         const seen = new Set()
         for (const key of (items[p.id] || []).concat((extra || {})[p.id] || [])) {
             if (seen.has(key)) continue
             seen.add(key)
             const label = tr(key)
-            const t = score(label, key + " " + p.label)
-            if (t >= 0) out.push({ page: p.id, label, icon: p.icon, key: "", sub: p.label, item: true, rank: t + 0.5 })
+            const t = score(label, key + " " + where)
+            if (t >= 0) out.push({ page: p.id, label, icon: p.icon, key: "", sub: where, item: true, rank: t + 0.5 })
         }
     }
     return out.sort((a, b) => a.rank - b.rank).slice(0, 30)

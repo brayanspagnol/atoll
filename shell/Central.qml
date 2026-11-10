@@ -32,17 +32,25 @@ Scope {
         WlrLayershell.keyboardFocus: Ui.open ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
         WlrLayershell.namespace: "atoll-central"
         color: "transparent"
-        readonly property var files: ({ som: "PgSound.qml", rede: "PgNet.qml", bt: "PgBt.qml", perf: "PgPerf.qml", cal: "PgCal.qml", avisos: "PgNotif.qml", ajustes: "PgSettings.qml", energia: "PgPower.qml", monitor: "PgMonitor.qml", sobre: "PgAbout.qml" , visual: "PgLook.qml", atalhos: "PgShortcuts.qml", apps: "PgApps.qml", regras: "PgRules.qml", backup: "PgBackup.qml", clima: "PgWeather.qml", ia: "PgAssistant.qml" })
+        readonly property var files: ({ som: "PgSound.qml", rede: "PgNet.qml", bt: "PgBt.qml", perf: "PgPerf.qml", cal: "PgCal.qml", avisos: "PgNotif.qml", ajustes: "PgSettings.qml", energia: "PgPower.qml", monitor: "PgMonitor.qml", sobre: "PgAbout.qml" , visual: "PgLook.qml", atalhos: "PgShortcuts.qml", apps: "PgApps.qml", topo: "PgTop.qml", instalados: "PgInstalled.qml", regras: "PgRules.qml", backup: "PgBackup.qml", clima: "PgWeather.qml", ia: "PgAssistant.qml" })
         // Every label on every screen, read from the screens' own files, so the search finds any button or option.
         property var labels: ({})
         Process {
             running: true
             workingDirectory: Quickshell.shellPath("")
-            command: ["grep", "-oH", 'Tr\\.t("[^"]*")'].concat(Object.keys(win.files).map(id => win.files[id]))
+            command: ["grep", "-osH", 'Tr\\.t("[^"]*")'].concat(Object.keys(win.files).map(id => win.files[id]))
             stdout: StdioCollector { onStreamFinished: win.labels = F.labelsFrom(text, win.files) }
         }
+        // A group's card opens or closes it; opening shows the screen last used in it.
+        property bool groupOpen: false
+        function openIfInGroup() { if (Ui.pages.find(p => p.id === Ui.page)?.group) groupOpen = true }
+        Component.onCompleted: openIfInGroup()
+        Connections { target: Ui; function onPageChanged() { win.openIfInGroup() } }
+        property real unfold: groupOpen ? 1 : 0
+        Behavior on unfold { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
         // A screen, or an item in one: open it, and for an item scroll there.
         function go(m) {
+            if (m.head) { groupOpen = !groupOpen; if (groupOpen) Ui.page = Ui.resolve(m.group); return }
             find.text = ""
             if (m.item) Ui.reveal(m.page, m.label)
             else Ui.page = m.page
@@ -61,7 +69,9 @@ Scope {
             monitor: Tr.t("Screens: %1").arg(Displays.count_on),
             sobre: "Atoll " + Ui.version,
             atalhos: Tr.t("Keys and commands"),
-            apps: Tr.t("Browser, terminal, files"),
+            topo: Tr.t("%1 items").arg(Cfg.island.length),
+            instalados: Tr.t("Uninstall apps"),
+            apps: Tr.t("Browser, terminal"),
             regras: Tr.t("Per app"),
             backup: Tr.t("Export, import"),
             energia: UPower.displayDevice?.isLaptopBattery ? Tr.t("Battery %1%").arg(Math.round(UPower.displayDevice.percentage * 100)) : Tr.t("Shut down, suspend")
@@ -111,8 +121,8 @@ Scope {
                                 Component.onCompleted: forceActiveFocus()
                                 onTextChanged: nav.currentIndex = text ? 0 : -1
                                 Keys.onEscapePressed: { if (text) text = ""; else Ui.open = false }
-                                Keys.onDownPressed: nav.currentIndex = Math.min(nav.count - 1, nav.currentIndex + 1)
-                                Keys.onUpPressed: nav.currentIndex = Math.max(0, nav.currentIndex - 1)
+                                Keys.onDownPressed: nav.step(1)
+                                Keys.onUpPressed: nav.step(-1)
                                 Keys.onReturnPressed: if (nav.currentItem) win.go(nav.currentItem.modelData)
                                 Keys.onEnterPressed: if (nav.currentItem) win.go(nav.currentItem.modelData)
                                 Tx { visible: !find.text; text: Tr.t("Search the control center"); dim: true; anchors.verticalCenter: parent.verticalCenter }
@@ -127,12 +137,18 @@ Scope {
                     ListView {
                         id: nav
                         Layout.fillWidth: true; Layout.fillHeight: true
-                        clip: true; spacing: 4
+                        clip: true
                         boundsBehavior: Flickable.StopAtBounds
                         // Screens when empty; matches while typing. A new array each time, so it fades in again.
-                        model: find.text.trim() ? F.search(Ui.pages, find.text, Tr.t, win.labels) : Ui.pages.map(p => ({ page: p.id, label: p.label, icon: p.icon, key: p.key, item: false }))
+                        model: find.text.trim() ? F.search(Ui.pages, find.text, Tr.t, win.labels) : F.tree(Ui.pages, Ui.groups)
                         currentIndex: -1
                         highlightFollowsCurrentItem: false
+                        // One row up or down, past a closed group's screens.
+                        function step(d) {
+                            let i = currentIndex
+                            do i += d; while (i >= 0 && i < count && model[i].group && !model[i].head && !win.groupOpen)
+                            if (i >= 0 && i < count) currentIndex = i
+                        }
                         ScrollBar.vertical: ScrollBar { policy: nav.contentHeight > nav.height ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff; width: 6 }
                         populate: Transition {
                             ParallelAnimation {
@@ -141,38 +157,66 @@ Scope {
                             }
                         }
                         Tx { anchors.centerIn: parent; visible: nav.count === 0; text: Tr.t("Nothing found."); dim: true }
-                        delegate: Rectangle {
+                        // Rows carry their own gap below, so a closed group's screens take no room at all.
+                        // A group's card is drawn by its header, under the screens that follow it.
+                        delegate: Item {
                             id: row
                             required property var modelData
                             required property int index
-                            readonly property bool sel: !modelData.item && Ui.page === modelData.page
+                            readonly property bool head: !!modelData.head
+                            readonly property bool child: !!modelData.group && !head
+                            readonly property bool sel: !modelData.item && !head && Ui.page === modelData.page
                             readonly property bool cur: ListView.isCurrentItem
                             readonly property color fg: sel ? Theme.accentInk : Theme.ink
+                            readonly property string line: modelData.sub || (win.status[modelData.page] ?? "")
                             width: ListView.view.width - 8
-                            height: 58; radius: 14
-                            color: sel ? Theme.accent : cur || rm.containsMouse ? Theme.raisedHover : Theme.raised
-                            border.width: cur && !sel ? 1 : activeFocus ? 2 : 0
-                            border.color: activeFocus ? Theme.ink : Theme.accent
-                            scale: rm.pressed ? 0.98 : 1
-                            Behavior on color { ColorAnimation { duration: Theme.fast } }
-                            Behavior on scale { NumberAnimation { duration: 120 } }
+                            height: head ? 54 + 10 * (1 - win.unfold) : child ? 48 * win.unfold + (modelData.last ? 10 * win.unfold : 0) : 62
+                            visible: height > 0.5
                             activeFocusOnTab: true
                             Accessible.role: Accessible.Button
-                            Accessible.name: modelData.label + ", " + (modelData.item ? modelData.sub : win.status[modelData.page] ?? "")
+                            Accessible.name: modelData.label + (line && !head ? ", " + line : "")
+                            Accessible.expandable: head
+                            Accessible.expanded: head && win.groupOpen
+                            Accessible.onPressAction: win.go(modelData)
                             Keys.onSpacePressed: win.go(modelData)
                             Keys.onReturnPressed: win.go(modelData)
-                            RowLayout {
-                                anchors.fill: parent; anchors.leftMargin: 14; anchors.rightMargin: 14; spacing: 12
-                                Ic { name: row.modelData.icon; size: 22; color: row.fg }
-                                ColumnLayout {
-                                    Layout.fillWidth: true; spacing: 1
-                                    Tx { text: row.modelData.label; strong: true; color: row.fg; Layout.fillWidth: true }
-                                    Tx { text: row.modelData.item ? row.modelData.sub : win.status[row.modelData.page] ?? ""; size: 13; color: row.fg; opacity: 0.8; Layout.fillWidth: true }
-                                }
-                                Tx { visible: !!row.modelData.key; text: row.modelData.key; mono: true; size: 12; color: row.fg; opacity: 0.6 }
-                                Ic { visible: row.modelData.item; name: "right"; size: 16; color: row.fg; opacity: 0.6 }
+                            Keys.onDownPressed: { nav.currentIndex = index; nav.step(1); nav.currentItem.forceActiveFocus() }
+                            Keys.onUpPressed: { nav.currentIndex = index; nav.step(-1); nav.currentItem.forceActiveFocus() }
+                            Rectangle {
+                                visible: row.head
+                                width: parent.width; height: 60 + 48 * (row.modelData.count ?? 0) * win.unfold
+                                radius: 16; color: Theme.raised
                             }
-                            MouseArea { id: rm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: win.go(row.modelData) }
+                            Rectangle {
+                                id: box
+                                x: row.head || row.child ? 6 : 0
+                                y: row.head ? 6 : row.child ? 4 : 0
+                                width: parent.width - 2 * x
+                                height: row.head ? 48 : row.child ? 44 : 58
+                                radius: row.head || row.child ? 12 : 14
+                                // A group's screens fade in one after another as it opens.
+                                opacity: row.child ? Math.max(0, Math.min(1, (win.unfold - row.modelData.nth * 0.15) / 0.55)) : 1
+                                color: row.sel ? Theme.accent : row.cur || rm.containsMouse ? Theme.raisedHover : row.head || row.child ? "transparent" : Theme.raised
+                                border.width: row.cur && !row.sel ? 1 : row.activeFocus ? 2 : 0
+                                border.color: row.activeFocus ? Theme.ink : Theme.accent
+                                scale: rm.pressed ? 0.98 : 1
+                                Behavior on color { ColorAnimation { duration: Theme.fast } }
+                                Behavior on scale { NumberAnimation { duration: 120 } }
+                                RowLayout {
+                                    anchors.fill: parent; anchors.leftMargin: row.child ? 22 : row.head ? 8 : 14; anchors.rightMargin: row.head ? 10 : 14; spacing: 12
+                                    Ic { visible: !row.child; name: row.modelData.icon; size: 22; color: row.fg }
+                                    ColumnLayout {
+                                        Layout.fillWidth: true; spacing: 1
+                                        Tx { text: row.modelData.label; strong: !row.child || row.sel; color: row.fg; Layout.fillWidth: true }
+                                        Tx { visible: !row.head && !row.child; text: row.line; size: 13; color: row.fg; opacity: 0.8; Layout.fillWidth: true }
+                                    }
+                                    Tx { visible: row.child; text: row.line; size: 13; color: row.fg; opacity: 0.8 }
+                                    Tx { visible: !!row.modelData.key; text: row.modelData.key; mono: true; size: 12; color: row.fg; opacity: 0.6 }
+                                    Ic { visible: !!row.modelData.item; name: "right"; size: 16; color: row.fg; opacity: 0.6 }
+                                    Ic { visible: row.head; name: "down"; size: 16; color: row.fg; opacity: 0.7; rotation: 180 * win.unfold }
+                                }
+                                MouseArea { id: rm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: win.go(row.modelData) }
+                            }
                         }
                     }
                     Rowi {

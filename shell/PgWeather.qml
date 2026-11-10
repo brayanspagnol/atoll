@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import "weather.js" as W
+import "pins.js" as Pins
 
 Page {
     id: pg
@@ -89,6 +90,6 @@ Page {
     }
     Line {
         label: Tr.t("Show in the island")
-        Swt { a11y: Tr.t("Show in the island"); checked: Cfg.v.weatherChip; onToggled: Cfg.v.weatherChip = checked }
+        Swt { a11y: Tr.t("Show in the island"); checked: Cfg.island.includes("weather"); onToggled: Cfg.v.island = Pins.set(Cfg.island, "weather", checked) }
     }
 }

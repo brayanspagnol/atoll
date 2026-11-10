@@ -8,6 +8,7 @@ import "apps.js" as A
 // One app per role, for Atoll (scripts/open-app, which the shortcuts run) and for the system (xdg-mime) at once.
 Page {
     id: pg
+    group: Tr.t("Applications")
     title: Tr.t("Default apps")
     subtitle: Tr.t("One app for each role.")
     readonly property string script: Quickshell.env("HOME") + "/.local/share/atoll/scripts/open-app"

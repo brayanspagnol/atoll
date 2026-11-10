@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import "pins.js" as Pins
 
 // Who answers in the island, and how. The header below carries the mascot, so the page's own title stays empty.
 Page {
@@ -152,7 +153,7 @@ Page {
         }
         Line {
             label: Tr.t("Show in the island")
-            Swt { a11y: Tr.t("Show in the island"); checked: Cfg.v.aiChip; onToggled: Cfg.v.aiChip = checked }
+            Swt { a11y: Tr.t("Show in the island"); checked: Cfg.island.includes("lagu"); onToggled: Cfg.v.island = Pins.set(Cfg.island, "lagu", checked) }
         }
         Line {
             label: Tr.t("Shortcut")

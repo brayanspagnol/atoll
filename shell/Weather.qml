@@ -14,7 +14,7 @@ Singleton {
     readonly property var place: auto ? ipPlace : W.place(Cfg.v.weatherPlace)
     // The last good forecast: a failed fetch keeps it.
     property var data: null
-    readonly property bool shown: !!data && Cfg.v.weatherChip
+    readonly property bool shown: !!data && Cfg.island.includes("weather")
 
     property real lastTry: 0
     property real lastOk: 0

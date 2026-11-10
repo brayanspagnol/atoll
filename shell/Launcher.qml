@@ -114,8 +114,8 @@ Scope {
                 hay: (a.name + " " + a.genericName + " " + a.keywords.join(" ")).toLowerCase(), run: () => win.launch(a)
             })) : []
             const screens = mode === "" || mode === "screens" ? Ui.pages.map(p => ({
-                group: Tr.t("Screens"), icon: p.icon, name: p.label, sub: "", kind: Tr.t("screen"),
-                hay: (p.label + " " + p.kw).toLowerCase(), run: () => Ui.show(p.id)
+                group: Tr.t("Screens"), icon: p.icon, name: p.full, sub: "", kind: Tr.t("screen"),
+                hay: (p.full + " " + p.kw).toLowerCase(), run: () => Ui.show(p.id)
             })) : []
             const shots = [
                 { name: Tr.t("Area screenshot"), sub: Tr.t("Saved to Pictures and copied"), words: "screenshot print capture area", run: () => win.shoot("region-file") },

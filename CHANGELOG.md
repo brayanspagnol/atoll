@@ -9,6 +9,8 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - Assistant: `Super+A`, or the mascot Lagu in the island, stretches the island into a bar where you ask about your computer. The steps it takes, its answer and visual cards (a ring, bars and up to three buttons that open a screen or an app) drop in below, and it asks before changing files. It uses the Claude Code, Cursor or Codex command line already logged in on this computer, so there are no API keys to paste. While it works with the bar closed, Lagu in the island shows it, then says when it is done. A new Assistant screen (`Super+Alt+G`) picks which one answers and shows how to install the others.
+- Island: right-click an item to unpin it from the top, open its screen or choose what stays. An unpinned item shrinks away and a toast offers Undo for 6 seconds. The clock and workspaces always stay, and a low battery, a running focus timer and a busy assistant still show while they last.
+- On top screen, under Applications: a live preview of the island, the pinned items to reorder (drag, the arrow buttons or `Alt+Up`/`Alt+Down`) or unpin, the others to pin, and Reset to default.
 - Installed apps: a screen under Applications lists the apps from the system, Flatpak and AppImage, largest first, with search and a filter per source, and uninstalls them. The dialog shows the exact command first. A system package opens a terminal with `sudo pacman -Rns` ready, so you type your password there and never in Atoll; Flatpak and AppImage apps go without a password, the AppImage file and its launcher to the trash. Apps Atoll needs, your default apps and packages that others depend on are protected.
 
 ### Fixed
@@ -18,6 +20,8 @@ All notable changes to this project are documented here. The format follows
 ### Changed
 
 - Floating panels (island, dock, control center, cards, launcher, clipboard) no longer have an outline. Critical notifications keep their red one.
+- The control center's Default apps card is now an Applications group that opens in place into On top, Installed and Default. `Super+Alt+N` opens the one you used last, and the search finds each with its group's name.
+- The island's items are one ordered list in the profile, so they follow your profile and its backup. The Weather and Assistant screens' "Show in the island" switches now pin and unpin those items, and a profile where they were off keeps them off.
 
 ## [1.17.0] - 2026-11-06
 

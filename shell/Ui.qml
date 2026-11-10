@@ -65,21 +65,29 @@ Singleton {
         { id: "ajustes", key: "Alt+J", label: Tr.t("Settings"), icon: "ajustes", kw: "settings language keyboard mouse touchpad idle calendar holidays night light " + Tr.t("language keyboard idle") },
         { id: "visual", key: "Alt+T", label: Tr.t("Personalization"), icon: "palette", kw: "profile photo theme dark light accent color wallpaper " + Tr.t("profile photo theme color wallpaper") },
         { id: "atalhos", key: "Alt+K", label: Tr.t("Shortcuts"), icon: "keyboard", kw: "shortcuts keys keybinds hotkeys " + Tr.t("shortcuts keys") },
-        { id: "apps", key: "Alt+N", label: Tr.t("Default apps"), icon: "grid", kw: "default apps browser terminal files " + Tr.t("browser terminal files") },
+        // A group: one card in the list (see groups), opening into these. parent names it in the search and the page's header.
+        { id: "topo", key: "", group: "aplicativos", parent: Tr.t("Applications"), label: Tr.t("On top"), icon: "pin", kw: "island top bar pin unpin " + Tr.t("island pin unpin") },
+        { id: "instalados", key: "", group: "aplicativos", parent: Tr.t("Applications"), label: Tr.t("Installed"), icon: "download", kw: "installed apps uninstall remove flatpak appimage " + Tr.t("apps uninstall remove") },
+        { id: "apps", key: "", group: "aplicativos", parent: Tr.t("Applications"), label: Tr.t("Default"), icon: "grid", kw: "default apps browser terminal files " + Tr.t("browser terminal files") },
         { id: "regras", key: "Alt+R", label: Tr.t("Window rules"), icon: "window", kw: "window rules float workspace " + Tr.t("float workspace") },
         { id: "backup", key: "Alt+U", label: Tr.t("Backup"), icon: "archive", kw: "backup export import profile " + Tr.t("export import profile") },
         { id: "energia", key: "Alt+E", label: Tr.t("Power"), icon: "energia", kw: "power shut down suspend restart lock log out " + Tr.t("shut down suspend restart lock log out") },
         { id: "sobre", key: "Alt+O", label: Tr.t("About"), icon: "sobre", kw: "about version update github " + Tr.t("version update") }
-    ]
+    ].map(p => Object.assign({ full: p.parent ? p.parent + " › " + p.label : p.label }, p)) // full: the name outside the list, with its group
+    // A group's card in the list. Its id also works as a page for toggle and show: the one last used in it.
+    readonly property var groups: ({ aplicativos: { label: Tr.t("Applications"), icon: "grid", key: "Alt+N" } })
+    property var lastIn: ({ aplicativos: "topo" })
+    onPageChanged: { const g = pages.find(p => p.id === page)?.group; if (g) lastIn[g] = page }
+    function resolve(p) { return lastIn.hasOwnProperty(p) ? lastIn[p] : p }
     readonly property var screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0] ?? null
 
     // Pages watch these to scroll to a label and mark it; the counter repeats the same request.
     property string revealLabel: ""
     property int revealCount: 0
-    function reveal(p, label) { page = p; revealLabel = label; revealCount++ }
-    function show(p) { page = p; launcher = false; overview = false; clipboard = false; mediaOpen = false; dockEditor = false; open = true }
+    function reveal(p, label) { page = resolve(p); revealLabel = label; revealCount++ }
+    function show(p) { page = resolve(p); launcher = false; overview = false; clipboard = false; mediaOpen = false; dockEditor = false; open = true }
     function editDock() { open = false; launcher = false; overview = false; mediaOpen = false; dockEditor = true }
-    function toggle(p) { if (open && (!p || page === p)) open = false; else show(p || page) }
+    function toggle(p) { p = resolve(p); if (open && (!p || page === p)) open = false; else show(p || page) }
     function sh(cmd) { Quickshell.execDetached(["sh", "-c", cmd]) }
 
     readonly property string version: versionFile.text().trim()

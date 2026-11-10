@@ -24,9 +24,28 @@ Frost {
     HoverHandler { id: hover }
     Timer {
         // Critical stays until dismissed; -1/0 means "server decides": 6 s.
-        running: !c.critical && !hover.hovered
+        running: !c.critical && !hover.hovered && !c.modelData.countdown
         interval: c.modelData.expireTimeout > 0 ? c.modelData.expireTimeout : 6000
         onTriggered: Notifs.drop(c.modelData)
+    }
+    // The shell's own toasts with a countdown (an undo) show the time left as a bar, which pauses under the pointer.
+    Rectangle {
+        visible: !!c.modelData.countdown
+        anchors { left: parent.left; right: parent.right; bottom: parent.bottom; leftMargin: 18; rightMargin: 18; bottomMargin: 6 }
+        height: 3; radius: 1.5
+        color: Theme.line
+        Rectangle {
+            property real left: 1
+            width: parent.width * left; height: parent.height; radius: 1.5
+            color: Theme.accent
+            NumberAnimation on left {
+                running: !!c.modelData.countdown
+                paused: running && hover.hovered
+                from: 1; to: 0
+                duration: c.modelData.expireTimeout
+                onFinished: Notifs.drop(c.modelData)
+            }
+        }
     }
     TapHandler { onTapped: Notifs.drop(c.modelData) }
 

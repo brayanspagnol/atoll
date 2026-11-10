@@ -178,7 +178,7 @@ assert.deepEqual([P.duration(720), P.duration(12000), P.duration(190000)], ["12 
 // The control center's search: screens and what is inside them, accents ignored, best match first.
 const F = (() => {
     const ctx = { P }; vm.createContext(ctx)
-    vm.runInContext(fs.readFileSync(new URL("../shell/finder.js", import.meta.url), "utf8").replace(".pragma library", "").replace(/^\.import .*$/m, "") + ";this.x={search,items,labelsFrom}", ctx)
+    vm.runInContext(fs.readFileSync(new URL("../shell/finder.js", import.meta.url), "utf8").replace(".pragma library", "").replace(/^\.import .*$/m, "") + ";this.x={search,items,labelsFrom,tree}", ctx)
     return ctx.x
 })()
 const pagesForTest = [{ id: "ajustes", label: "Ajustes", icon: "ajustes", key: "Alt+J", kw: "settings" }, { id: "energia", label: "Energia", icon: "energia", key: "Alt+E", kw: "power" }]
@@ -202,6 +202,47 @@ assert.ok(F.search(pagesForTest, "night", trPt).some(r => r.label === "Luz notur
     assert.ok(all.monitor.includes("Extend") && all.ajustes.includes("Pointer speed"))
 }
 assert.ok(Object.keys(F.items).every(id => ["som", "rede", "bt", "perf", "cal", "avisos", "monitor", "ajustes", "visual", "atalhos", "apps", "regras", "backup", "energia", "sobre"].includes(id)))
+{
+    // A group: one card in the list with its screens under it, and the search names the group.
+    const pages = [{ id: "som", label: "Som", icon: "som", key: "Alt+A", kw: "" },
+        { id: "topo", label: "No topo", icon: "pin", key: "", kw: "island", group: "aplicativos", parent: "Aplicativos" },
+        { id: "instalados", label: "Instalados", icon: "download", key: "", kw: "uninstall", group: "aplicativos", parent: "Aplicativos" },
+        { id: "sobre", label: "Sobre", icon: "sobre", key: "Alt+O", kw: "" }]
+    const rows = plain(F.tree(pages, { aplicativos: { label: "Aplicativos", icon: "grid", key: "Alt+N" } }))
+    assert.deepEqual(rows.map(r => (r.head ? "[" + r.label + " " + r.count + "]" : r.group ? "  " + r.page + r.nth + (r.last ? "." : "") : r.page)), ["som", "[Aplicativos 2]", "  topo0", "  instalados1.", "sobre"])
+    assert.equal(rows[1].key, "Alt+N")
+    assert.deepEqual(plain(F.search(pages, "instal", k => k)).map(r => [r.label, r.sub ?? ""]), [["Instalados", "Aplicativos"]])
+    assert.deepEqual(plain(F.search(pages, "aplicativos", k => k)).map(r => r.page), ["topo", "instalados"]) // the group's name finds its screens
+    const inside = plain(F.search(pages, "luz", k => ({ "Night light": "Luz noturna" })[k] ?? k, { topo: ["Night light"] }))
+    assert.deepEqual(inside.map(r => [r.label, r.sub]), [["Luz noturna", "Aplicativos › No topo"]])
+}
+// The island's pinned items: the profile's list checked like outside data, the old switches carried over, and the moves.
+{
+    const Pi = load("pins.js", "items,ids,item,valid,migrate,pin,unpin,set,move")
+    const all = Pi.ids.slice()
+    assert.deepEqual(all, ["lagu", "weather", "media", "tray", "sound", "network", "bluetooth", "clipboard", "notifications", "focus", "power", "battery"])
+    for (const bad of [null, undefined, 7, "sound", { sound: true }, ["clock", "workspaces", 3], [null]]) assert.deepEqual(plain(Pi.valid(bad)), all, JSON.stringify(bad))
+    assert.deepEqual(plain(Pi.valid(["power", "x", "sound", "power", 5, "clock", "sound"])), ["power", "sound"]) // unknown dropped, each once, in order
+    assert.deepEqual(plain(Pi.valid([])), []) // everything unpinned is a choice
+    assert.deepEqual(plain(Pi.migrate({ weatherChip: false, aiChip: true })), all.filter(id => id !== "weather"))
+    assert.deepEqual(plain(Pi.migrate({ weatherChip: false, aiChip: false })), all.filter(id => id !== "weather" && id !== "lagu"))
+    assert.deepEqual(plain(Pi.migrate({})), all); assert.deepEqual(plain(Pi.migrate(null)), all)
+    assert.deepEqual(plain(Pi.pin(["sound", "power"], "network")), ["sound", "network", "power"]) // near its default place
+    assert.deepEqual(plain(Pi.pin(["power", "sound"], "lagu")), ["lagu", "power", "sound"])
+    assert.deepEqual(plain(Pi.pin(["sound", "power"], "battery")), ["sound", "power", "battery"])
+    assert.deepEqual(plain(Pi.pin(["power", "sound"], "battery", 0)), ["battery", "power", "sound"]) // an undo puts it back where it was
+    assert.deepEqual(plain(Pi.pin(["power"], "battery", 9)), ["power", "battery"])
+    assert.deepEqual(plain(Pi.pin(["power"], "power")), ["power"]); assert.deepEqual(plain(Pi.pin(["power"], "clock")), ["power"])
+    assert.deepEqual(plain(Pi.set(["sound", "power"], "sound", false)), ["power"]); assert.deepEqual(plain(Pi.unpin(["power"], "x")), ["power"])
+    assert.deepEqual(plain(Pi.move(["a", "b", "c"], "a", 1)), ["b", "a", "c"]); assert.deepEqual(plain(Pi.move(["a", "b", "c"], "a", 9)), ["b", "c", "a"])
+    assert.deepEqual(plain(Pi.move(["a", "b", "c"], "c", -1)), ["a", "c", "b"]); assert.deepEqual(plain(Pi.move(["a", "b"], "a", -1)), ["a", "b"])
+    const uiText = fs.readFileSync(new URL("../shell/Ui.qml", import.meta.url), "utf8")
+    for (const i of Pi.items) assert(i.page === "" || uiText.includes(`{ id: "${i.page}", key:`), i.page) // a screen that exists
+    for (const file of fs.readdirSync(new URL("../shell/i18n/", import.meta.url))) {
+        const dict = JSON.parse(fs.readFileSync(new URL("../shell/i18n/" + file, import.meta.url), "utf8"))
+        for (const i of Pi.items) assert(i.label in dict, `${file} is missing: ${i.label}`)
+    }
+}
 const kb = P.zipLayouts("br,us", "abnt2,")
 assert.deepEqual(JSON.parse(JSON.stringify(kb)), [{ layout: "br", variant: "abnt2" }, { layout: "us", variant: "" }])
 assert.deepEqual(JSON.parse(JSON.stringify(P.joinLayouts(kb))), { layout: "br,us", variant: "abnt2," })
@@ -276,9 +317,12 @@ if (haveQs) {
     // A key the file lacks gets its default, not the previous profile's value, and what the file has is kept.
     const dir = fs.mkdtempSync("/tmp/atoll-test-")
     fs.cpSync(new URL("../shell/Cfg.qml", import.meta.url), dir + "/Cfg.qml")
+    fs.cpSync(new URL("../shell/pins.js", import.meta.url), dir + "/pins.js")
     fs.writeFileSync(dir + "/a.json", JSON.stringify({ accent: "rosa", lockAc: 9, dnd: true, dock: [{ label: "X" }] }))
     fs.writeFileSync(dir + "/b.json", JSON.stringify({ accent: "verde", wallpapers: { "DP-1": "/w" }, dnd: false }))
     fs.writeFileSync(dir + "/d.json", "{oops")
+    fs.writeFileSync(dir + "/e.json", JSON.stringify({ accent: "verde", weatherChip: false, aiChip: true }))
+    fs.writeFileSync(dir + "/f.json", JSON.stringify({ island: ["power", 3, "power", "sound"] }))
     const out = runQml(dir, `import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -297,12 +341,21 @@ ShellRoot {
             if (step === 3) { show("c"); Profiles.path = "${dir}/d.json" }
             if (step === 4) { show("d"); Profiles.path = "${dir}/b.json" }
             if (step === 5) { show("back"); Cfg.v.nightK = 3000 }
-            if (step === 7) { console.log("RESULT writes " + writes); Qt.quit() }
+            if (step === 7) { console.log("RESULT writes " + writes); Profiles.path = "${dir}/e.json" }
+            if (step === 8) { console.log("RESULT e " + JSON.stringify(Cfg.island)); Profiles.path = "${dir}/f.json" }
+            if (step === 9) { console.log("RESULT f " + JSON.stringify(Cfg.island)); Profiles.path = "${dir}/a.json" }
+            if (step === 10) { console.log("RESULT a2 " + JSON.stringify(Cfg.island)); Qt.quit() }
         }
     }
 }
 `, { "Profiles.qml": `pragma Singleton\nimport Quickshell\nSingleton { property string path: "${dir}/a.json" }\n` })
     const file = name => JSON.parse(fs.readFileSync(`${dir}/${name}.json`))
+    // The island list: an older profile's switches turned into it, once; a broken one read as what it can be.
+    const noWeather = ["lagu", "media", "tray", "sound", "network", "bluetooth", "clipboard", "notifications", "focus", "power", "battery"]
+    assert.deepEqual(out.e, noWeather)
+    assert.deepEqual(file("e").island, noWeather); assert.equal(file("e").weatherChip, undefined) // migrated, and the old keys go
+    assert.deepEqual(out.f, ["power", "sound"]); assert.deepEqual(file("f").island, ["power", 3, "power", "sound"]) // checked on read, never rewritten
+    assert.equal(out.a2.length, 12); assert.equal(file("a").island.length, 12) // a profile from before both: everything
     assert.deepEqual(out.a, { accent: "rosa", lockAc: 9, dnd: true, docks: 1, wallpapers: {} })
     assert.deepEqual(out.b, { accent: "verde", lockAc: 5, dnd: false, docks: 6, wallpapers: { "DP-1": "/w" } })
     assert.deepEqual(out.c, { accent: "gelo", lockAc: 5, dnd: false, docks: 6, wallpapers: {} }) // no file at all
@@ -1445,7 +1498,7 @@ ShellRoot {
 }
 `
     fs.writeFileSync(sc + "/shell.qml", qmlRoot)
-    fs.writeFileSync(sc + "/Ui.qml", `pragma Singleton\nimport Quickshell\nSingleton { property bool open: true; readonly property var pages: [{ id: "som", label: "Sound" }] }\n`)
+    fs.writeFileSync(sc + "/Ui.qml", `pragma Singleton\nimport Quickshell\nSingleton { property bool open: true; readonly property var pages: [{ id: "som", label: "Sound", full: "Sound" }] }\n`)
     const { WAYLAND_DISPLAY, DISPLAY, HYPRLAND_INSTANCE_SIGNATURE, ...env } = process.env
     const run = spawnSync("dbus-run-session", ["--", "qs", "-p", sc + "/shell.qml"], { encoding: "utf8", timeout: 30000, env: { ...env, PATH: sc + "/bin:" + env.PATH, LANG: "C.UTF-8", LC_ALL: "C.UTF-8", LANGUAGE: "en", QT_QPA_PLATFORM: "offscreen", HOME: sc + "/home", XDG_DATA_HOME: sc + "/home/share", XDG_CONFIG_HOME: sc + "/home/config", XDG_STATE_HOME: sc + "/home/state", XDG_DATA_DIRS: sc + "/data" } })
     const said = Object.fromEntries([...(run.stdout + run.stderr).matchAll(/RESULT (\w+) (.*)/g)].map(m => [m[1], JSON.parse(m[2])]))
@@ -1889,6 +1942,116 @@ ShellRoot {
     assert.deepEqual(out.after, { calls: ["refresh", "allow", "login claude", "stop", "ask hello"], page: "perf", askOpen: false })
     assert.equal(fs.readFileSync(ad + "/launched", "utf8"), "org.gnome.Nautilus\n")
     fs.rmSync(ad, { recursive: true })
+}
+
+// The island's pinned items and the Applications group, on the real island, control center and On top page.
+// Plain windows stand in for the layer shell. The Installed page is built elsewhere: only Ui is checked for it.
+if (haveQs) {
+    const it = fs.mkdtempSync("/tmp/atoll-test-")
+    fs.cpSync(new URL("../shell/", import.meta.url), it, { recursive: true })
+    fs.mkdirSync(it + "/home/.config/atoll/profiles", { recursive: true })
+    fs.writeFileSync(it + "/home/.config/atoll/profiles/default.json", JSON.stringify({ aiChip: false })) // from before the list: the assistant's chip off
+    for (const [file, size] of [["Island.qml", ""], ["Central.qml", "implicitWidth: 1600; implicitHeight: 1200"]]) fs.writeFileSync(`${it}/${file}`, fs.readFileSync(`${it}/${file}`, "utf8")
+        .replace("PanelWindow {", "FloatingWindow { " + size)
+        .replace("    LazyLoader {", "    readonly property var win: loader.item\n    LazyLoader {\n    id: loader")
+        .split("\n").filter(l => !/^\s*(anchors \{ top|anchors\.top: true|margins\.top|exclusiveZone|exclusionMode|WlrLayershell)/.test(l)).join("\n"))
+    const out = runQml(it, `import QtQuick
+import Quickshell
+ShellRoot {
+    Variants { id: islands; model: Quickshell.screens; Island {} }
+    Central { id: central }
+    property int step: 0
+    function all(item, test, out) { for (const c of item.children) { if (test(c)) out.push(c); all(c, test, out) } return out }
+    function say(tag, v) { console.log("RESULT " + tag + " " + JSON.stringify(v)) }
+    property var held: null
+    function isl() { return islands.instances[0] }
+    function nav() { return all(central.win.contentItem, c => c.step !== undefined && c.currentIndex !== undefined, [])[0] }
+    function find() { return all(central.win.contentItem, c => c.selectionColor !== undefined && c.cursorPosition !== undefined, [])[0] }
+    function top() { return all(central.win.contentItem, c => c.rest !== undefined && c.list !== undefined, [])[0] }
+    function rows() { return all(top().contentItem, c => c.step !== undefined && c.label !== undefined, []).sort((a, b) => a.index - b.index).map(r => r.modelData) }
+    function menu() {
+        for (const d of isl().data) if (d.anchor !== undefined) return { open: d.visible, rows: all(d.contentItem, c => c.picked !== undefined, []).map(r => r.visible ? r.text + (r.key ? " " + r.key : "") : "-") }
+    }
+    function slot(id) { return all(isl().contentItem, c => c.lead !== undefined && c.modelData === id, [])[0] }
+    function tree() { return nav().model.map(r => r.head ? "[" + r.label + " " + r.key + "]" : (r.group ? "  " : "") + r.page) }
+    Timer {
+        running: true; repeat: true; interval: 500
+        onTriggered: {
+            step++
+            if (step === 2) {
+                say("start", { island: Cfg.island, shown: isl().shown, has: isl().has })
+                Ui.toggle("aplicativos")
+            }
+            if (step === 3) {
+                say("group", { page: Ui.page, open: Ui.open, tree: tree(), open2: central.win.groupOpen, status: central.win.status.topo })
+                find().text = "Installed"
+            }
+            if (step === 4) {
+                const installed = nav().model.map(r => [r.label, r.sub ?? ""])
+                find().text = "on top"
+                say("found", { installed, ontop: nav().model.filter(r => !r.item).map(r => [r.label, r.sub ?? ""]) })
+                find().text = ""
+                isl().openMenu(slot("sound"))
+            }
+            if (step === 5) {
+                say("menu", menu())
+                isl().openMenu(slot("clipboard"))
+            }
+            if (step === 6) {
+                say("menu2", menu())
+                isl().unpin("sound")
+            }
+            if (step === 7) {
+                say("unpinned", { island: Cfg.island, shown: isl().shown, rows: rows(), toasts: Notifs.toasts.map(t => [t.summary, t.body, t.actions.map(a => a.text), t.countdown]) })
+                Notifs.toasts[0].actions[0].invoke()
+            }
+            if (step === 8) {
+                say("undone", { island: Cfg.island, rows: rows(), toasts: Notifs.toasts.length })
+                all(top().contentItem, c => c.a11y === "Pin Assistant", [])[0].clicked()
+            }
+            if (step === 9) {
+                all(top().contentItem, c => c.a11y === "Take Weather off the top", [])[0].clicked()
+                held = all(top().contentItem, c => c.step !== undefined && c.modelData === "power", [])[0]
+                held.step(-1)
+            }
+            if (step === 10) {
+                // The row that moved is the same row, so it keeps the keyboard focus and a drag.
+                say("edited", { island: Cfg.island, rows: rows(), shown: isl().shown, rest: top().rest, held: [held.modelData, held.index] })
+                Ui.page = "apps"
+            }
+            if (step === 11) {
+                Ui.open = false
+                Ui.toggle("aplicativos")
+                const back = Ui.page
+                Ui.toggle("aplicativos")
+                Ui.toggle("instalados")
+                say("toggles", { back, page: Ui.page, open: Ui.open, resolve: [Ui.resolve("aplicativos"), Ui.resolve("toString"), Ui.resolve("som")] })
+                Qt.quit()
+            }
+        }
+    }
+}
+`)
+    assert.deepEqual(out.log.split("\n").filter(l => /(Island|Central|PgTop|Page|Toast|Ui|Cfg|Notifs)\.qml|pins\.js|finder\.js/.test(l)), [])
+    const all = ["lagu", "weather", "media", "tray", "sound", "network", "bluetooth", "clipboard", "notifications", "focus", "power", "battery"]
+    const noAi = all.filter(id => id !== "lagu")
+    const on = list => list.filter(id => out.start.has[id] ?? true) // what this machine has: no music or tray here, Bluetooth and a battery maybe
+    assert.deepEqual(out.start.island, noAi); assert.deepEqual(out.start.shown, on(noAi))
+    assert.deepEqual(on(["media", "tray"]), [])
+    assert.deepEqual(out.group, { page: "topo", open: true, open2: true, status: "11 items",
+        tree: ["som", "rede", "bt", "perf", "cal", "clima", "ia", "avisos", "monitor", "ajustes", "visual", "atalhos", "[Applications Alt+N]", "  topo", "  instalados", "  apps", "regras", "backup", "energia", "sobre"] })
+    assert.deepEqual(out.found.installed[0], ["Installed", "Applications"])
+    assert.deepEqual(out.found.ontop, [["On top", "Applications"]])
+    assert.deepEqual(out.menu, { open: true, rows: ["Open Sound Alt+A", "Unpin from the top", "Choose what stays on top…"] })
+    assert.deepEqual(out.menu2, { open: true, rows: ["-", "Unpin from the top", "Choose what stays on top…"] }) // no screen of its own
+    assert.deepEqual(out.unpinned, { island: noAi.filter(id => id !== "sound"), shown: on(noAi.filter(id => id !== "sound")), rows: noAi.filter(id => id !== "sound"),
+        toasts: [["Sound left the top", "It stays in Applications › On top", ["Undo"], true]] })
+    assert.deepEqual(out.undone, { island: noAi, rows: noAi, toasts: 0 })
+    const edited = ["lagu", "media", "tray", "sound", "network", "bluetooth", "clipboard", "notifications", "power", "focus", "battery"]
+    assert.deepEqual(out.edited, { island: edited, rows: edited, shown: on(edited), rest: ["weather"], held: ["power", 8] })
+    assert.deepEqual(out.toggles, { back: "apps", page: "instalados", open: true, resolve: ["instalados", "toString", "som"] })
+    assert.deepEqual(JSON.parse(fs.readFileSync(it + "/home/.config/atoll/profiles/default.json", "utf8")).island, edited)
+    fs.rmSync(it, { recursive: true })
 }
 
 console.log("ok")

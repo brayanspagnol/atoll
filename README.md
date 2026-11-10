@@ -19,7 +19,7 @@ wallpaper, and windows keep the rest of the screen.
 
 ## Features
 
-- **Island:** workspaces, clock, media and status in a floating pill at the top.
+- **Island:** workspaces, clock, media and status in a floating pill at the top. Right-click an item to unpin it, or choose and reorder what stays in Applications › On top (`Super+Alt+N`).
 - **Dock:** hides at the bottom edge, so windows get the full height. Hover the edge or press `Super+Z`. The gear opens a full-screen launchpad to choose its apps, from the installed list or any program in your files, and to reorder them.
 - **Control center:** sound, internet, Bluetooth, performance, calendar, notifications, monitor, settings, about, power and more, in a scrolling list with a search that finds the screens and the settings inside them.
 - **Weather:** the temperature in the island, and a card with the next hours and 7 days from Open-Meteo. Pick your city in the Weather screen (`Super+Alt+W`).
@@ -155,7 +155,7 @@ for `sudo`; everything else stays in your home directory. See `./install.sh --he
 | `Super+Alt+C` / `V` / `J` / `E` | Calendar / Notifications / Settings / Power |
 | `Super+Alt+M` / `O` / `W` / `G` | Monitor / About / Weather / Assistant |
 | `Super+Alt+T` | Personalization |
-| `Super+Alt+K` / `N` / `R` / `U` | Shortcuts / Default apps / Window rules / Backup |
+| `Super+Alt+K` / `N` / `R` / `U` | Shortcuts / Applications / Window rules / Backup |
 | `Super+Shift+V` / `Super+.` | Clipboard history / Emoji |
 | `Super+O` | Workspace overview |
 | `Super+Enter` | Terminal |

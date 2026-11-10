@@ -6,7 +6,7 @@ Flickable {
     id: p
     property string title: ""
     property string subtitle: ""
-    property string section: ""
+    property string group: "" // a group's name, small above the title, for a screen inside one
     default property alias body: col.data
     readonly property int bodyWidth: col.width
     clip: true
@@ -17,7 +17,7 @@ Flickable {
     Column {
         id: head
         width: p.width - 60; spacing: 4
-        Tx { text: p.section; visible: !!text; size: 14; dim: true; width: parent.width } // the group a screen belongs to
+        Tx { text: p.group; visible: !!text; size: 14; dim: true; width: parent.width }
         Tx { text: p.title; visible: !!text; size: 30; strong: true; width: parent.width; Accessible.role: Accessible.Heading; Accessible.name: p.title }
         Tx { text: p.subtitle; dim: true; visible: !!text; width: parent.width }
     }

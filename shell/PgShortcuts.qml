@@ -131,7 +131,7 @@ Page {
     }
     readonly property var editApp: edit ? (apps.find(a => a.id === edit.app) ?? null) : null
     readonly property string editExec: !edit || !edit.custom ? "" : edit.kind === 0 ? appCommand(editApp) : edit.kind === 2 ? (edit.page ? screenPrefix + edit.page : "") : edit.cmd.trim()
-    readonly property string editLabel: !edit || !edit.custom ? "" : edit.label.trim() || (edit.kind === 0 ? (editApp?.name ?? "") : edit.kind === 2 ? (Ui.pages.find(p => p.id === edit.page)?.label ?? "") : edit.cmd.trim())
+    readonly property string editLabel: !edit || !edit.custom ? "" : edit.label.trim() || (edit.kind === 0 ? (editApp?.name ?? "") : edit.kind === 2 ? (Ui.pages.find(p => p.id === edit.page)?.full ?? "") : edit.cmd.trim())
     readonly property string editProblem: edit && edit.keys ? K.problem(edit.keys) : ""
     readonly property var editConflicts: edit && edit.keys && !editProblem ? K.conflicts(entries, edit.keys, edit.id) : []
     readonly property bool editBlocked: editConflicts.some(e => e.state === "user")
@@ -429,8 +429,8 @@ Page {
                     Layout.fillWidth: true
                     a11y: Tr.t("Screen")
                     model: Ui.pages
-                    textRole: "label"
-                    displayText: Ui.pages.find(p => p.id === pg.edit?.page)?.label ?? Tr.t("Choose a screen")
+                    textRole: "full"
+                    displayText: Ui.pages.find(p => p.id === pg.edit?.page)?.full ?? Tr.t("Choose a screen")
                     currentIndex: Ui.pages.findIndex(p => p.id === pg.edit?.page)
                     onActivated: i => pg.edit = Object.assign({}, pg.edit, { page: Ui.pages[i].id })
                 }

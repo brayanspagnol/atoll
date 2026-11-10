@@ -10,7 +10,7 @@ import "term.js" as T
 // runs in a terminal where the person types the password: the shell never sees it.
 Page {
     id: pg
-    section: Tr.t("Applications")
+    group: Tr.t("Applications")
     title: Tr.t("Installed")
     readonly property string script: Quickshell.env("HOME") + "/.local/share/atoll/scripts/apps"
     property var apps: []
