@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "assistant.js" as A
+import "term.js" as T
 
 // Lagu's brain: runs the AI command-line tool the person already uses (see assistant.js) and keeps the conversation
 // for the island and the page. Nothing is saved but the profile keys; a new shell starts a new conversation.
@@ -64,7 +65,7 @@ Singleton {
     function login(id) {
         const p = info(id), args = A.loginArgs(id)
         if (!p?.installed || !args.length) return
-        Quickshell.execDetached(["sh", "-c", 'if command -v xdg-terminal-exec >/dev/null; then exec xdg-terminal-exec "$@"; else exec kitty "$@"; fi', "sh", p.bin].concat(args.slice(1)))
+        Quickshell.execDetached(T.argv([p.bin].concat(args.slice(1))))
     }
 
     function run(prompt, allowSpecs) {
