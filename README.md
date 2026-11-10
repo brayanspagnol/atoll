@@ -23,7 +23,7 @@ wallpaper, and windows keep the rest of the screen.
 - **Dock:** hides at the bottom edge, so windows get the full height. Hover the edge or press `Super+Z`. The gear opens a full-screen launchpad to choose its apps, from the installed list or any program in your files, and to reorder them.
 - **Control center:** sound, internet, Bluetooth, performance, calendar, notifications, monitor, settings, about, power and more, in a scrolling list with a search that finds the screens and the settings inside them.
 - **Weather:** the temperature in the island, and a card with the next hours and 7 days from Open-Meteo. Pick your city in the Weather screen (`Super+Alt+W`).
-- **Assistant (Lagu):** press `Super+A` and the island stretches into a bar to ask about your computer. Steps, answers and visual cards (rings, bars, buttons that open a screen or an app) drop below it. It uses the Claude Code, Cursor or Codex command line already logged in on your computer, with no API keys, and asks before changing files. Choose which in the Assistant screen (`Super+Alt+G`).
+- **Assistant (Lagu):** press `Super+A` and the island stretches into a bar to ask about your computer. Steps, answers and visual cards (rings, bars, buttons that open a screen or an app) drop below it. It uses the Claude Code, Cursor or Codex command line already logged in on your computer, with no API keys, and asks before changing files. Pick the model and effort from the bar, and reopen or continue past conversations from its history. Choose the tool in the Assistant screen (`Super+Alt+G`).
 - **Music card:** cover art, colors taken from the album, seek bar, repeat, shuffle, likes, volume and output switching.
 - **Focus mode:** a timer in the island (25 or 50 min, 1 h, open-ended or pomodoro) that hides music and notifications, except the apps you let through.
 - **Notifications and volume:** glass cards that drop from under the island.
@@ -39,6 +39,7 @@ wallpaper, and windows keep the rest of the screen.
 - **Keyboard and mouse:** layouts, pointer speed, natural scrolling and touchpad options in Settings.
 - **Internet:** Wi-Fi with hidden and enterprise (802.1X: PEAP, TTLS and certificate-based TLS) networks, plus WireGuard and OpenVPN files you import.
 - **Shortcuts:** a keyboard map of every shortcut, colored by group. Press a new combination to change one, see conflicts and free keys, and add your own for apps or commands.
+- **Installed apps:** the apps from the system, Flatpak and AppImage, largest first, with search and a filter per source, and uninstall. A system package opens a terminal with `sudo pacman -Rns` ready, so you type your password there; Flatpak and AppImage apps go without one. Apps Atoll needs, your default apps and packages others depend on are protected.
 - **Default apps:** browser, terminal, files, text, images, video, music and email, for Atoll's shortcuts and for the files and links you open.
 - **Window rules:** per app, open floating, centered, at a size, maximized, pinned, see-through or on a given workspace, without writing Lua.
 - **Backup:** export a profile or everything to one file, with or without images, and review line by line before importing it here or on another computer.
@@ -57,6 +58,10 @@ Screenshots use demo data.
 | Music | Sound and output | Likes |
 |---|---|---|
 | ![Now playing card](docs/screenshots/music.webp) | ![Volume and output switching](docs/screenshots/music-sound.webp) | ![Liked songs](docs/screenshots/music-likes.webp) |
+
+| Assistant (Lagu) | Its history |
+|---|---|
+| ![The assistant answering with a memory card](docs/screenshots/assistant.webp) | ![Past conversations](docs/screenshots/assistant-history.webp) |
 
 | Weather | Focus |
 |---|---|
@@ -85,6 +90,10 @@ Screenshots use demo data.
 | Personalization | Light theme |
 |---|---|
 | ![Personalization](docs/screenshots/personalization.webp) | ![Light theme](docs/screenshots/light.webp) |
+
+| On top | Installed apps |
+|---|---|
+| ![Choosing what stays in the island](docs/screenshots/on-top.webp) | ![Installed apps with uninstall](docs/screenshots/installed.webp) |
 
 | Shortcuts | Default apps |
 |---|---|

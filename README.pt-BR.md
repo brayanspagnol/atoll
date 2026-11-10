@@ -15,8 +15,9 @@ Os prints estão no [README em inglês](README.md#screenshots).
 
 ## O que tem
 
-- **Ilha:** áreas de trabalho, relógio, música e status em uma pílula flutuante no topo.
+- **Ilha:** áreas de trabalho, relógio, música e status em uma pílula flutuante no topo. Clique com o botão direito num item para desafixar, ou escolha e reordene o que fica em Aplicativos › No topo (`Super+Alt+N`).
 - **Clima:** a temperatura na ilha e um cartão com as próximas horas e 7 dias, do Open-Meteo. Escolha sua cidade na tela Clima (`Super+Alt+W`).
+- **Assistente (Lagu):** aperte `Super+A` e a ilha estica e vira uma barra para perguntar sobre o seu computador. Passos, respostas e cards visuais (anéis, barras, botões que abrem uma tela ou um app) descem dela. Usa o Claude Code, o Cursor ou o Codex que já estão logados no seu computador, sem chave de API, e pergunta antes de mudar arquivos. Escolha o modelo e o esforço na barra e reabra ou continue conversas antigas pelo histórico. A ferramenta se escolhe na tela Assistente (`Super+Alt+G`).
 - **Dock:** se esconde na borda inferior, então as janelas ganham a altura toda. Encoste o mouse na borda ou aperte `Super+Z`. A engrenagem abre um launchpad em tela cheia para escolher os apps, da lista de instalados ou qualquer programa nos seus arquivos, e reordenar.
 - **Central:** som, internet, Bluetooth, desempenho, calendário, avisos, monitor, ajustes, sobre, energia e mais, numa lista com rolagem e uma busca que acha as telas e os ajustes dentro delas.
 - **Cartão de música:** capa, cores tiradas do álbum, barra de tempo, repetir, aleatório, curtidas, volume e troca de saída.
@@ -34,6 +35,7 @@ Os prints estão no [README em inglês](README.md#screenshots).
 - **Teclado e mouse:** layouts, velocidade do ponteiro, rolagem natural e opções do touchpad em Ajustes.
 - **Internet:** Wi-Fi com redes ocultas e corporativas (802.1X: PEAP, TTLS e TLS com certificado), mais arquivos WireGuard e OpenVPN que você importa.
 - **Atalhos:** um mapa do teclado com todos os atalhos, por cor de grupo. Aperte uma combinação nova para trocar, veja conflitos e teclas livres, e crie os seus para apps ou comandos.
+- **Aplicativos instalados:** lista os apps do sistema, Flatpak e AppImage, dos maiores para os menores, com busca e filtro por origem, e desinstala. App do sistema abre um terminal com `sudo pacman -Rns` pronto, para você digitar a senha lá; Flatpak e AppImage saem sem senha. Apps que o Atoll precisa, seus apps padrão e pacotes de que outros dependem ficam protegidos.
 - **Apps padrão:** navegador, terminal, arquivos, texto, imagens, vídeo, música e e-mail, para os atalhos do Atoll e para os arquivos e links que você abre.
 - **Regras de janela:** por app, abrir flutuando, centralizada, num tamanho, maximizada, fixa no topo, transparente ou numa área de trabalho, sem escrever Lua.
 - **Backup:** exporte um perfil ou tudo num arquivo, com ou sem imagens, e revise linha por linha antes de importar aqui ou em outro computador.
@@ -87,14 +89,15 @@ Para escolher o Atoll no gerenciador de login, rode também `./install.sh --sess
 
 | Teclas | Ação |
 |---|---|
+| `Super+A` | Assistente |
 | `Super+R` | Buscar aplicativos e telas |
 | `Super+Z` | Mostrar o dock |
 | `Super+N` | Central |
 | `Super+Alt+A` / `I` / `B` / `D` | Som / Internet / Bluetooth / Desempenho |
 | `Super+Alt+C` / `V` / `J` / `E` | Calendário / Avisos / Ajustes / Energia |
-| `Super+Alt+M` / `O` / `W` | Monitor / Sobre / Clima |
+| `Super+Alt+M` / `O` / `W` / `G` | Monitor / Sobre / Clima / Assistente |
 | `Super+Alt+T` | Personalização |
-| `Super+Alt+K` / `N` / `R` / `U` | Atalhos / Apps padrão / Regras de janela / Backup |
+| `Super+Alt+K` / `N` / `R` / `U` | Atalhos / Aplicativos / Regras de janela / Backup |
 | `Super+Shift+V` / `Super+.` | Área de transferência / Emoji |
 | `Super+O` | Visão geral das áreas |
 | `Super+Enter` | Terminal |
