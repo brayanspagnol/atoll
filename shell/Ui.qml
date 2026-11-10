@@ -13,7 +13,7 @@ Singleton {
     property bool clipboard: false
     function openClipboard() { open = false; launcher = false; overview = false; clipboard = true }
     property string launcherMode: "" // "", "clip" or "emoji": what the search lists
-    onLauncherChanged: if (!launcher) launcherMode = ""
+    onLauncherChanged: { if (!launcher) launcherMode = ""; else askOpen = false }
     function openLauncher(mode) { open = false; launcher = true; launcherMode = mode }
     property bool dockPeek: false
     property bool dockEditor: false
@@ -35,9 +35,20 @@ Singleton {
         if (!focusOpen) { sheetScreen = screen; sheetIsland = island; open = false; mediaOpen = false; weatherOpen = false }
         focusOpen = !focusOpen
     }
-    onMediaOpenChanged: if (mediaOpen) { weatherOpen = false; focusOpen = false }
-    onOpenChanged: if (open) { weatherOpen = false; focusOpen = false }
-    onDockEditorChanged: if (dockEditor) { weatherOpen = false; focusOpen = false }
+    onMediaOpenChanged: if (mediaOpen) { weatherOpen = false; focusOpen = false; askOpen = false }
+    onOpenChanged: if (open) { weatherOpen = false; focusOpen = false; askOpen = false }
+    onDockEditorChanged: if (dockEditor) { weatherOpen = false; focusOpen = false; askOpen = false }
+    onWeatherOpenChanged: if (weatherOpen) askOpen = false
+    onFocusOpenChanged: if (focusOpen) askOpen = false
+    onOverviewChanged: if (overview) askOpen = false
+    onClipboardChanged: if (clipboard) askOpen = false
+    // The assistant takes the island's place, so it closes every other panel and they close it.
+    property bool askOpen: false
+    property var askScreen: null
+    function toggleAsk(screen) {
+        if (!askOpen) { askScreen = screen ?? null; open = false; launcher = false; overview = false; clipboard = false; mediaOpen = false; weatherOpen = false; focusOpen = false; dockEditor = false }
+        askOpen = !askOpen
+    }
     function toggleDock() { dockPeek = !dockPeek }
     // A dock raised by shortcut goes away on its own; hovering keeps it up.
     Timer { interval: 4000; running: ui.dockPeek; onTriggered: ui.dockPeek = false }
@@ -48,6 +59,7 @@ Singleton {
         { id: "perf", key: "Alt+D", label: Tr.t("Performance"), icon: "perf", kw: "cpu memory processes temperature battery " + Tr.t("cpu memory processes temperature battery") },
         { id: "cal", key: "Alt+C", label: Tr.t("Calendar"), icon: "cal", kw: "agenda event date " + Tr.t("agenda event date") },
         { id: "clima", key: "Alt+W", label: Tr.t("Weather"), icon: "cloudSun", kw: "weather forecast temperature city " + Tr.t("forecast temperature city") },
+        { id: "ia", key: "Alt+G", label: Tr.t("Assistant"), icon: "sparkle", kw: "assistant ai claude cursor openai codex chat lagu " + Tr.t("artificial intelligence chat") },
         { id: "avisos", key: "Alt+V", label: Tr.t("Notifications"), icon: "avisos", kw: "notifications do not disturb " + Tr.t("do not disturb") },
         { id: "monitor", key: "Alt+M", label: Tr.t("Monitor"), icon: "monitor", kw: "monitor display screen resolution rotation mirror " + Tr.t("display resolution rotation mirror") },
         { id: "ajustes", key: "Alt+J", label: Tr.t("Settings"), icon: "ajustes", kw: "settings language keyboard mouse touchpad idle calendar holidays night light " + Tr.t("language keyboard idle") },
@@ -82,6 +94,7 @@ Singleton {
         function emoji(): void { ui.openLauncher("emoji") }
         function dock(): void { ui.toggleDock() }
         function editDock(): void { ui.editDock() }
-        function close(): void { ui.open = false; ui.launcher = false; ui.overview = false; ui.clipboard = false }
+        function ask(): void { ui.toggleAsk() }
+        function close(): void { ui.open = false; ui.launcher = false; ui.overview = false; ui.clipboard = false; ui.askOpen = false }
     }
 }

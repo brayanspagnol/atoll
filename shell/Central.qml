@@ -32,7 +32,7 @@ Scope {
         WlrLayershell.keyboardFocus: Ui.open ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
         WlrLayershell.namespace: "atoll-central"
         color: "transparent"
-        readonly property var files: ({ som: "PgSound.qml", rede: "PgNet.qml", bt: "PgBt.qml", perf: "PgPerf.qml", cal: "PgCal.qml", avisos: "PgNotif.qml", ajustes: "PgSettings.qml", energia: "PgPower.qml", monitor: "PgMonitor.qml", sobre: "PgAbout.qml" , visual: "PgLook.qml", atalhos: "PgShortcuts.qml", apps: "PgApps.qml", regras: "PgRules.qml", backup: "PgBackup.qml", clima: "PgWeather.qml" })
+        readonly property var files: ({ som: "PgSound.qml", rede: "PgNet.qml", bt: "PgBt.qml", perf: "PgPerf.qml", cal: "PgCal.qml", avisos: "PgNotif.qml", ajustes: "PgSettings.qml", energia: "PgPower.qml", monitor: "PgMonitor.qml", sobre: "PgAbout.qml" , visual: "PgLook.qml", atalhos: "PgShortcuts.qml", apps: "PgApps.qml", regras: "PgRules.qml", backup: "PgBackup.qml", clima: "PgWeather.qml", ia: "PgAssistant.qml" })
         // Every label on every screen, read from the screens' own files, so the search finds any button or option.
         property var labels: ({})
         Process {
@@ -54,6 +54,7 @@ Scope {
             perf: "CPU " + Math.round(Sys.cpu) + "% · " + Math.round(Sys.temp) + " °C",
             cal: Tr.date(new Date(), "MMM d").replace(/\./g, ""),
             clima: Weather.data ? Weather.data.place + " · " + Weather.data.temp + "°" : Tr.t("Not set"),
+            ia: Assistant.providers.find(p => p.id === Assistant.provider)?.name ?? Tr.t("Not set up"),
             avisos: Notifs.all.length ? Tr.t("Notifications: %1").arg(Notifs.all.length) : Tr.t("All caught up"),
             ajustes: Tr.t("Language, keyboard, idle"),
             visual: Tr.t("Profile, theme, wallpaper"),

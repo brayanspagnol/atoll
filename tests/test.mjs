@@ -269,7 +269,8 @@ const runQml = (dir, shellQml, files = {}, bins = []) => { // bins: a test's own
     if (real >= 0) dirs.splice(real, 0, guardBin); else dirs.push(guardBin)
     const env = { ...base, PATH: bins.concat(dirs).join(":") }
     const run = spawnSync("dbus-run-session", ["--", "qs", "-p", dir + "/shell.qml"], { encoding: "utf8", timeout: 30000, env: { ...env, LANG: "C.UTF-8", LC_ALL: "C.UTF-8", LANGUAGE: "en", QT_QPA_PLATFORM: "offscreen", HOME: dir + "/home", XDG_DATA_HOME: dir + "/home/share", XDG_CONFIG_HOME: dir + "/home/config", XDG_STATE_HOME: dir + "/home/state", XDG_DATA_DIRS: dir + "/data" } })
-    return Object.fromEntries([...(run.stdout + run.stderr).matchAll(/RESULT (\w+) (.*)/g)].map(m => [m[1], JSON.parse(m[2])]))
+    const said = Object.fromEntries([...(run.stdout + run.stderr).matchAll(/RESULT (\w+) (.*)/g)].map(m => [m[1], JSON.parse(m[2])]))
+    return Object.defineProperty(said, "log", { value: run.stdout + run.stderr }) // the whole output, for warnings; not enumerable
 }
 if (haveQs) {
     // A key the file lacks gets its default, not the previous profile's value, and what the file has is kept.
@@ -1571,6 +1572,103 @@ ShellRoot {
         assert.equal(fs.readFileSync(ad + "/cwd.log", "utf8").trim(), ad + "/home")
         fs.rmSync(ad, { recursive: true })
     }
+}
+
+// The assistant's overlay and its screen on the real QML, against a scripted Assistant: no AI command line ever runs.
+if (haveQs) {
+    const ad = fs.mkdtempSync("/tmp/atoll-test-"), bin = ad + "/bin"
+    fs.cpSync(new URL("../shell/", import.meta.url), ad, { recursive: true })
+    fs.mkdirSync(bin); fs.mkdirSync(ad + "/home/.config/atoll/profiles", { recursive: true })
+    fs.writeFileSync(bin + "/gtk-launch", `#!/bin/sh\nprintf '%s\\n' "$@" >> '${ad}/launched'\n`, { mode: 0o755 })
+    const step = n => ({ kind: "step", text: "Running a command", detail: "ps -eo pid,comm\n#" + n })
+    const items = [
+        { kind: "user", text: "Why is my computer slow?" },
+        step(1), step(2), step(3), step(4), step(5),
+        { kind: "text", text: "<b>not bold</b>" },
+        { kind: "card", text: "", card: { title: "The browser has 23 tabs", subtitle: "Memory is what weighs.", ring: { value: 0.68, label: "memory" },
+            bars: [{ label: "Browser", value: 0.88, text: "5.1 GB" }, { label: "Editor", value: 0.34, text: "1.9 GB" }],
+            actions: [{ label: "Open Performance", page: "perf" }, { label: "Files", app: "org.gnome.Nautilus" }, { label: "Run", cmd: "rm -rf ~" }, { label: "Nowhere", page: "nope" }, { label: "Sneaky", app: "-x; rm" }] } },
+        { kind: "denied", text: "", denials: [{ tool: "Edit", input: { file_path: "/home/u/.bashrc" } }] },
+        { kind: "error", text: "Not logged in", login: true }
+    ]
+    fs.writeFileSync(ad + "/Assistant.qml", `pragma Singleton
+import Quickshell
+Singleton {
+    property var providers: [{ id: "claude", name: "Claude", bin: "claude", installed: true }, { id: "cursor", name: "Cursor", bin: "cursor-agent", installed: true, loggedIn: false }, { id: "codex", name: "OpenAI Codex", bin: "codex", installed: false }]
+    property string provider: "claude"
+    property bool busy: true
+    property string mood: "waiting"
+    property var items: ${JSON.stringify(items)}
+    property string session: "s1"
+    property var pending: ({ tool: "Edit" })
+    property var calls: []
+    function note(c) { calls = calls.concat([c]) }
+    function ask(text) { note("ask " + text) }
+    function stop() { note("stop") }
+    function reset() { note("reset") }
+    function allow() { note("allow") }
+    function deny() { note("deny") }
+    function login(id) { note("login " + id) }
+    function refresh() { note("refresh") }
+}
+`)
+    fs.writeFileSync(ad + "/Ui.qml", `pragma Singleton\nimport Quickshell\nSingleton { property bool open: false; property string page: ""; property bool askOpen: true; property string revealLabel: ""; property int revealCount: 0; readonly property var pages: [{ id: "perf" }, { id: "ia" }]; function show(p) { page = p; open = true; askOpen = false } }\n`)
+    const path = process.env.PATH
+    process.env.PATH = bin + ":" + path
+    const out = runQml(ad, `import QtQuick
+import Quickshell
+ShellRoot {
+    FloatingWindow { implicitWidth: 1200; implicitHeight: 1600; AskPanel { id: panel; anchors.fill: parent; shown: true } }
+    FloatingWindow { implicitWidth: 900; implicitHeight: 1100; PgAssistant { id: pg; anchors.fill: parent } }
+    property int step: 0
+    function all(item, test, out) { for (const c of item.children) { if (c.visible && test(c)) out.push(c); all(c, test, out) } return out }
+    function say(tag, v) { console.log("RESULT " + tag + " " + JSON.stringify(v)) }
+    function button(item, text) { return all(item, c => c.text === text && c.clicked !== undefined, [])[0] }
+    function radios() { return all(pg.contentItem, c => c.provider !== undefined && c.pick !== undefined, []) }
+    Timer {
+        running: true; repeat: true; interval: 500
+        onTriggered: {
+            step++
+            if (step === 5) {
+                say("first", {
+                    rows: panel.view.rows.map(r => r.kind + (r.count ?? "")),
+                    actions: all(panel, c => c.action !== undefined, []).map(a => a.text),
+                    plain: all(panel, c => c.textFormat !== undefined && c.text === "<b>not bold</b>", []).map(c => c.textFormat),
+                    stop: all(panel, c => c.stopping !== undefined, []).map(c => c.stopping),
+                    allow: !!button(panel, "Allow"), login: !!button(panel, "Log in"),
+                    radios: radios().map(r => r.provider.id + (r.activeFocusOnTab ? "" : "-off") + (r.Accessible.checked ? "*" : "")),
+                    install: all(pg.contentItem, c => c.readOnly === true && c.selectByMouse === true && c.font?.family === Theme.mono, []).map(c => c.text),
+                    pageLogin: !!button(pg.contentItem, "Log in")
+                })
+                all(panel, c => c.action !== undefined, [])[1].clicked()
+                button(panel, "Allow").clicked(); button(panel, "Log in").clicked()
+                all(panel, c => c.stopping !== undefined, [])[0].press()
+                radios()[2].pick(); radios()[1].pick()
+                all(panel, c => c.toggle !== undefined, [])[0].toggle() // last: the list grows, and rows out of view are hidden
+            }
+            if (step === 6) {
+                Assistant.busy = false
+                panel.input.text = "  hello  "; panel.send()
+                say("second", { rows: panel.view.rows.map(r => r.kind), provider: Cfg.v.aiProvider, field: panel.input.text })
+                all(panel, c => c.action !== undefined, [])[0].clicked()
+            }
+            if (step === 7) { say("after", { calls: Assistant.calls, page: Ui.page, askOpen: Ui.askOpen }); Qt.quit() }
+        }
+    }
+}
+`)
+    process.env.PATH = path
+    assert.deepEqual(out.log.split("\n").filter(l => /(Ask|AskPanel|PgAssistant|Page|Lagu|Assistant)\.qml/.test(l)), [])
+    assert.deepEqual(out.first, {
+        rows: ["user", "more2", "step", "step", "step", "text", "card", "denied", "error"],
+        actions: ["Open Performance", "Files"], // only a screen here or an installed app, never a command
+        plain: [0], stop: [true], allow: true, login: true,
+        radios: ["claude*", "cursor", "codex-off"], install: ["npm i -g @openai/codex"], pageLogin: true
+    })
+    assert.deepEqual(out.second, { rows: ["user", "more", "step", "step", "step", "step", "step", "text", "card", "denied", "error"], provider: "cursor", field: "" })
+    assert.deepEqual(out.after, { calls: ["refresh", "allow", "login claude", "stop", "ask hello"], page: "perf", askOpen: false })
+    assert.equal(fs.readFileSync(ad + "/launched", "utf8"), "org.gnome.Nautilus\n")
+    fs.rmSync(ad, { recursive: true })
 }
 
 console.log("ok")

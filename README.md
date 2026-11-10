@@ -23,6 +23,7 @@ wallpaper, and windows keep the rest of the screen.
 - **Dock:** hides at the bottom edge, so windows get the full height. Hover the edge or press `Super+Z`. The gear opens a full-screen launchpad to choose its apps, from the installed list or any program in your files, and to reorder them.
 - **Control center:** sound, internet, Bluetooth, performance, calendar, notifications, monitor, settings, about, power and more, in a scrolling list with a search that finds the screens and the settings inside them.
 - **Weather:** the temperature in the island, and a card with the next hours and 7 days from Open-Meteo. Pick your city in the Weather screen (`Super+Alt+W`).
+- **Assistant (Lagu):** press `Super+A` and the island stretches into a bar to ask about your computer. Steps, answers and visual cards (rings, bars, buttons that open a screen or an app) drop below it. It uses the Claude Code, Cursor or Codex command line already logged in on your computer, with no API keys, and asks before changing files. Choose which in the Assistant screen (`Super+Alt+G`).
 - **Music card:** cover art, colors taken from the album, seek bar, repeat, shuffle, likes, volume and output switching.
 - **Focus mode:** a timer in the island (25 or 50 min, 1 h, open-ended or pomodoro) that hides music and notifications, except the apps you let through.
 - **Notifications and volume:** glass cards that drop from under the island.
@@ -147,11 +148,12 @@ for `sudo`; everything else stays in your home directory. See `./install.sh --he
 | Keys | Action |
 |---|---|
 | `Super+R` | Search apps and screens |
+| `Super+A` | Assistant |
 | `Super+Z` | Show the dock |
 | `Super+N` | Control center |
 | `Super+Alt+A` / `I` / `B` / `D` | Sound / Internet / Bluetooth / Performance |
 | `Super+Alt+C` / `V` / `J` / `E` | Calendar / Notifications / Settings / Power |
-| `Super+Alt+M` / `O` / `W` | Monitor / About / Weather |
+| `Super+Alt+M` / `O` / `W` / `G` | Monitor / About / Weather / Assistant |
 | `Super+Alt+T` | Personalization |
 | `Super+Alt+K` / `N` / `R` / `U` | Shortcuts / Default apps / Window rules / Backup |
 | `Super+Shift+V` / `Super+.` | Clipboard history / Emoji |

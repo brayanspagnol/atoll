@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Assistant: `Super+A`, or the mascot Lagu in the island, stretches the island into a bar where you ask about your computer. The steps it takes, its answer and visual cards (a ring, bars and up to three buttons that open a screen or an app) drop in below, and it asks before changing files. It uses the Claude Code, Cursor or Codex command line already logged in on this computer, so there are no API keys to paste. While it works with the bar closed, Lagu in the island shows it, then says when it is done. A new Assistant screen (`Super+Alt+G`) picks which one answers and shows how to install the others.
+
 ### Fixed
 
 - Choosing a workspace now hides an open scratchpad, which used to stay on top and make the switch look like it did nothing.

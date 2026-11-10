@@ -16,7 +16,7 @@ Flickable {
     Column {
         id: head
         width: p.width - 60; spacing: 4
-        Tx { text: p.title; size: 30; strong: true; width: parent.width; Accessible.role: Accessible.Heading; Accessible.name: p.title }
+        Tx { text: p.title; visible: !!text; size: 30; strong: true; width: parent.width; Accessible.role: Accessible.Heading; Accessible.name: p.title }
         Tx { text: p.subtitle; dim: true; visible: !!text; width: parent.width }
     }
     ColumnLayout {

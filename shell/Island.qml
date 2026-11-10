@@ -26,6 +26,9 @@ PanelWindow {
         anchors.fill: parent
         implicitWidth: row.implicitWidth + 16
         radius: 28
+        // The assistant's bar grows from here and takes the island's place while open.
+        opacity: Ui.askOpen && (Quickshell.screens.includes(Ui.askScreen) ? Ui.askScreen : Ui.screen) === win.modelData ? 0 : 1
+        Behavior on opacity { NumberAnimation { duration: 160 } }
         RowLayout {
             id: row
             anchors.centerIn: parent
@@ -66,6 +69,38 @@ PanelWindow {
                     Tx { id: dateT; text: Tr.date(clk.date, "ddd, MMM d").replace(/\./g, ""); dim: true }
                 }
                 MouseArea { id: cm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Ui.toggle("cal") }
+            }
+            // The assistant's mascot: live while it works with the overlay closed, then "Done" for a moment.
+            Rectangle {
+                id: ai
+                property bool done: false
+                readonly property bool live: !Ui.askOpen && (Assistant.busy || done)
+                visible: Cfg.v.aiChip && !!Assistant.provider
+                implicitWidth: aiRow.implicitWidth + 18; implicitHeight: 44; radius: 22
+                color: aim.containsMouse ? Theme.raised : "transparent"
+                Behavior on implicitWidth { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                Accessible.role: Accessible.Button
+                Accessible.name: done ? Tr.t("Assistant: done") : live ? Tr.t("Assistant: working") : Tr.t("Assistant")
+                Accessible.onPressAction: Ui.toggleAsk(win.modelData)
+                Connections {
+                    target: Assistant
+                    function onBusyChanged() { if (!Assistant.busy && !Ui.askOpen) { ai.done = true; aiDone.restart() } }
+                }
+                Connections {
+                    target: Ui
+                    function onAskOpenChanged() { if (Ui.askOpen) ai.done = false }
+                }
+                Timer { id: aiDone; interval: 4000; onTriggered: ai.done = false }
+                RowLayout {
+                    id: aiRow; anchors.centerIn: parent; spacing: 6
+                    Lagu {
+                        size: 26
+                        mood: ai.done ? (Assistant.mood === "error" ? "error" : "done") : ai.live ? Assistant.mood : "idle"
+                        animate: ai.live || aim.containsMouse
+                    }
+                    Tx { visible: ai.done; text: Tr.t("Done"); size: 14; strong: true }
+                }
+                MouseArea { id: aim; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Ui.toggleAsk(win.modelData) }
             }
             // Focus mode's timer while it runs.
             Rectangle {
