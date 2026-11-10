@@ -713,7 +713,7 @@ Item {
                     delegate: Rectangle {
                         id: pr
                         required property var modelData
-                        readonly property string sub: [Assistant.info(modelData.provider)?.name ?? modelData.provider, modelData.model, panel.ago(modelData.updated)].filter(s => s).join(" · ")
+                        readonly property string sub: [Assistant.info(modelData.provider)?.name ?? modelData.provider, Assistant.modelLabel(modelData.provider, modelData.model), panel.ago(modelData.updated)].filter(s => s).join(" · ")
                         function pick() { panel.openPast(modelData.id) }
                         width: ListView.view.width; height: 60; radius: 16
                         color: prm.containsMouse || activeFocus ? Theme.raised : modelData.id === Assistant.session ? Theme.hover : "transparent"

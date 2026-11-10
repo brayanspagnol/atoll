@@ -32,10 +32,21 @@ Singleton {
         Cfg.v.aiModel = Object.assign({}, all, { [provider]: m })
     }
     function setEffort(e) { if (e === "" || A.effortOk(e)) Cfg.v.aiEffort = e }
-    // What the menus offer for the tool in use: [{ id, name }], "" first for the tool's default. Claude takes these aliases
-    // for its latest models; Cursor lists its own (its "auto" is the default already); Codex has no list here.
+    // Claude Code has no command that lists models, so these are its current ones by full name. Which of them a
+    // subscription can use is up to the account: a model it can't use comes back as an error in the answer.
+    // shortcut: a fixed list, update it when Anthropic releases a model, or read one from the CLI if it gains a list command.
+    readonly property var claudeModels: [
+        { id: "claude-fable-5-2", name: "Fable 5.2" }, { id: "claude-fable-5-1", name: "Fable 5.1" },
+        { id: "claude-opus-5-5", name: "Opus 5.5" }, { id: "claude-opus-5", name: "Opus 5" }, { id: "claude-opus-4-8", name: "Opus 4.8" },
+        { id: "claude-sonnet-5-5", name: "Sonnet 5.5" }, { id: "claude-sonnet-5", name: "Sonnet 5" },
+        { id: "claude-haiku-5-5", name: "Haiku 5.5" },
+        { id: "opus", name: "Opus" }, { id: "sonnet", name: "Sonnet" }, { id: "haiku", name: "Haiku" }, { id: "fable", name: "Fable" }
+    ]
+    function modelLabel(who, id) { return who === "claude" ? (claudeModels.find(c => c.id === id)?.name ?? id) : id }
+    // What the menus offer for the tool in use: [{ id, name }], "" first for the tool's default. Cursor lists its own
+    // (its "auto" is the default already); Codex has no list here. The short aliases stay valid for old profiles but aren't offered.
     readonly property var modelChoices: {
-        const known = provider === "claude" ? [{ id: "opus", name: "Opus" }, { id: "sonnet", name: "Sonnet" }, { id: "haiku", name: "Haiku" }, { id: "fable", name: "Fable" }]
+        const known = provider === "claude" ? claudeModels.filter(c => c.id.startsWith("claude-"))
             : provider === "cursor" ? cursorModels.filter(c => c.id !== "auto") : []
         const all = [{ id: "", name: Tr.t("Default") }].concat(known)
         return model && !all.some(c => c.id === model) ? all.concat([{ id: model, name: model }]) : all

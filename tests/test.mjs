@@ -1953,7 +1953,7 @@ ShellRoot {
                 say("stale", { stale: panel.stale, note: all(panel, c => c.text !== undefined && /^This conversation was with/.test(c.text), []).map(c => c.text) })
                 panel.openMenu()
             }
-            if (step === 18) { say("claudeMenu", { rows: choices().map(c => c.text + (c.on ? "*" : "")) }); choose("Haiku"); panel.openMenu() }
+            if (step === 18) { say("claudeMenu", { rows: choices().map(c => c.text + (c.on ? "*" : "")) }); choose("Haiku 5.5"); panel.openMenu() }
             if (step === 19) { choose("Low"); say("picked", { model: Assistant.model, effort: Assistant.effort, pill: pill(), menu: panel.menuOpen }); Assistant.ask("fresh") }
             if (step === 25) {
                 say("fresh", { items: Assistant.items.map(i => i.kind), session: Assistant.session, ids: Assistant.history.map(h => h.id) })
@@ -1974,11 +1974,11 @@ ShellRoot {
         const cursorCalls = fs.readFileSync(ad + "/cursor.log", "utf8").split("\x1e").filter(Boolean).map(l => l.split("\x1f").slice(0, -1))
         assert.deepEqual(cursorCalls.map(c => [c[0], flag(c, "--model"), flag(c, "--resume"), c.at(-1)]), [["--list-models", null, null, "--list-models"], ["-p", "foo-1", "c-1", "go on"]])
         assert.deepEqual(out2.stale, { stale: true, note: ["This conversation was with Cursor. Your next question starts a new one with Claude Code."] })
-        assert.deepEqual(out2.claudeMenu.rows, ["Default*", "Opus", "Sonnet", "Haiku", "Fable", "Default*", "Low", "Medium", "High", "Extra high", "Max", "Assistant settings"])
-        assert.deepEqual(out2.picked, { model: "haiku", effort: "low", pill: "Claude Code · Haiku", menu: false })
+        assert.deepEqual(out2.claudeMenu.rows, ["Default*", "Fable 5.2", "Fable 5.1", "Opus 5.5", "Opus 5", "Opus 4.8", "Sonnet 5.5", "Sonnet 5", "Haiku 5.5", "Default*", "Low", "Medium", "High", "Extra high", "Max", "Assistant settings"])
+        assert.deepEqual(out2.picked, { model: "claude-haiku-5-5", effort: "low", pill: "Claude Code · Haiku 5.5", menu: false })
         assert.deepEqual(out2.fresh, { items: ["user", "step", "text"], session: s1, ids: [s1, "c-1", s20] }) // a new conversation, no --resume
         const fresh = fs.readFileSync(ad + "/argv.log", "utf8").split("\x1e").filter(Boolean).map(l => l.split("\x1f").slice(0, -1))
-        assert.deepEqual(fresh.map(c => [flag(c, "--model"), flag(c, "--effort"), c.includes("--resume"), c.at(-1)]), [["haiku", "low", false, "fresh"]])
+        assert.deepEqual(fresh.map(c => [flag(c, "--model"), flag(c, "--effort"), c.includes("--resume"), c.at(-1)]), [["claude-haiku-5-5", "low", false, "fresh"]])
         assert.deepEqual(out2.forgot, { ids: [s1, "c-1"], rows: 2 })
         assert.deepEqual(JSON.parse(fs.readFileSync(state + "/assistant.json", "utf8")).map(c => c.id), [s1, "c-1"])
         assert.equal(fs.statSync(state + "/assistant.json").mode & 0o777, 0o600)
