@@ -577,18 +577,16 @@ Item {
             }
         }
 
-        // A hint, and a fresh start once there is something to clear.
+        // A fresh start, once there is something to clear.
         Frost {
             id: foot
-            visible: panel.ready
+            visible: panel.ready && (Assistant.items?.length ?? 0) > 0
             anchors.horizontalCenter: parent.horizontalCenter
             width: footRow.implicitWidth + 28; height: 40; radius: 20
             RowLayout {
                 id: footRow
                 anchors.centerIn: parent; spacing: 12
-                Tx { text: Assistant.busy ? Tr.t("Esc hides this; the answer keeps coming") : Tr.t("Enter sends · Esc closes"); size: 12; dim: true }
                 Btn {
-                    visible: (Assistant.items?.length ?? 0) > 0
                     variant: "quiet"; implicitHeight: 30; radius: 15
                     icon: "plus"; text: Tr.t("New conversation")
                     onClicked: { Assistant.reset(); panel.expanded = {}; field.forceActiveFocus() }
