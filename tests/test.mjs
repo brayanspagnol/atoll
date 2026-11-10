@@ -1363,4 +1363,44 @@ ShellRoot {
     }
 }
 
+// Lagu, the assistant's mascot: every mood at the island's and the panel's sizes, still and animated, then a change of mood, without a QML warning.
+if (haveQs) {
+    const root = fs.mkdtempSync("/tmp/atoll-test-")
+    fs.cpSync(new URL("../shell/Lagu.qml", import.meta.url), root + "/Lagu.qml")
+    fs.writeFileSync(root + "/shell.qml", `import QtQuick
+import Quickshell
+ShellRoot {
+    readonly property var names: ["idle", "listening", "thinking", "working", "waiting", "done", "error", "sleeping", "nope"]
+    property int shift: 0
+    FloatingWindow {
+        implicitWidth: 1200; implicitHeight: 600
+        Flow {
+            anchors.fill: parent
+            Repeater {
+                id: all
+                model: names.length * 4
+                Lagu { mood: names[(index + shift) % names.length]; size: index % 2 ? 120 : 24; animate: index % 4 > 1 }
+            }
+        }
+    }
+    Timer {
+        running: true; repeat: true; interval: 600
+        onTriggered: {
+            if (++shift < 3) return
+            const items = Array.from({ length: all.count }, (_, i) => all.itemAt(i))
+            console.log("RESULT lagu " + JSON.stringify({ count: items.length, sizes: [...new Set(items.map(l => l.implicitWidth))], faces: [...new Set(items.map(l => l.face))].length, unknown: items.filter(l => l.mood === "nope").map(l => l.face)[0], name: items[0].Accessible.name }))
+            Qt.quit()
+        }
+    }
+}
+`)
+    const { WAYLAND_DISPLAY, DISPLAY, HYPRLAND_INSTANCE_SIGNATURE, ...env } = process.env
+    const run = spawnSync("dbus-run-session", ["--", "qs", "-p", root + "/shell.qml"], { encoding: "utf8", timeout: 30000, env: { ...env, PATH: [guardBin, env.PATH].join(":"), LANG: "C.UTF-8", LC_ALL: "C.UTF-8", LANGUAGE: "en", QT_QPA_PLATFORM: "offscreen", HOME: root + "/home", XDG_DATA_HOME: root + "/home/share", XDG_CONFIG_HOME: root + "/home/config", XDG_STATE_HOME: root + "/home/state" } })
+    const out = run.stdout + run.stderr
+    assert.deepEqual(out.split("\n").filter(l => !l.includes(" INFO") && /Lagu\.qml|shell\.qml|Shape|PathSvg|TypeError|ReferenceError/.test(l)), [])
+    const said = Object.fromEntries([...out.matchAll(/RESULT (\w+) (.*)/g)].map(m => [m[1], JSON.parse(m[2])]))
+    assert.deepEqual(said.lagu, { count: 36, sizes: [24, 120], faces: 8, unknown: "idle", name: "Lagu" })
+    fs.rmSync(root, { recursive: true })
+}
+
 console.log("ok")
