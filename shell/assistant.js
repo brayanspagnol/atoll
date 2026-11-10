@@ -23,7 +23,8 @@ const commands = [
     "hyprctl -j clients", "hyprctl -j activewindow", "hyprctl -j workspaces", "hyprctl -j activeworkspace", "hyprctl -j monitors"
 ].concat(workspaces.map(n => `hyprctl dispatch 'hl.dsp.focus({ workspace = ${n} })'`),
     workspaces.map(n => `hyprctl dispatch 'hl.dsp.window.move({ workspace = ${n} })'`))
-const allowed = ["Read", "Glob", "Grep", "WebSearch", "WebFetch"].concat(commands.map(c => "Bash(" + c + ")"))
+// No WebFetch by default: a fetched page could carry instructions to send home files out. A denial still lets the user allow it once.
+const allowed = ["Read", "Glob", "Grep", "WebSearch"].concat(commands.map(c => "Bash(" + c + ")"))
 // Never, not even once: deny rules beat any allow. Secrets stay unread even though Read is allowed.
 const secrets = ["~/.ssh/**", "~/.gnupg/**", "~/.password-store/**", "~/.local/share/keyrings/**", "~/.claude/.credentials.json"]
 const disallowed = ["sudo", "su", "pkexec", "doas", "run0"].map(c => `Bash(${c}:*)`)
