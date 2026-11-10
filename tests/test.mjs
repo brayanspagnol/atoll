@@ -1585,7 +1585,7 @@ if (haveQs) {
         { kind: "user", text: "Why is my computer slow?" },
         step(1), step(2), step(3), step(4), step(5),
         { kind: "text", text: "<b>not bold</b>" },
-        { kind: "card", text: "", card: { title: "The browser has 23 tabs", subtitle: "Memory is what weighs.", ring: { value: 0.68, label: "memory" },
+        { kind: "card", text: "", card: { title: "The browser has 23 tabs", subtitle: "Memory is what weighs.", ring: { value: 0.68, label: "68%" },
             bars: [{ label: "Browser", value: 0.88, text: "5.1 GB" }, { label: "Editor", value: 0.34, text: "1.9 GB" }],
             actions: [{ label: "Open Performance", page: "perf" }, { label: "Files", app: "org.gnome.Nautilus" }, { label: "Run", cmd: "rm -rf ~" }, { label: "Nowhere", page: "nope" }, { label: "Sneaky", app: "-x; rm" }] } },
         { kind: "denied", text: "", denials: [{ tool: "Edit", input: { file_path: "/home/u/.bashrc" } }] },
@@ -1600,7 +1600,7 @@ Singleton {
     property string mood: "waiting"
     property var items: ${JSON.stringify(items)}
     property string session: "s1"
-    property var pending: ({ tool: "Edit" })
+    property var pending: [{ tool: "Edit", input: {} }]
     property var calls: []
     function note(c) { calls = calls.concat([c]) }
     function ask(text) { note("ask " + text) }

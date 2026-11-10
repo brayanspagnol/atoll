@@ -30,7 +30,7 @@ Item {
     function actionsOf(card) {
         const acts = Array.isArray(card?.actions) ? card.actions : []
         return acts.filter(a => a && typeof a.label === "string" && a.label.trim() !== ""
-            && (typeof a.page === "string" ? Ui.pages.some(p => p.id === a.page) : typeof a.app === "string" && /^[A-Za-z0-9][\w.-]*$/.test(a.app))).slice(0, 3)
+            && (typeof a.page === "string" ? Ui.pages.some(p => p.id === a.page) : typeof a.app === "string" && /^[A-Za-z0-9][A-Za-z0-9._+-]*$/.test(a.app))).slice(0, 3)
     }
     function run(a) {
         if (typeof a.page === "string") Ui.show(a.page) // the control center takes the screen, which closes this
@@ -216,6 +216,9 @@ Item {
         readonly property var acts: panel.actionsOf(c)
         readonly property var bars: (Array.isArray(c.bars) ? c.bars : []).slice(0, 6)
         readonly property real ringValue: clamp(c.ring?.value)
+        // A label with a number ("57%", "9 GB") is the ring's big text; a word ("memory") goes under the percentage.
+        readonly property string ringLabel: c.ring?.label ?? ""
+        readonly property bool ringSays: /\d/.test(ringLabel)
         property real grow: 0 // ring and bars fill once the card has opened
         function clamp(v) { return Math.max(0, Math.min(1, Number(v) || 0)) }
         function tone(v) { return v > 0.6 ? Theme.warn : Theme.accent }
@@ -232,7 +235,7 @@ Item {
                 visible: !!vis.c.ring
                 implicitWidth: 116; implicitHeight: 116
                 Accessible.role: Accessible.ProgressBar
-                Accessible.name: (vis.c.ring?.label ?? "") + " " + Math.round(vis.ringValue * 100) + "%"
+                Accessible.name: vis.ringSays ? vis.ringLabel : vis.ringLabel + " " + Math.round(vis.ringValue * 100) + "%"
                 Shape {
                     anchors.fill: parent
                     preferredRendererType: Shape.CurveRenderer
@@ -248,8 +251,8 @@ Item {
                 Column {
                     anchors.centerIn: parent
                     opacity: Math.min(1, vis.grow * 3)
-                    Tx { anchors.horizontalCenter: parent.horizontalCenter; text: Math.round(vis.ringValue * vis.grow * 100) + "%"; size: 28; strong: true }
-                    Tx { anchors.horizontalCenter: parent.horizontalCenter; width: Math.min(implicitWidth, 84); text: vis.c.ring?.label ?? ""; size: 12; dim: true; horizontalAlignment: Text.AlignHCenter }
+                    Tx { anchors.horizontalCenter: parent.horizontalCenter; width: Math.min(implicitWidth, 90); text: vis.ringSays ? vis.ringLabel : Math.round(vis.ringValue * vis.grow * 100) + "%"; size: vis.ringSays && vis.ringLabel.length > 4 ? 20 : 28; strong: true; horizontalAlignment: Text.AlignHCenter }
+                    Tx { anchors.horizontalCenter: parent.horizontalCenter; visible: !vis.ringSays && !!text; width: Math.min(implicitWidth, 84); text: vis.ringLabel; size: 12; dim: true; horizontalAlignment: Text.AlignHCenter }
                 }
             }
             ColumnLayout {
@@ -405,7 +408,7 @@ Item {
             spacing: 10
             opacity: 0
             Lagu {
-                size: 40
+                size: 46
                 mood: !panel.ready ? "sleeping" : !Assistant.busy && field.activeFocus && field.text ? "listening" : Assistant.mood
                 animate: panel.shown
             }
@@ -558,7 +561,7 @@ Item {
                 Component { id: moreC; More { width: d.width; row: d.row } }
                 Component { id: textC; Answer { width: d.width; item: d.item; reveal: d.unfold } }
                 Component { id: cardC; Visual { width: d.width; item: d.item; reveal: d.unfold } }
-                Component { id: deniedC; Denied { width: d.width; item: d.item; reveal: d.unfold; live: !!Assistant.pending && (d.row.live ?? false) } }
+                Component { id: deniedC; Denied { width: d.width; item: d.item; reveal: d.unfold; live: (Assistant.pending?.length ?? 0) > 0 && (d.row.live ?? false) } }
                 Component { id: errorC; Failure { width: d.width; item: d.item; reveal: d.unfold } }
             }
         }

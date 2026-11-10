@@ -74,17 +74,19 @@ PanelWindow {
             Rectangle {
                 id: ai
                 property bool done: false
-                readonly property bool live: !Ui.askOpen && (Assistant.busy || done)
+                // A permission request keeps it up until answered: the work is waiting on a yes or no.
+                readonly property bool waiting: !Assistant.busy && (Assistant.pending?.length ?? 0) > 0
+                readonly property bool live: !Ui.askOpen && (Assistant.busy || done || waiting)
                 visible: Cfg.v.aiChip && !!Assistant.provider
                 implicitWidth: aiRow.implicitWidth + 18; implicitHeight: 44; radius: 22
                 color: aim.containsMouse ? Theme.raised : "transparent"
                 Behavior on implicitWidth { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
                 Accessible.role: Accessible.Button
-                Accessible.name: done ? Tr.t("Assistant: done") : live ? Tr.t("Assistant: working") : Tr.t("Assistant")
+                Accessible.name: waiting && !Ui.askOpen ? Tr.t("Lagu needs your OK") : done ? Tr.t("Assistant: done") : live ? Tr.t("Assistant: working") : Tr.t("Assistant")
                 Accessible.onPressAction: Ui.toggleAsk(win.modelData)
                 Connections {
                     target: Assistant
-                    function onBusyChanged() { if (!Assistant.busy && !Ui.askOpen) { ai.done = true; aiDone.restart() } }
+                    function onBusyChanged() { if (!Assistant.busy && !Ui.askOpen && !ai.waiting) { ai.done = true; aiDone.restart() } }
                 }
                 Connections {
                     target: Ui
@@ -95,7 +97,7 @@ PanelWindow {
                     id: aiRow; anchors.centerIn: parent; spacing: 6
                     Lagu {
                         size: 26
-                        mood: ai.done ? (Assistant.mood === "error" ? "error" : "done") : ai.live ? Assistant.mood : "idle"
+                        mood: ai.waiting && ai.live ? "waiting" : ai.done ? (Assistant.mood === "error" ? "error" : "done") : ai.live ? Assistant.mood : "idle"
                         animate: ai.live || aim.containsMouse
                     }
                     Tx { visible: ai.done; text: Tr.t("Done"); size: 14; strong: true }
