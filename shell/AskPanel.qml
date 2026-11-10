@@ -56,32 +56,40 @@ Item {
     }
 
     onShownChanged: if (shown) { leave.stop(); grow.restart(); field.forceActiveFocus() } else { grow.stop(); leave.restart() }
+    // The bar grows first; the conversation waits until the bar has nearly settled, so nothing outruns its background.
     SequentialAnimation {
         id: grow
         ParallelAnimation {
-            NumberAnimation { target: bar; property: "opacity"; to: 1; duration: 120 }
-            NumberAnimation { target: bar; property: "width"; from: 430; to: panel.barWidth; duration: 700; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
+            NumberAnimation { target: bar; property: "opacity"; to: 1; duration: 160; easing.type: Easing.OutCubic }
+            NumberAnimation { target: bar; property: "width"; from: 430; to: panel.barWidth; duration: 650; easing.type: Easing.OutBack; easing.overshoot: 1.1 }
             SequentialAnimation {
-                PauseAnimation { duration: 220 }
-                NumberAnimation { target: barRow; property: "opacity"; to: 1; duration: 220 }
+                PauseAnimation { duration: 300 }
+                NumberAnimation { target: barRow; property: "opacity"; to: 1; duration: 240; easing.type: Easing.OutCubic }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 260 }
+                PauseAnimation { duration: 520 }
                 ParallelAnimation {
-                    NumberAnimation { target: body; property: "opacity"; to: 1; duration: 240 }
-                    NumberAnimation { target: bodyShift; property: "y"; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: body; property: "opacity"; to: 1; duration: 280; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: bodyShift; property: "y"; from: -16; to: 0; duration: 420; easing.type: Easing.OutCubic }
                 }
             }
         }
         ScriptAction { script: { bar.width = Qt.binding(() => panel.barWidth); panel.settled = true } }
     }
+    // The reverse, unhurried: the conversation lifts away, then the bar shrinks back into the island and fades.
     ParallelAnimation {
         id: leave
-        NumberAnimation { target: bar; property: "width"; to: 430; duration: 200; easing.type: Easing.InCubic }
-        NumberAnimation { target: bar; property: "opacity"; to: 0; duration: 200 }
-        NumberAnimation { target: barRow; property: "opacity"; to: 0; duration: 90 }
-        NumberAnimation { target: body; property: "opacity"; to: 0; duration: 150 }
-        NumberAnimation { target: bodyShift; property: "y"; to: -12; duration: 200; easing.type: Easing.InCubic }
+        NumberAnimation { target: body; property: "opacity"; to: 0; duration: 200; easing.type: Easing.InOutCubic }
+        NumberAnimation { target: bodyShift; property: "y"; to: -12; duration: 240; easing.type: Easing.InOutCubic }
+        NumberAnimation { target: barRow; property: "opacity"; to: 0; duration: 180; easing.type: Easing.InOutCubic }
+        SequentialAnimation {
+            PauseAnimation { duration: 80 }
+            NumberAnimation { target: bar; property: "width"; to: 430; duration: 360; easing.type: Easing.InOutCubic }
+        }
+        SequentialAnimation {
+            PauseAnimation { duration: 240 }
+            NumberAnimation { target: bar; property: "opacity"; to: 0; duration: 200; easing.type: Easing.InOutCubic }
+        }
     }
 
     Keys.onEscapePressed: Ui.askOpen = false

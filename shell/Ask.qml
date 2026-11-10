@@ -14,7 +14,7 @@ Scope {
         if (isOpen) { closing.stop(); alive = true }
         else closing.restart()
     }
-    Timer { id: closing; interval: 220; onTriggered: ask.alive = false }
+    Timer { id: closing; interval: 480; onTriggered: ask.alive = false } // a little longer than AskPanel's leave
 
     PanelWindow {
         id: win

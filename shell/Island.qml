@@ -78,7 +78,13 @@ PanelWindow {
         radius: 28
         // The assistant's bar grows from here and takes the island's place while open.
         opacity: Ui.askOpen && (Quickshell.screens.includes(Ui.askScreen) ? Ui.askScreen : Ui.screen) === win.modelData ? 0 : 1
-        Behavior on opacity { NumberAnimation { duration: 160 } }
+        // Coming back, it waits for the bar to shrink into it, so the two never stack.
+        Behavior on opacity {
+            SequentialAnimation {
+                PauseAnimation { duration: pill.opacity < 0.5 ? 300 : 0 }
+                NumberAnimation { duration: 200; easing.type: Easing.InOutCubic }
+            }
+        }
         RowLayout {
             id: row
             anchors.centerIn: parent
