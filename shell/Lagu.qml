@@ -10,7 +10,7 @@ Item {
     property real size: 64
     property bool animate: true
     implicitWidth: size; implicitHeight: size
-    clip: true
+    clip: !tiny // small, the box is centered on the body and a bubble or a bounce may peek past it into the chip's padding
     Accessible.role: Accessible.Graphic
     Accessible.name: "Lagu"
 
@@ -131,7 +131,9 @@ Item {
     }
 
     // The design's box, fitted into the item keeping its aspect.
-    readonly property var box: tiny ? [20, -26, 166, 170] : [-30, -24, 220, 190]
+    // Small (the island's chip), the box is centered on the body, a little above its middle for the sprout, so Lagu sits
+    // on the chip's centre line; big, it leaves room around for the extras.
+    readonly property var box: tiny ? [-3, 1, 166, 170] : [-30, -24, 220, 190]
     readonly property real s: Math.min(width / box[2], height / box[3])
     Item {
         x: (root.width - root.box[2] * root.s) / 2 - root.box[0] * root.s
