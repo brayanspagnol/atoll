@@ -11,9 +11,13 @@ Scope {
     property bool alive: false
     readonly property bool isOpen: Ui.askOpen
     onIsOpenChanged: {
-        if (isOpen) { closing.stop(); alive = true }
-        else closing.restart()
+        if (isOpen) { closing.stop(); alive = true; grabLater.restart() }
+        else { grabLater.stop(); grabReady = false; closing.restart() }
     }
+    // The click-outside grab waits for the window to be on screen again: armed at once, it was cleared at once,
+    // and the assistant closed right after opening.
+    property bool grabReady: false
+    Timer { id: grabLater; interval: 250; onTriggered: ask.grabReady = true }
     Timer { id: closing; interval: 480; onTriggered: ask.alive = false } // a little longer than AskPanel's leave
 
     PanelWindow {
@@ -33,13 +37,14 @@ Scope {
         }
         // A click anywhere else closes it.
         HyprlandFocusGrab {
-            active: Ui.askOpen && win.visible
+            active: Ui.askOpen && win.visible && ask.grabReady
             windows: [win]
             onCleared: Ui.askOpen = false
         }
         AskPanel {
             id: panel
             anchors.fill: parent
+            span: win.screen ? win.screen.width : 0
             Component.onCompleted: shown = Qt.binding(() => Ui.askOpen)
         }
     }

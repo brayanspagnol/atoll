@@ -9,7 +9,10 @@ Item {
     id: panel
     property bool shown: false
     property bool settled: false // after the opening: items arriving now drop in one by one, not in a cascade
-    readonly property real barWidth: Math.min(1000, width - 80)
+    // The screen's width, from the window: right after the window shows again its own width can still be 0,
+    // and a bar sized from that grew to nothing.
+    property real span: 0
+    readonly property real barWidth: Math.min(1000, Math.max(width, span) - 80)
     readonly property real listWidth: Math.min(760, barWidth - 40)
     // The visible pieces, for the window's input mask, and the text field.
     readonly property Item barItem: bar
