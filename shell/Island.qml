@@ -342,11 +342,8 @@ PanelWindow {
         implicitHeight: menuBox.implicitHeight
         color: "transparent"
         visible: false
-        HyprlandFocusGrab {
-            active: menu.visible
-            windows: [menu, win]
-            onCleared: menu.visible = false
-        }
+        // The popup's own grab: a click outside closes it. A HyprlandFocusGrab here took clicks on the popup itself as outside.
+        grabFocus: true
         Rectangle {
             id: menuBox
             function first() { return [openRow, pinRow, chooseRow].find(r => r.visible) }

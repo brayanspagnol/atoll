@@ -42,7 +42,7 @@ Frost {
                 running: !!c.modelData.countdown
                 paused: running && hover.hovered
                 from: 1; to: 0
-                duration: c.modelData.expireTimeout
+                duration: Math.max(1, c.modelData.expireTimeout) // a real notification may say -1; this bar only runs for countdowns
                 onFinished: Notifs.drop(c.modelData)
             }
         }
