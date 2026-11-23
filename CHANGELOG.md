@@ -13,6 +13,8 @@ All notable changes to this project are documented here. The format follows
 - Assistant: History, in the bar, lists the conversations Atoll had, newest first, with search. Open one to read it again and keep going with the same tool and session; the trash button takes it off the list. The last 30 are kept in `~/.local/state/atoll/assistant.json`, readable only by you.
 - Island: right-click an item to unpin it from the top, open its screen or choose what stays. An unpinned item shrinks away and a toast offers Undo for 6 seconds. The clock and workspaces always stay, and a low battery, a running focus timer and a busy assistant still show while they last.
 - On top screen, under Applications: a live preview of the island, the pinned items to reorder (drag, the arrow buttons or `Alt+Up`/`Alt+Down`) or unpin, the others to pin, and Reset to default.
+- Island: it rests as a small pill (workspaces, clock, battery) and opens in full under the pointer, closing again a moment after it leaves. It grows into what is happening, with a spring: the song playing (cover, scrolling title, moving bars), the volume or brightness, a new notification, the focus timer, Lagu's current step, and a green pulse when the charger is plugged in. Hold it to open the music card if something plays, or else the control center.
+- Island: when music, focus and Lagu run at the same time, the first stays in the island and the others pull away into round bubbles beside it, merging back when they end. Hover a bubble for a small card (music controls, the time left and Stop, Lagu's step); click it for the full card.
 - Installed apps: a screen under Applications lists the apps from the system, Flatpak and AppImage, largest first, with search and a filter per source, and uninstalls them. The dialog shows the exact command first. A system package opens a terminal with `sudo pacman -Rns` ready, so you type your password there and never in Atoll; Flatpak and AppImage apps go without a password, the AppImage file and its launcher to the trash. Apps Atoll needs, your default apps and packages that others depend on are protected.
 
 ### Fixed
@@ -22,6 +24,7 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- Notifications, the volume and the shell's own toasts (such as Undo) now show inside the island, one at a time for 5 seconds (critical ones until dismissed), with a count of the ones waiting, instead of glass cards under it. The brightness keys show the new level there too.
 - Floating panels (island, dock, control center, cards, launcher, clipboard) no longer have an outline. Critical notifications keep their red one.
 - The control center's Default apps card is now an Applications group that opens in place into On top, Installed and Default. `Super+Alt+N` opens the one you used last, and the search finds each with its group's name.
 - The island's items are one ordered list in the profile, so they follow your profile and its backup. The Weather and Assistant screens' "Show in the island" switches now pin and unpin those items, and a profile where they were off keeps them off.

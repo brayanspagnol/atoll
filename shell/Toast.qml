@@ -4,34 +4,34 @@ import Quickshell
 import Quickshell.Services.Notifications
 import Quickshell.Widgets
 
-// New notification: a glass card of its own under the island.
-Frost {
+// A new notification, inside the island, which grows down into it. One at a time: the island keeps the rest waiting.
+Item {
     id: c
     required property var modelData
+    property int waiting: 0 // shown as +N
+    property bool paused: false // the pointer is on the island
     readonly property bool critical: modelData.urgency === NotificationUrgency.Critical
     readonly property string iconSource: Notifs.iconOf(modelData)
-    implicitHeight: lay.implicitHeight + 28
-    radius: 24
-    border.width: critical ? 1 : 0
-    border.color: Theme.danger
-    transformOrigin: Item.Top
-    // Here, not in the list's add transition: a second arrival interrupts that one and would strand the card.
-    NumberAnimation on opacity { from: 0; to: 1; duration: 180 }
-    NumberAnimation on scale { from: 0.9; to: 1; duration: 340; easing.type: Easing.OutBack; easing.overshoot: 1.3 }
+    // Two buttons at most: its own actions first, then Dismiss.
+    readonly property var buttons: {
+        const own = (modelData.actions ?? []).slice(0, 2)
+        return own.length < 2 ? own.concat([{ text: Tr.t("Dismiss"), invoke: () => c.modelData.dismiss(), quiet: true }]) : own
+    }
+    implicitWidth: 440
+    implicitHeight: lay.implicitHeight + 30
     Accessible.role: Accessible.AlertMessage
     Accessible.name: modelData.summary + ". " + modelData.body
 
-    HoverHandler { id: hover }
     Timer {
-        // Critical stays until dismissed; -1/0 means "server decides": 6 s.
-        running: !c.critical && !hover.hovered && !c.modelData.countdown
-        interval: c.modelData.expireTimeout > 0 ? c.modelData.expireTimeout : 6000
+        // Critical stays until dismissed; -1/0 means "server decides": 5 s. Under the pointer it waits, and starts over after.
+        running: !c.critical && !c.paused && !c.modelData.countdown
+        interval: c.modelData.expireTimeout > 0 ? c.modelData.expireTimeout : 5000
         onTriggered: Notifs.drop(c.modelData)
     }
     // The shell's own toasts with a countdown (an undo) show the time left as a bar, which pauses under the pointer.
     Rectangle {
         visible: !!c.modelData.countdown
-        anchors { left: parent.left; right: parent.right; bottom: parent.bottom; leftMargin: 18; rightMargin: 18; bottomMargin: 6 }
+        anchors { left: parent.left; right: parent.right; bottom: parent.bottom; leftMargin: 24; rightMargin: 24; bottomMargin: 7 }
         height: 3; radius: 1.5
         color: Theme.line
         Rectangle {
@@ -40,51 +40,59 @@ Frost {
             color: Theme.accent
             NumberAnimation on share {
                 running: !!c.modelData.countdown
-                paused: running && hover.hovered
+                paused: running && c.paused
                 from: 1; to: 0
                 duration: Math.max(1, c.modelData.expireTimeout) // a real notification may say -1; this bar only runs for countdowns
                 onFinished: Notifs.drop(c.modelData)
             }
         }
     }
+    // A click on it puts it away; the history keeps it.
     TapHandler { onTapped: Notifs.drop(c.modelData) }
 
     RowLayout {
         id: lay
-        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14 }
+        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 18; rightMargin: 18; topMargin: 15 }
         spacing: 12
         ClippingRectangle {
             Layout.alignment: Qt.AlignTop
-            implicitWidth: 44; implicitHeight: 44; radius: 12
+            implicitWidth: 40; implicitHeight: 40; radius: 12
             color: Theme.raised
-            IconImage { anchors.centerIn: parent; implicitSize: c.iconSource.startsWith("image://icon") || c.iconSource.endsWith(".svg") ? 30 : 44; source: c.iconSource; visible: !!c.iconSource }
-            Ic { anchors.centerIn: parent; visible: !!c.modelData.icon; name: c.modelData.icon ?? ""; size: 24; color: Theme.accent } // the shell's own cards
-            Tx { anchors.centerIn: parent; visible: !c.iconSource && !c.modelData.icon; text: (c.modelData.appName || "?").charAt(0).toUpperCase(); size: 20; strong: true }
+            IconImage { anchors.centerIn: parent; implicitSize: c.iconSource.startsWith("image://icon") || c.iconSource.endsWith(".svg") ? 28 : 40; source: c.iconSource; visible: !!c.iconSource }
+            Ic { anchors.centerIn: parent; visible: !!c.modelData.icon; name: c.modelData.icon ?? ""; size: 22; color: Theme.accent } // the shell's own cards
+            Tx { anchors.centerIn: parent; visible: !c.iconSource && !c.modelData.icon; text: (c.modelData.appName || "?").charAt(0).toUpperCase(); size: 18; strong: true }
         }
         ColumnLayout {
             Layout.fillWidth: true; spacing: 1
             RowLayout {
                 Layout.fillWidth: true; spacing: 6
                 Tx { text: c.modelData.appName; dim: true; size: 12; Layout.fillWidth: true }
-                Tx { text: c.critical ? Tr.t("important") : Tr.t("now"); size: 12; color: c.critical ? Theme.danger : Theme.muted; Layout.rightMargin: closeBtn.visible ? 26 : 0 }
+                Tx { visible: c.critical; text: Tr.t("important"); size: 12; color: Theme.danger }
+                Rectangle {
+                    visible: c.waiting > 0
+                    implicitWidth: more.implicitWidth + 14; implicitHeight: 20; radius: 10
+                    color: Theme.raised
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: Tr.t("%1 waiting").arg(c.waiting)
+                    Tx { id: more; anchors.centerIn: parent; text: "+" + c.waiting; size: 12; strong: true }
+                }
             }
             Tx { text: c.modelData.summary; strong: true; Layout.fillWidth: true }
-            Tx { text: c.modelData.body; visible: !!text; dim: true; wrapMode: Text.Wrap; maximumLineCount: 3; Layout.fillWidth: true }
+            Tx { text: c.modelData.body.replace(/\s+/g, " "); visible: !!text; dim: true; maximumLineCount: 1; Layout.fillWidth: true }
             RowLayout {
-                visible: c.modelData.actions.length > 0; Layout.topMargin: 8; spacing: 6
+                Layout.topMargin: 8; spacing: 6
                 Repeater {
-                    model: c.modelData.actions
-                    Btn { required property var modelData; text: modelData.text; onClicked: modelData.invoke() }
+                    model: c.buttons
+                    Btn {
+                        required property var modelData
+                        required property int index
+                        text: modelData.text
+                        variant: index === 0 && !modelData.quiet ? "solid" : "ghost"
+                        implicitHeight: 32
+                        onClicked: modelData.invoke()
+                    }
                 }
             }
         }
-    }
-    Btn {
-        id: closeBtn
-        anchors { top: parent.top; right: parent.right; margins: 8 }
-        visible: hover.hovered || c.critical
-        variant: "quiet"; icon: "x"; iconSize: 16; implicitWidth: 30; implicitHeight: 30
-        a11y: Tr.t("Dismiss")
-        onClicked: c.modelData.dismiss()
     }
 }

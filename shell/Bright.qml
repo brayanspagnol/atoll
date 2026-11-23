@@ -9,6 +9,7 @@ Singleton {
     property int panel: -1
     property int external: -1
     function refresh() { pp.running = true; ep.running = true }
+    function refreshPanel() { pp.running = true }
     function setPanel(v) { panel = v; Quickshell.execDetached(["brightnessctl", "-q", "s", v + "%"]) }
     function setExternal(v) { external = v; Quickshell.execDetached(["ddcutil", "--noverify", "--sleep-multiplier=.2", "setvcp", "10", String(v)]) }
     Process {

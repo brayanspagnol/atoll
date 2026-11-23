@@ -19,14 +19,14 @@ wallpaper, and windows keep the rest of the screen.
 
 ## Features
 
-- **Island:** workspaces, clock, media and status in a floating pill at the top. Right-click an item to unpin it, or choose and reorder what stays in Applications › On top (`Super+Alt+N`).
+- **Island:** a small pill at the top (workspaces, clock, battery) that opens in full under the pointer and grows into what is happening: the song playing with moving bars, the volume or brightness, a new notification with its buttons, the focus timer, Lagu at work, the charger plugged in. When several run at once, the others wait beside it as round bubbles that grow into a small card under the pointer. Hold it to open the music card or the control center. Right-click an item to unpin it, or choose and reorder what stays in Applications › On top (`Super+Alt+N`).
 - **Dock:** hides at the bottom edge, so windows get the full height. Hover the edge or press `Super+Z`. The gear opens a full-screen launchpad to choose its apps, from the installed list or any program in your files, and to reorder them.
 - **Control center:** sound, internet, Bluetooth, performance, calendar, notifications, monitor, settings, about, power and more, in a scrolling list with a search that finds the screens and the settings inside them.
 - **Weather:** the temperature in the island, and a card with the next hours and 7 days from Open-Meteo. Pick your city in the Weather screen (`Super+Alt+W`).
 - **Assistant (Lagu):** press `Super+A` and the island stretches into a bar to ask about your computer. Steps, answers and visual cards (rings, bars, buttons that open a screen or an app) drop below it. It uses the Claude Code, Cursor or Codex command line already logged in on your computer, with no API keys, and asks before changing files. Pick the model and effort from the bar, and reopen or continue past conversations from its history. Choose the tool in the Assistant screen (`Super+Alt+G`).
 - **Music card:** cover art, colors taken from the album, seek bar, repeat, shuffle, likes, volume and output switching.
 - **Focus mode:** a timer in the island (25 or 50 min, 1 h, open-ended or pomodoro) that hides music and notifications, except the apps you let through.
-- **Notifications and volume:** glass cards that drop from under the island.
+- **Notifications and volume:** shown inside the island, one notification at a time, with a count of the ones waiting.
 - **Overview:** a strip of workspaces above the current one's windows, with live previews. Drag a window to another workspace. `Super+O`.
 - **Search:** apps, system screens, commands, emoji (searched in your language) and screenshots, with tabs and your recent apps on top. Type "wifi" or "volume".
 - **Clipboard history:** search, filter by text, links or images, preview images, pin what you reuse and delete the rest. From the island icon or `Super+Shift+V`.
