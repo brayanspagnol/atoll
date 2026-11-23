@@ -216,28 +216,6 @@ assert.ok(Object.keys(F.items).every(id => ["som", "rede", "bt", "perf", "cal", 
     const inside = plain(F.search(pages, "luz", k => ({ "Night light": "Luz noturna" })[k] ?? k, { topo: ["Night light"] }))
     assert.deepEqual(inside.map(r => [r.label, r.sub]), [["Luz noturna", "Aplicativos › No topo"]])
 }
-// The island's states: what owns the pill by priority, at most two bubbles that stay put while an event passes, notifications one at a time, the charger once.
-{
-    const Is = load("island.js", "layout,queue,plugged,events,activities")
-    const lay = on => plain(Is.layout(on))
-    assert.deepEqual(lay({}), { main: "rest", bubbles: [] }); assert.deepEqual(lay(null), { main: "rest", bubbles: [] })
-    assert.deepEqual(lay({ music: true }), { main: "music", bubbles: [] })
-    assert.deepEqual(lay({ focus: true, music: true }), { main: "focus", bubbles: ["music"] })
-    assert.deepEqual(lay({ lagu: true, focus: true, music: true }), { main: "lagu", bubbles: ["focus", "music"] })
-    assert.deepEqual(lay({ notif: true, osd: true, charge: true, lagu: true, focus: true, music: true }), { main: "notif", bubbles: ["focus", "music"] })
-    assert.deepEqual(lay({ osd: true, charge: true, music: true }), { main: "osd", bubbles: [] })
-    assert.deepEqual(lay({ charge: true, lagu: true }), { main: "charge", bubbles: [] })
-    assert.deepEqual(lay({ notif: true }), { main: "notif", bubbles: [] })
-    const order = ["notif", "osd", "charge", "lagu", "focus", "music"] // each beats the ones after it
-    for (let i = 0; i < order.length; i++) assert.equal(Is.layout(Object.fromEntries(order.slice(i).map(id => [id, true]))).main, order[i])
-    for (const n of [0, 1, 2, 3]) assert(Is.layout(Object.fromEntries(Is.activities.slice(0, n).map(id => [id, true]))).bubbles.length <= 2)
-    assert.deepEqual(plain(Is.queue([])), { current: null, waiting: 0 }); assert.deepEqual(plain(Is.queue(undefined)), { current: null, waiting: 0 })
-    assert.deepEqual(plain(Is.queue(["newest", "middle", "oldest"])), { current: "oldest", waiting: 2 }) // Notifs keeps them newest first
-    assert.deepEqual(plain(Is.queue(["only"])), { current: "only", waiting: 0 })
-    assert(Is.plugged("discharging", "charging"))
-    for (const [a, b] of [["charging", "charging"], ["other", "charging"], ["", "charging"], ["charging", "discharging"], ["discharging", "other"]]) assert(!Is.plugged(a, b), a + ">" + b)
-}
-
 // The island's pinned items: the profile's list checked like outside data, the old switches carried over, and the moves.
 {
     const Pi = load("pins.js", "items,ids,item,valid,migrate,pin,unpin,set,move")

@@ -15,14 +15,14 @@ Os prints estão no [README em inglês](README.md#screenshots).
 
 ## O que tem
 
-- **Ilha:** uma pílula pequena no topo (áreas de trabalho, relógio, bateria) que abre inteira sob o ponteiro e cresce no que está acontecendo: a música tocando com barras de som, o volume ou o brilho, um aviso novo com seus botões, o timer de foco, o Lagu trabalhando, o carregador ligado. Quando várias coisas acontecem juntas, as outras esperam ao lado em gotas redondas que viram um pequeno cartão sob o ponteiro. Segure a ilha para abrir o cartão de música ou a central. Clique com o botão direito num item para desafixar, ou escolha e reordene o que fica em Aplicativos › No topo (`Super+Alt+N`).
+- **Ilha:** áreas de trabalho, relógio, música e status em uma pílula flutuante no topo. Clique com o botão direito num item para desafixar, ou escolha e reordene o que fica em Aplicativos › No topo (`Super+Alt+N`).
 - **Clima:** a temperatura na ilha e um cartão com as próximas horas e 7 dias, do Open-Meteo. Escolha sua cidade na tela Clima (`Super+Alt+W`).
 - **Assistente (Lagu):** aperte `Super+A` e a ilha estica e vira uma barra para perguntar sobre o seu computador. Passos, respostas e cards visuais (anéis, barras, botões que abrem uma tela ou um app) descem dela. Usa o Claude Code, o Cursor ou o Codex que já estão logados no seu computador, sem chave de API, e pergunta antes de mudar arquivos. Escolha o modelo e o esforço na barra e reabra ou continue conversas antigas pelo histórico. A ferramenta se escolhe na tela Assistente (`Super+Alt+G`).
 - **Dock:** se esconde na borda inferior, então as janelas ganham a altura toda. Encoste o mouse na borda ou aperte `Super+Z`. A engrenagem abre um launchpad em tela cheia para escolher os apps, da lista de instalados ou qualquer programa nos seus arquivos, e reordenar.
 - **Central:** som, internet, Bluetooth, desempenho, calendário, avisos, monitor, ajustes, sobre, energia e mais, numa lista com rolagem e uma busca que acha as telas e os ajustes dentro delas.
 - **Cartão de música:** capa, cores tiradas do álbum, barra de tempo, repetir, aleatório, curtidas, volume e troca de saída.
 - **Modo foco:** um timer na ilha (25 ou 50 min, 1 h, sem fim ou pomodoro) que esconde música e avisos, menos os apps que você deixa passar.
-- **Avisos e volume:** aparecem dentro da ilha, um aviso por vez, com a contagem dos que esperam.
+- **Avisos e volume:** cartões de vidro que descem de baixo da ilha.
 - **Visão geral:** faixa com as áreas de trabalho acima das janelas da área atual, com prévia ao vivo. Arraste uma janela para outra área. `Super+O`.
 - **Busca:** aplicativos, telas do sistema, comandos, emoji (buscado no seu idioma) e prints, com abas e seus apps recentes no topo. Digite "wifi" ou "volume".
 - **Área de transferência:** busque, filtre por texto, links ou imagens, veja a prévia de imagens, fixe o que você reutiliza e apague o resto. Pelo ícone na ilha ou `Super+Shift+V`.

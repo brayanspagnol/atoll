@@ -27,7 +27,7 @@ Singleton {
         toasts = toasts.filter(t => t !== n)
         if (!all.includes(n)) n.dismiss()
     }
-    // A toast in the island, on the screen in use unless a card there is already open. The island shows them one at a time, oldest first.
+    // A toast under the island, on the screen in use unless a card there is already open.
     function pop(t) {
         if (toasts.length === 0 && !Ui.mediaOpen && !Ui.focusOpen) Ui.sheetScreen = Ui.screen
         toasts = [t].concat(toasts)

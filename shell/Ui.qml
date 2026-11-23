@@ -23,9 +23,6 @@ Singleton {
     // Each screen's island width, by output name: the assistant's bar grows out of it and shrinks back into it.
     property var islandWidths: ({})
     function setIslandWidth(name, w) { if (name && islandWidths[name] !== w) islandWidths = Object.assign({}, islandWidths, { [name]: w }) }
-    // And how far it reaches down past its usual 56 px (a notification): the cards under it move down by as much.
-    property var islandDrops: ({})
-    function setIslandDrop(name, h) { if (name && islandDrops[name] !== h) islandDrops = Object.assign({}, islandDrops, { [name]: h }) }
     function toggleMedia(screen, island) {
         if (!mediaOpen) { sheetScreen = screen; sheetIsland = island; open = false }
         mediaOpen = !mediaOpen
