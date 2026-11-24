@@ -11,6 +11,8 @@ O Atoll troca aquela pilha de barra, lançador, daemon de notificações e apps 
 única e consistente, feita com [Quickshell](https://quickshell.org). Cada peça flutua sobre o papel de parede, e
 as janelas ficam com o resto da tela.
 
+![Abrindo a central, trocando de tela e buscando](docs/screenshots/tour.gif)
+
 Os prints estão no [README em inglês](README.md#screenshots).
 
 ## O que tem

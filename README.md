@@ -17,6 +17,8 @@ Atoll replaces the usual pile of bar, launcher, notification daemon and settings
 consistent interface, built with [Quickshell](https://quickshell.org). Every piece floats over your
 wallpaper, and windows keep the rest of the screen.
 
+![Opening the control center, switching screens and searching](docs/screenshots/tour.gif)
+
 ## Features
 
 - **Island:** workspaces, clock, media and status in a floating pill at the top. Right-click an item to unpin it, or choose and reorder what stays in Applications › On top (`Super+Alt+N`).
