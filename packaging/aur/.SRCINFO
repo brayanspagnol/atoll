@@ -40,6 +40,6 @@ pkgbase = atoll
 	optdepends = networkmanager-openvpn: import OpenVPN files
 	optdepends = ddcutil: brightness of external monitors
 	source = atoll-1.18.0.tar.gz::https://github.com/brayanspagnol/atoll/archive/refs/tags/v1.18.0.tar.gz
-	sha256sums = 51efe333092ac3d2f51837f9bcd6a342faf5fcf7db170b1e6617a1ea7699bd3b
+	sha256sums = eaf6d541baf898fa1b2ee0598a767760821f64ec9f029bfc26fbfedad9dd475b
 
 pkgname = atoll
